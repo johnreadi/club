@@ -61,12 +61,14 @@ async function traiterScanStock(code) {
 }
 
 async function chargerStock() {
+  const tbody = document.getElementById('liste-produits');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-400"><i class="fa fa-spinner fa-spin mr-1"></i> Chargement...</td></tr>`;
   try {
     produits = await apiFetch('/stock') || [];
     afficherListeProduits();
-  } catch {
-    document.getElementById('liste-produits').innerHTML =
-      `<tr><td colspan="6" class="text-center py-6 text-red-500">Impossible de charger le stock</td></tr>`;
+  } catch (err) {
+    if (tbody) tbody.innerHTML =
+      `<tr><td colspan="6" class="text-center py-6 text-red-500">❌ Impossible de charger le stock — ${err.message || 'Erreur réseau'}</td></tr>`;
   }
 }
 

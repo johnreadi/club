@@ -157,3 +157,12 @@ VALUES ('AS Rouen', 'Rouen', 'complet', CURRENT_DATE + INTERVAL '1 year');
 -- Proprietaire club : jean@asrouen.fr / ClubAS2026!Rouen
 INSERT INTO utilisateurs (club_id, nom, prenom, email, mot_de_passe_hash, role)
 VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$bpFN0y4vawEgDqzJZfcgeutJWeDRtFkAMV8CN84LFCgF5vCocUNre', 'proprietaire');
+
+-- Produits de démonstration pour AS Rouen
+INSERT INTO produits (club_id, reference, code_barre, nom, description, prix_achat, prix_vente, quantite_stock, seuil_alerte) VALUES
+(1, 'TSH-M-BL', '001234567890', 'T-shirt Club', 'Taille M — Coton 100% — Bleu marine', 8.00, 15.00, 25, 5),
+(1, 'TSH-L-BL', '001234567891', 'T-shirt Club', 'Taille L — Coton 100% — Bleu marine', 8.00, 15.00, 20, 5),
+(1, 'SHO-42-BL', '001234567892', 'Chaussettes Club', 'Pointure 42-45 — Blanc', 2.50, 5.00, 50, 10),
+(1, 'SCF-UNI', '001234567893', 'Écharpe Club', 'Taille unique — Laine — Bleu/Blanc', 5.00, 12.00, 15, 5),
+(1, 'BON-UNI', '001234567894', 'Bonnet Club', 'Taille unique — Acrylique — Bleu marine', 4.00, 10.00, 12, 3),
+(1, 'SAC-MED', '001234567895', 'Sac de sport', 'Medium — Polyester — Logo club', 12.00, 25.00, 8, 3);

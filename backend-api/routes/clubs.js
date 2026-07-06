@@ -6,8 +6,12 @@ const router = express.Router();
 router.use(verifierToken);
 
 router.get('/', async (req, res) => {
-  const result = await pool.query('SELECT * FROM clubs WHERE actif = true ORDER BY nom');
-  res.json(result.rows);
+  try {
+    const result = await pool.query('SELECT * FROM clubs WHERE actif = true ORDER BY nom');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;

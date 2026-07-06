@@ -6,12 +6,16 @@ const router = express.Router();
 router.use(verifierToken);
 
 router.get('/', async (req, res) => {
-  const { club_id } = req.utilisateur;
-  const result = await pool.query(
-    'SELECT * FROM ventes WHERE club_id = $1 ORDER BY date_vente DESC LIMIT 100',
-    [club_id]
-  );
-  res.json(result.rows);
+  try {
+    const { club_id } = req.utilisateur;
+    const result = await pool.query(
+      'SELECT * FROM ventes WHERE club_id = $1 ORDER BY date_vente DESC LIMIT 100',
+      [club_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
 });
 
 router.post('/', async (req, res) => {

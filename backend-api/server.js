@@ -74,6 +74,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ erreur: 'Erreur interne du serveur' });
 });
 
+// Éviter les crashes sur erreurs non catchées
+process.on('uncaughtException', (err) => {
+  console.error('⚠️  Erreur non catchée (ignorée):', err.message);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('⚠️  Promesse rejetée (ignorée):', err?.message || err);
+});
+
 // Démarrage
 initDB()
   .then(() => {

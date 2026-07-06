@@ -1,17 +1,64 @@
 // === Gestion du Stock ===
 let produits = [];
 let produitEnEdition = null;
+let scanStockBuffer = '';
+let scanStockTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('form-produit')?.addEventListener('submit', enregistrerProduit);
   document.getElementById('recherche-produit')?.addEventListener('input', e => {
     const q = e.target.value.toLowerCase();
-    const lignes = document.querySelectorAll('#liste-produits tr');
-    lignes.forEach(tr => {
+    document.querySelectorAll('#liste-produits tr').forEach(tr => {
       tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
   });
+
+  // Douchette globale sur la page Stock : saisie rapide clavier
+  document.addEventListener('keydown', intercepterScanStock);
 });
+
+// Interception douchette : accumule les touches, détecte Enter (fin de scan)
+function intercepterScanStock(e) {
+  const sectionStock = document.getElementById('stock');
+  if (!sectionStock || sectionStock.classList.contains('hidden')) return;
+  // Ignorer si focus sur un input/textarea
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Enter') {
+    if (scanStockBuffer.length > 2) {
+      traiterScanStock(scanStockBuffer);
+    }
+    scanStockBuffer = '';
+    clearTimeout(scanStockTimer);
+    return;
+  }
+  if (e.key.length === 1) {
+    scanStockBuffer += e.key;
+    clearTimeout(scanStockTimer);
+    scanStockTimer = setTimeout(() => { scanStockBuffer = ''; }, 500);
+  }
+}
+
+async function traiterScanStock(code) {
+  try {
+    const produit = await apiFetch('/stock/scan/' + encodeURIComponent(code));
+    // Produit trouvé → ouvrir édition
+    afficherMessage(`📦 Produit scanné : ${produit.nom} (stock: ${produit.quantite_stock})`, 'info');
+    editerProduit(produit.id);
+  } catch (err) {
+    if (err.message && err.message.includes('404')) {
+      // Produit non trouvé → pré-remplir le formulaire avec le code scanné
+      afficherMessage(`🔍 Code ${code} non trouvé — créez le produit`, 'warning');
+      const form = document.getElementById('form-produit');
+      if (form) {
+        form.code_barre.value = code;
+        form.nom.focus();
+        form.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }
+}
 
 async function chargerStock() {
   try {
@@ -32,8 +79,8 @@ function afficherListeProduits() {
   }
   conteneur.innerHTML = produits.map(p => `
     <tr class="border-b hover:bg-gray-50">
-      <td class="p-2">${p.reference || '-'}</td>
-      <td class="p-2">${p.code_barre || '-'}</td>
+      <td class="p-2 text-xs">${p.reference || '-'}</td>
+      <td class="p-2 text-xs font-mono">${p.code_barre || '-'}</td>
       <td class="p-2 font-medium">${p.nom}</td>
       <td class="p-2 text-right">${parseFloat(p.prix_vente).toFixed(2)} €</td>
       <td class="p-2 text-right font-medium ${p.quantite_stock <= (p.seuil_alerte || 5) ? 'text-red-600' : 'text-green-700'}">${p.quantite_stock}</td>
@@ -51,7 +98,7 @@ async function enregistrerProduit(e) {
   const form = e.target;
   const donnees = {
     reference: form.reference.value.trim(),
-    code_barre: form.code_barre.value.trim(),
+    code_barre: form.code_barre.value.trim() || null,
     nom: form.nom.value.trim(),
     prix_achat: parseFloat(form.prix_achat.value) || 0,
     prix_vente: parseFloat(form.prix_vente.value) || 0,
@@ -59,13 +106,14 @@ async function enregistrerProduit(e) {
     seuil_alerte: parseInt(form.seuil.value) || 5
   };
   try {
+    let produitSauvegarde;
     if (produitEnEdition) {
-      await apiFetch(`/stock/${produitEnEdition}`, { method: 'PUT', body: JSON.stringify(donnees) });
-      afficherMessage('✅ Produit mis à jour', 'success');
+      produitSauvegarde = await apiFetch(`/stock/${produitEnEdition}`, { method: 'PUT', body: JSON.stringify(donnees) });
+      afficherMessage('✅ Produit mis à jour en base', 'success');
       produitEnEdition = null;
     } else {
-      await apiFetch('/stock', { method: 'POST', body: JSON.stringify(donnees) });
-      afficherMessage('✅ Produit ajouté', 'success');
+      produitSauvegarde = await apiFetch('/stock', { method: 'POST', body: JSON.stringify(donnees) });
+      afficherMessage('✅ Produit enregistré en base — code-barres : ' + produitSauvegarde.code_barre, 'success');
     }
     form.reset();
     document.querySelector('#form-produit button[type="submit"]').textContent = 'Enregistrer';
@@ -92,14 +140,47 @@ function editerProduit(id) {
 function imprimerEtiquette(id) {
   const p = produits.find(x => x.id === id);
   if (!p) return;
-  const contenu = `
-    <div style="width:70mm;height:30mm;padding:5px;font-family:sans-serif;border:1px solid #ccc;">
-      <h3 style="font-size:13px;margin:0 0 4px 0;">${p.nom}</h3>
-      <p style="font-size:14px;margin:2px 0;font-weight:bold;">Prix : ${parseFloat(p.prix_vente).toFixed(2)} €</p>
-      <p style="font-size:9px;margin:2px 0;">Réf : ${p.reference || '-'} | Code : ${p.code_barre || '-'}</p>
-    </div>`;
-  const fenetre = window.open('', '', 'width=320,height=220');
-  fenetre.document.write(`<html><body onload="window.print();window.close()">${contenu}</body></html>`);
+
+  // Récupérer les paramètres d'étiquette sauvegardés
+  const cfg = window.parametresActuels || {};
+  const police = cfg.etiquette_police || 'Arial';
+  const tNom = cfg.etiquette_taille_nom || 14;
+  const tPrix = cfg.etiquette_taille_prix || 18;
+  const tCode = cfg.etiquette_taille_code || 10;
+  const coulTexte = cfg.etiquette_couleur_texte || '#000000';
+  const coulFond = cfg.etiquette_couleur_fond || '#ffffff';
+  const align = cfg.etiquette_alignement || 'center';
+  const largeur = (cfg.etiquette_largeur || 60) * 3.78;
+  const hauteur = (cfg.etiquette_hauteur || 40) * 3.78;
+  const showPrix = cfg.etiquette_afficher_prix !== false;
+  const showRef = cfg.etiquette_afficher_reference !== false;
+  const showCode = cfg.etiquette_afficher_codebarre !== false;
+  const logoUrl = cfg.etiquette_afficher_logo && cfg.etiquette_logo_url ? cfg.etiquette_logo_url : null;
+
+  const code = p.code_barre || '';
+  const logoHtml = logoUrl ? `<img src="${logoUrl}" style="max-height:24px;display:block;margin:0 auto 4px;">` : '';
+  const refHtml = showRef ? `<p style="font-size:${tCode}px;margin:2px 0;color:${coulTexte};">Réf: ${p.reference || '-'}</p>` : '';
+  const prixHtml = showPrix ? `<p style="font-size:${tPrix}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${parseFloat(p.prix_vente).toFixed(2)} €</p>` : '';
+  const codeHtml = showCode && code ? `<svg id="bc-print" style="display:block;margin:2px auto;"></svg>` : '';
+
+  const fenetre = window.open('', '', `width=${Math.round(largeur + 40)},height=${Math.round(hauteur + 60)}`);
+  fenetre.document.write(`<!DOCTYPE html><html><head>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    </head><body style="margin:4px;background:${coulFond};">
+    <div style="width:${largeur}px;min-height:${hauteur}px;padding:6px;font-family:${police};text-align:${align};background:${coulFond};border:1px solid #ccc;box-sizing:border-box;">
+      ${logoHtml}
+      <p style="font-size:${tNom}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${p.nom}</p>
+      ${refHtml}
+      ${prixHtml}
+      ${codeHtml}
+    </div>
+    <script>
+      if(document.getElementById('bc-print')){
+        JsBarcode('#bc-print','${code}',{format:'CODE128',width:1.5,height:40,displayValue:true,fontSize:${tCode},margin:2});
+      }
+      window.onload=function(){window.print();window.close();};
+    <\/script>
+  </body></html>`);
   fenetre.document.close();
 }
 

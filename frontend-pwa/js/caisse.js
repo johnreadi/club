@@ -1,11 +1,75 @@
 // === Caisse & Ventes ===
 let panier = [];
 let produitsCaisse = [];
+let scanCaisseBuffer = '';
+let scanCaisseTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('scan-produit')?.addEventListener('keydown', gererScan);
+  // Champ de saisie manuelle
+  document.getElementById('scan-produit')?.addEventListener('keydown', gererScanManuel);
+
+  // Douchette globale sur la page Caisse
+  document.addEventListener('keydown', intercepterScanCaisse);
   afficherPanier();
 });
+
+// Interception douchette : accumule les touches rapides, détecte Enter
+function intercepterScanCaisse(e) {
+  const sectionCaisse = document.getElementById('caisse');
+  if (!sectionCaisse || sectionCaisse.classList.contains('hidden')) return;
+  const focused = document.activeElement;
+  if (focused && focused.id === 'scan-produit') return; // déjà géré par gererScanManuel
+  const tag = focused?.tagName;
+  if (tag === 'BUTTON' || tag === 'SELECT') return;
+
+  if (e.key === 'Enter') {
+    if (scanCaisseBuffer.length > 2) {
+      traiterScanCaisse(scanCaisseBuffer);
+    }
+    scanCaisseBuffer = '';
+    clearTimeout(scanCaisseTimer);
+    return;
+  }
+  if (e.key.length === 1) {
+    scanCaisseBuffer += e.key;
+    clearTimeout(scanCaisseTimer);
+    scanCaisseTimer = setTimeout(() => { scanCaisseBuffer = ''; }, 500);
+  }
+}
+
+async function gererScanManuel(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const code = e.target.value.trim();
+  if (!code) return;
+  e.target.value = '';
+  await traiterScanCaisse(code);
+}
+
+async function traiterScanCaisse(code) {
+  try {
+    // Chercher d'abord dans le cache local
+    let produit = produitsCaisse.find(p =>
+      p.code_barre === code || p.reference === code ||
+      p.nom.toLowerCase() === code.toLowerCase()
+    );
+    // Si pas en cache → appel API (scan douchette d'un nouveau produit)
+    if (!produit) {
+      produit = await apiFetch('/stock/scan/' + encodeURIComponent(code));
+      // Mettre à jour le cache local
+      const idx = produitsCaisse.findIndex(p => p.id === produit.id);
+      if (idx >= 0) produitsCaisse[idx] = produit; else produitsCaisse.push(produit);
+    }
+    if (produit.quantite_stock <= 0) {
+      afficherMessage(`⚠️ Stock épuisé : ${produit.nom}`, 'warning');
+      return;
+    }
+    ajouterAuPanier(produit);
+    afficherMessage(`✅ ${produit.nom} ajouté`, 'success');
+  } catch {
+    afficherMessage('❌ Produit non trouvé : ' + code, 'danger');
+  }
+}
 
 async function chargerVentesCaisse() {
   try {
@@ -21,21 +85,6 @@ async function chargerVentesCaisse() {
       ).join('') || '<p class="text-gray-500">Aucune vente</p>';
     }
   } catch {}
-}
-
-function gererScan(e) {
-  if (e.key !== 'Enter') return;
-  e.preventDefault();
-  const code = e.target.value.trim();
-  if (!code) return;
-  const produit = produitsCaisse.find(p => p.code_barre === code || p.reference === code || p.nom.toLowerCase() === code.toLowerCase());
-  if (!produit) {
-    afficherMessage('❌ Produit non trouvé : ' + code, 'danger');
-    e.target.value = '';
-    return;
-  }
-  ajouterAuPanier(produit);
-  e.target.value = '';
 }
 
 function ajouterAuPanier(produit) {
@@ -88,32 +137,55 @@ async function validerVente(modePaiement) {
       method: 'POST',
       body: JSON.stringify({ articles, montant_total, mode_paiement: modePaiement })
     });
+    // Mettre à jour le stock local (décrémentation)
+    articles.forEach(a => {
+      const p = produitsCaisse.find(x => x.id === a.produit_id);
+      if (p) p.quantite_stock = Math.max(0, p.quantite_stock - a.quantite);
+    });
     imprimerTicket({ ...vente, lignes: panier, montant_total, mode_paiement: modePaiement });
     panier = [];
     afficherPanier();
-    afficherMessage('✅ Vente enregistrée — ' + modePaiement, 'success');
+    afficherMessage('✅ Vente enregistrée — stock mis à jour', 'success');
     await chargerVentesCaisse();
   } catch {}
 }
 
 function imprimerTicket(vente) {
   const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
-  let contenu = `<div style="width:75mm;padding:8px;font-family:monospace;font-size:12px;">
-    <h3 style="text-align:center;font-weight:bold;margin:0 0 4px 0;">GESTION DES CLUBS</h3>
-    <p style="text-align:center;margin:2px 0;">${utilisateur.club_nom || ''}</p>
-    <p style="text-align:center;margin:2px 0;">${new Date().toLocaleString('fr-FR')}</p>
-    <hr style="margin:6px 0;">`;
-  (vente.lignes || []).forEach(l => {
-    contenu += `<p style="margin:3px 0;">${l.nom}<br/>${l.quantite} × ${parseFloat(l.prix_unitaire).toFixed(2)} € = ${(l.quantite * parseFloat(l.prix_unitaire)).toFixed(2)} €</p>`;
-  });
-  contenu += `<hr style="margin:6px 0;">
-    <p style="text-align:right;font-weight:bold;">Total : ${parseFloat(vente.montant_total).toFixed(2)} €</p>
-    <p style="margin:4px 0;">Règlement : ${vente.mode_paiement}</p>
-    <p style="text-align:center;margin-top:10px;">Merci de votre visite !</p>
-  </div>`;
-  const fenetre = window.open('', '_blank', 'width=320,height=580');
-  if (fenetre) {
-    fenetre.document.write(`<html><body onload="window.print();window.close()">${contenu}</body></html>`);
-    fenetre.document.close();
-  }
+  const clubNom = utilisateur.club_nom || 'GESTION DES CLUBS';
+  const lignesHtml = (vente.lignes || []).map(l => {
+    const p = produitsCaisse.find(x => x.id === l.produit_id);
+    const code = p?.code_barre || '';
+    const codeBarreHtml = code
+      ? `<div style="text-align:center;margin:2px 0;"><svg class="bc-ticket" data-code="${code}" style="max-width:180px;"></svg></div>`
+      : '';
+    return `<div style="border-bottom:1px dashed #ccc;padding:4px 0;margin:2px 0;">
+      <p style="margin:0;font-weight:bold;">${l.nom}</p>
+      <p style="margin:0;">${l.quantite} × ${parseFloat(l.prix_unitaire).toFixed(2)} € = <strong>${(l.quantite * parseFloat(l.prix_unitaire)).toFixed(2)} €</strong></p>
+      ${codeBarreHtml}
+    </div>`;
+  }).join('');
+
+  const fenetre = window.open('', '_blank', 'width=340,height=620');
+  if (!fenetre) return;
+  fenetre.document.write(`<!DOCTYPE html><html><head>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    </head><body style="margin:0;padding:8px;font-family:monospace;font-size:12px;width:280px;">
+    <h3 style="text-align:center;margin:0 0 2px 0;">${clubNom}</h3>
+    <p style="text-align:center;margin:2px 0;font-size:10px;">${new Date().toLocaleString('fr-FR')}</p>
+    <hr style="margin:4px 0;">
+    ${lignesHtml}
+    <hr style="margin:4px 0;">
+    <p style="text-align:right;font-size:14px;font-weight:bold;">TOTAL : ${parseFloat(vente.montant_total).toFixed(2)} €</p>
+    <p style="margin:2px 0;">Règlement : ${vente.mode_paiement}</p>
+    <p style="text-align:center;margin-top:8px;font-size:11px;">Merci de votre visite !</p>
+    <script>
+      document.querySelectorAll('.bc-ticket').forEach(function(svg){
+        var code = svg.getAttribute('data-code');
+        if(code) JsBarcode(svg, code, {format:'CODE128',width:1.2,height:30,displayValue:false,margin:1});
+      });
+      window.onload = function(){ window.print(); window.close(); };
+    <\/script>
+  </body></html>`);
+  fenetre.document.close();
 }

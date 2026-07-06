@@ -1,5 +1,43 @@
 // === Module Inventaire ===
 let produitsInventaire = [];
+let scanInventaireBuffer = '';
+let scanInventaireTimer = null;
+
+document.addEventListener('keydown', intercepterScanInventaire);
+
+function intercepterScanInventaire(e) {
+  const section = document.getElementById('inventaire');
+  if (!section || section.classList.contains('hidden')) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Enter') {
+    if (scanInventaireBuffer.length > 2) traiterScanInventaire(scanInventaireBuffer);
+    scanInventaireBuffer = '';
+    clearTimeout(scanInventaireTimer);
+    return;
+  }
+  if (e.key.length === 1) {
+    scanInventaireBuffer += e.key;
+    clearTimeout(scanInventaireTimer);
+    scanInventaireTimer = setTimeout(() => { scanInventaireBuffer = ''; }, 500);
+  }
+}
+
+function traiterScanInventaire(code) {
+  const produit = produitsInventaire.find(p => p.code_barre === code || p.reference === code);
+  if (!produit) {
+    afficherMessage('❌ Produit non trouvé dans l\'inventaire : ' + code, 'danger');
+    return;
+  }
+  const input = document.getElementById(`inv-${produit.id}`);
+  if (input) {
+    input.focus();
+    input.select();
+    afficherMessage(`📦 ${produit.nom} — saisir la quantité réelle`, 'info');
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
 
 async function chargerInventaire() {
   try {

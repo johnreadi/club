@@ -30,6 +30,7 @@ function remplirFormulaire(d) {
   v('etiq-couleur-texte', d.etiquette_couleur_texte || '#000000');
   v('etiq-couleur-fond', d.etiquette_couleur_fond || '#ffffff');
   c('etiq-show-prix', d.etiquette_afficher_prix !== false);
+  c('etiq-show-desc', d.etiquette_afficher_description !== false);
   c('etiq-show-ref', d.etiquette_afficher_reference !== false);
   c('etiq-show-code', d.etiquette_afficher_codebarre !== false);
   c('etiq-show-logo', d.etiquette_afficher_logo);
@@ -105,6 +106,7 @@ function mettreAJourApercu() {
   const largeur = document.getElementById('etiq-largeur')?.value || 60;
   const hauteur = document.getElementById('etiq-hauteur')?.value || 40;
   const showPrix = document.getElementById('etiq-show-prix')?.checked;
+  const showDesc = document.getElementById('etiq-show-desc')?.checked;
   const showRef = document.getElementById('etiq-show-ref')?.checked;
   const showCode = document.getElementById('etiq-show-code')?.checked;
   const showLogo = document.getElementById('etiq-show-logo')?.checked;
@@ -124,7 +126,9 @@ function mettreAJourApercu() {
   const apCode = document.getElementById('ap-code');
   const apLogo = document.getElementById('ap-logo');
 
+  const apDesc = document.getElementById('ap-desc');
   if (apNom) apNom.style.fontSize = tailleNom + 'px';
+  if (apDesc) { apDesc.style.fontSize = (tailleCode) + 'px'; apDesc.style.display = showDesc ? '' : 'none'; }
   if (apRef) { apRef.style.fontSize = (tailleCode) + 'px'; apRef.style.display = showRef ? '' : 'none'; }
   if (apPrix) { apPrix.style.fontSize = taillePrix + 'px'; apPrix.style.display = showPrix ? '' : 'none'; }
   if (apCode) { apCode.style.fontSize = tailleCode + 'px'; apCode.style.display = showCode ? '' : 'none'; }
@@ -231,6 +235,7 @@ async function sauvegarderParametres() {
       etiquette_couleur_texte: document.getElementById('etiq-couleur-texte')?.value || '#000000',
       etiquette_couleur_fond: document.getElementById('etiq-couleur-fond')?.value || '#ffffff',
       etiquette_alignement: alignementActuel,
+      etiquette_afficher_description: document.getElementById('etiq-show-desc')?.checked,
       etiquette_afficher_logo: document.getElementById('etiq-show-logo')?.checked,
       etiquette_logo_url: document.getElementById('etiq-logo-url')?.value || null,
       etiquette_afficher_prix: document.getElementById('etiq-show-prix')?.checked,
@@ -286,7 +291,7 @@ document.addEventListener('input', (e) => {
   if (ids.includes(e.target.id)) mettreAJourApercu();
 });
 document.addEventListener('change', (e) => {
-  const ids = ['etiq-show-prix','etiq-show-ref','etiq-show-code','etiq-show-logo'];
+  const ids = ['etiq-show-prix','etiq-show-desc','etiq-show-ref','etiq-show-code','etiq-show-logo'];
   if (ids.includes(e.target.id)) mettreAJourApercu();
 });
 

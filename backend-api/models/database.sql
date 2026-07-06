@@ -130,6 +130,7 @@ CREATE TABLE parametres_club (
   etiquette_afficher_logo BOOLEAN DEFAULT FALSE,
   etiquette_logo_url TEXT,
   etiquette_afficher_prix BOOLEAN DEFAULT TRUE,
+  etiquette_afficher_description BOOLEAN DEFAULT TRUE,
   etiquette_afficher_reference BOOLEAN DEFAULT TRUE,
   etiquette_afficher_codebarre BOOLEAN DEFAULT TRUE,
   -- Préférences interface

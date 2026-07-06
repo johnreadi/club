@@ -30,7 +30,7 @@ router.put('/', async (req, res) => {
       etiquette_taille_nom, etiquette_taille_prix, etiquette_taille_code,
       etiquette_couleur_texte, etiquette_couleur_fond, etiquette_alignement,
       etiquette_afficher_logo, etiquette_logo_url,
-      etiquette_afficher_prix, etiquette_afficher_reference, etiquette_afficher_codebarre,
+      etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
       interface_couleur_primaire, interface_couleur_sidebar, interface_theme
     } = req.body;
 
@@ -41,10 +41,10 @@ router.put('/', async (req, res) => {
         etiquette_taille_nom, etiquette_taille_prix, etiquette_taille_code,
         etiquette_couleur_texte, etiquette_couleur_fond, etiquette_alignement,
         etiquette_afficher_logo, etiquette_logo_url,
-        etiquette_afficher_prix, etiquette_afficher_reference, etiquette_afficher_codebarre,
+        etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
         interface_couleur_primaire, interface_couleur_sidebar, interface_theme,
         mis_a_jour_le
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,CURRENT_TIMESTAMP)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,CURRENT_TIMESTAMP)
       ON CONFLICT (club_id) DO UPDATE SET
         imprimante_nom = EXCLUDED.imprimante_nom,
         imprimante_tickets_nom = EXCLUDED.imprimante_tickets_nom,
@@ -61,6 +61,7 @@ router.put('/', async (req, res) => {
         etiquette_afficher_logo = EXCLUDED.etiquette_afficher_logo,
         etiquette_logo_url = EXCLUDED.etiquette_logo_url,
         etiquette_afficher_prix = EXCLUDED.etiquette_afficher_prix,
+        etiquette_afficher_description = EXCLUDED.etiquette_afficher_description,
         etiquette_afficher_reference = EXCLUDED.etiquette_afficher_reference,
         etiquette_afficher_codebarre = EXCLUDED.etiquette_afficher_codebarre,
         interface_couleur_primaire = EXCLUDED.interface_couleur_primaire,
@@ -73,7 +74,7 @@ router.put('/', async (req, res) => {
        etiquette_taille_nom, etiquette_taille_prix, etiquette_taille_code,
        etiquette_couleur_texte, etiquette_couleur_fond, etiquette_alignement,
        etiquette_afficher_logo, etiquette_logo_url,
-       etiquette_afficher_prix, etiquette_afficher_reference, etiquette_afficher_codebarre,
+       etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
        interface_couleur_primaire, interface_couleur_sidebar, interface_theme]
     );
     res.json(result.rows[0]);

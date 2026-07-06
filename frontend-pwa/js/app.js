@@ -74,6 +74,7 @@ function naviguerVers(section) {
     'rapports': () => typeof chargerRapports === 'function' && chargerRapports(),
     'utilisateurs': () => typeof chargerUtilisateurs === 'function' && chargerUtilisateurs(),
     'admin-plateforme': () => typeof chargerListeClubs === 'function' && chargerListeClubs(),
+    'parametres': () => typeof chargerParametres === 'function' && chargerParametres(),
   };
   if (loaders[section]) loaders[section]();
 }

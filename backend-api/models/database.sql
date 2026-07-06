@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS inventaires_lignes CASCADE;
 DROP TABLE IF EXISTS inventaires CASCADE;
 DROP TABLE IF EXISTS produits CASCADE;
 DROP TABLE IF EXISTS utilisateurs CASCADE;
+DROP TABLE IF EXISTS parametres_club CASCADE;
 DROP TABLE IF EXISTS clubs CASCADE;
 DROP TABLE IF EXISTS admins_plateforme CASCADE;
 
@@ -106,6 +107,36 @@ CREATE TABLE inventaires_lignes (
   quantite_theorique INT NOT NULL,
   quantite_reelle INT NOT NULL,
   ecart INT NOT NULL
+);
+
+-- Paramètres club
+CREATE TABLE parametres_club (
+  id SERIAL PRIMARY KEY,
+  club_id INT UNIQUE REFERENCES clubs(id) ON DELETE CASCADE,
+  -- Périphériques
+  imprimante_nom VARCHAR(150),
+  imprimante_tickets_nom VARCHAR(150),
+  douchette_activee BOOLEAN DEFAULT TRUE,
+  -- Étiquettes produits
+  etiquette_largeur INT DEFAULT 60,
+  etiquette_hauteur INT DEFAULT 40,
+  etiquette_police VARCHAR(50) DEFAULT 'Arial',
+  etiquette_taille_nom INT DEFAULT 14,
+  etiquette_taille_prix INT DEFAULT 18,
+  etiquette_taille_code INT DEFAULT 10,
+  etiquette_couleur_texte VARCHAR(10) DEFAULT '#000000',
+  etiquette_couleur_fond VARCHAR(10) DEFAULT '#FFFFFF',
+  etiquette_alignement VARCHAR(10) DEFAULT 'center',
+  etiquette_afficher_logo BOOLEAN DEFAULT FALSE,
+  etiquette_logo_url TEXT,
+  etiquette_afficher_prix BOOLEAN DEFAULT TRUE,
+  etiquette_afficher_reference BOOLEAN DEFAULT TRUE,
+  etiquette_afficher_codebarre BOOLEAN DEFAULT TRUE,
+  -- Préférences interface
+  interface_couleur_primaire VARCHAR(10) DEFAULT '#3B82F6',
+  interface_couleur_sidebar VARCHAR(10) DEFAULT '#1e3a5f',
+  interface_theme VARCHAR(20) DEFAULT 'clair',
+  mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index

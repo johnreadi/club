@@ -57,6 +57,7 @@
           <a href="#inventaire" class="menu-item" data-section="inventaire"><i class="fa fa-list-alt"></i> Inventaire</a>
           <a href="#rapports" class="menu-item" data-section="rapports"><i class="fa fa-bar-chart"></i> Rapports</a>
           <a href="#utilisateurs" class="menu-item" data-section="utilisateurs"><i class="fa fa-users"></i> Utilisateurs</a>
+          <a href="#parametres" class="menu-item" data-section="parametres"><i class="fa fa-sliders"></i> Paramètres</a>
           <a href="#admin-plateforme" class="menu-item hidden" id="menu-admin" data-section="admin-plateforme"><i class="fa fa-cogs"></i> Administration Plateforme</a>
           <a href="#profil" class="menu-item" data-section="profil"><i class="fa fa-user"></i> Mon profil</a>
           <a href="#" onclick="deconnexion()" class="menu-item text-red-600"><i class="fa fa-sign-out"></i> Déconnexion</a>
@@ -267,6 +268,231 @@
           </div>
         </section>
 
+        <!-- Paramètres -->
+        <section id="parametres" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Paramètres du club</h2>
+          <!-- Onglets -->
+          <div class="flex border-b mb-6 gap-1">
+            <button onclick="ongletParam('periph')" id="tab-periph" class="tab-param active-tab px-4 py-2 rounded-t font-medium border border-b-0 bg-white"><i class="fa fa-plug mr-1"></i> Périphériques</button>
+            <button onclick="ongletParam('etiquettes')" id="tab-etiquettes" class="tab-param px-4 py-2 rounded-t font-medium border border-b-0 bg-gray-100"><i class="fa fa-tag mr-1"></i> Étiquettes</button>
+            <button onclick="ongletParam('prefs')" id="tab-prefs" class="tab-param px-4 py-2 rounded-t font-medium border border-b-0 bg-gray-100"><i class="fa fa-paint-brush mr-1"></i> Préférences</button>
+          </div>
+
+          <!-- Onglet Périphériques -->
+          <div id="param-periph" class="param-panel">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-print mr-2 text-primary"></i>Imprimante étiquettes</h3>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-sm mb-1">Nom / Modèle</label>
+                    <input type="text" id="peri-imprimante-nom" placeholder="ex: ZEBRA ZD220" class="w-full border p-2 rounded">
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Format papier</label>
+                    <select id="peri-imprimante-format" class="w-full border p-2 rounded">
+                      <option value="60x40">60×40 mm</option>
+                      <option value="100x50">100×50 mm</option>
+                      <option value="50x30">50×30 mm</option>
+                    </select>
+                  </div>
+                  <button onclick="testerImpression()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 w-full"><i class="fa fa-print mr-1"></i> Tester l'impression</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-ticket mr-2 text-green-600"></i>Imprimante tickets de caisse</h3>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-sm mb-1">Nom / Modèle</label>
+                    <input type="text" id="peri-ticket-nom" placeholder="ex: EPSON TM-T20" class="w-full border p-2 rounded">
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Largeur ticket (mm)</label>
+                    <select id="peri-ticket-largeur" class="w-full border p-2 rounded">
+                      <option value="80">80 mm</option>
+                      <option value="58">58 mm</option>
+                    </select>
+                  </div>
+                  <button onclick="testerTicket()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"><i class="fa fa-ticket mr-1"></i> Tester l'impression</button>
+                </div>
+              </div>
+              <div class="card md:col-span-2">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-barcode mr-2 text-orange-600"></i>Douchette / Scanner code-barres</h3>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-medium">Scanner code-barres activé</p>
+                    <p class="text-sm text-gray-500">La douchette envoie les données comme un clavier. Activez pour intercepter la saisie rapide sur Stock et Caisse.</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="peri-douchette" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-primary after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                  </label>
+                </div>
+                <p class="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded"><i class="fa fa-info-circle mr-1"></i> Testez la douchette : <input type="text" id="test-scan" placeholder="Scannez un code-barres ici..." class="border p-1 rounded ml-2 w-48 text-sm"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Onglet Étiquettes -->
+          <div id="param-etiquettes" class="param-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-tag mr-2 text-primary"></i>Conception de l'étiquette</h3>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-sm mb-1">Largeur (mm)</label>
+                      <input type="number" id="etiq-largeur" value="60" min="30" max="200" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                      <label class="block text-sm mb-1">Hauteur (mm)</label>
+                      <input type="number" id="etiq-hauteur" value="40" min="20" max="150" class="w-full border p-2 rounded">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Police de caractères</label>
+                    <select id="etiq-police" class="w-full border p-2 rounded">
+                      <option value="Arial">Arial</option>
+                      <option value="Helvetica">Helvetica</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                      <option value="Courier New">Courier New</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Verdana">Verdana</option>
+                    </select>
+                  </div>
+                  <div class="grid grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-sm mb-1">Taille nom</label>
+                      <input type="number" id="etiq-taille-nom" value="14" min="8" max="36" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                      <label class="block text-sm mb-1">Taille prix</label>
+                      <input type="number" id="etiq-taille-prix" value="18" min="8" max="36" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                      <label class="block text-sm mb-1">Taille code</label>
+                      <input type="number" id="etiq-taille-code" value="10" min="6" max="18" class="w-full border p-2 rounded">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-sm mb-1">Couleur texte</label>
+                      <input type="color" id="etiq-couleur-texte" value="#000000" class="w-full h-10 border rounded cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-sm mb-1">Couleur fond</label>
+                      <input type="color" id="etiq-couleur-fond" value="#ffffff" class="w-full h-10 border rounded cursor-pointer">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Alignement</label>
+                    <div class="flex gap-2">
+                      <button onclick="setAlignement('left')" id="align-left" class="flex-1 border p-2 rounded hover:bg-gray-100"><i class="fa fa-align-left"></i></button>
+                      <button onclick="setAlignement('center')" id="align-center" class="flex-1 border p-2 rounded bg-primary text-white"><i class="fa fa-align-center"></i></button>
+                      <button onclick="setAlignement('right')" id="align-right" class="flex-1 border p-2 rounded hover:bg-gray-100"><i class="fa fa-align-right"></i></button>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="etiq-show-prix" checked class="rounded"> Afficher le prix
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="etiq-show-ref" checked class="rounded"> Afficher la référence
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="etiq-show-code" checked class="rounded"> Afficher le code-barres
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-image mr-2 text-purple"></i>Logo sur l'étiquette</h3>
+                <div class="space-y-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="etiq-show-logo" class="rounded"> Afficher le logo
+                  </label>
+                  <div>
+                    <label class="block text-sm mb-1">URL du logo</label>
+                    <input type="url" id="etiq-logo-url" placeholder="https://..." class="w-full border p-2 rounded">
+                  </div>
+                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors" id="zone-drop-logo" ondragover="event.preventDefault()" ondrop="dropLogo(event)" onclick="document.getElementById('input-logo').click()">
+                    <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-sm text-gray-500">Glisser-déposer ou cliquer pour importer</p>
+                    <p class="text-xs text-gray-400">PNG, JPG, SVG — max 2 Mo</p>
+                    <input type="file" id="input-logo" accept="image/*" class="hidden" onchange="importerLogo(event)">
+                  </div>
+                  <div id="apercu-logo" class="text-center hidden">
+                    <img id="logo-preview" class="mx-auto max-h-16 border rounded p-1" src="" alt="Logo">
+                    <button onclick="supprimerLogo()" class="text-red-500 text-sm mt-1"><i class="fa fa-trash mr-1"></i>Supprimer</button>
+                  </div>
+                </div>
+
+                <h3 class="text-lg font-medium mt-6 mb-4"><i class="fa fa-eye mr-2 text-green-600"></i>Aperçu étiquette</h3>
+                <div id="apercu-etiquette" class="border-2 rounded-lg p-3 flex flex-col items-center justify-center min-h-24 bg-white mx-auto" style="width:180px;min-height:120px">
+                  <p id="ap-nom" class="font-bold text-sm text-center">Nom du produit</p>
+                  <p id="ap-ref" class="text-xs text-gray-500">RÉF: 00001</p>
+                  <p id="ap-prix" class="text-lg font-bold mt-1">9.90 €</p>
+                  <p id="ap-code" class="text-xs font-mono mt-1">||| 1234567890 |||</p>
+                </div>
+                <button onclick="sauvegarderParametres()" class="w-full mt-4 bg-primary text-white py-2 rounded hover:bg-primary/90"><i class="fa fa-save mr-1"></i> Sauvegarder</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Onglet Préférences -->
+          <div id="param-prefs" class="param-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-paint-brush mr-2 text-primary"></i>Couleurs de l'interface</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm mb-1">Couleur principale (boutons, liens)</label>
+                    <div class="flex items-center gap-3">
+                      <input type="color" id="pref-couleur-primaire" value="#3B82F6" class="w-16 h-10 border rounded cursor-pointer" oninput="previewCouleur(this.value)">
+                      <span id="pref-couleur-hex" class="text-sm font-mono">#3B82F6</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Couleur barre latérale</label>
+                    <div class="flex items-center gap-3">
+                      <input type="color" id="pref-couleur-sidebar" value="#1e3a5f" class="w-16 h-10 border rounded cursor-pointer" oninput="previewSidebar(this.value)">
+                      <span id="pref-sidebar-hex" class="text-sm font-mono">#1e3a5f</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-2">Thème</label>
+                    <div class="flex gap-3">
+                      <button onclick="setTheme('clair')" id="theme-clair" class="flex-1 border-2 border-primary p-3 rounded text-sm font-medium"><i class="fa fa-sun-o mr-1"></i> Clair</button>
+                      <button onclick="setTheme('sombre')" id="theme-sombre" class="flex-1 border p-3 rounded text-sm font-medium bg-gray-800 text-white"><i class="fa fa-moon-o mr-1"></i> Sombre</button>
+                    </div>
+                  </div>
+                  <div class="bg-gray-50 border rounded p-3">
+                    <p class="text-sm font-medium mb-2">Aperçu couleurs</p>
+                    <div class="flex gap-2">
+                      <div id="prev-primaire" class="w-8 h-8 rounded" style="background:#3B82F6"></div>
+                      <div id="prev-sidebar" class="w-8 h-8 rounded" style="background:#1e3a5f"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="text-lg font-medium mb-4"><i class="fa fa-th-large mr-2 text-orange-600"></i>Palettes prédéfinies</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <button onclick="appliquerPalette('#3B82F6','#1e3a5f')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#3B82F6"></span> Bleu classique</button>
+                  <button onclick="appliquerPalette('#10B981','#064e3b')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#10B981"></span> Vert sport</button>
+                  <button onclick="appliquerPalette('#EF4444','#7f1d1d')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#EF4444"></span> Rouge énergie</button>
+                  <button onclick="appliquerPalette('#F59E0B','#78350f')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#F59E0B"></span> Orange dynamique</button>
+                  <button onclick="appliquerPalette('#8B5CF6','#4c1d95')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#8B5CF6"></span> Violet prestige</button>
+                  <button onclick="appliquerPalette('#0EA5E9','#0c4a6e')" class="p-3 rounded border hover:shadow text-sm"><span class="inline-block w-4 h-4 rounded mr-1" style="background:#0EA5E9"></span> Cyan moderne</button>
+                </div>
+                <button onclick="sauvegarderParametres()" class="w-full mt-6 bg-primary text-white py-2 rounded hover:bg-primary/90"><i class="fa fa-save mr-1"></i> Sauvegarder les préférences</button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
         <!-- Mon profil -->
         <section id="profil" class="module hidden">
           <h2 class="text-2xl font-semibold mb-4">Mon profil</h2>
@@ -315,5 +541,6 @@
   <script src="/js/rapports.js"></script>
   <script src="/js/utilisateurs.js"></script>
   <script src="/js/admin-plateforme.js"></script>
+  <script src="/js/parametres.js"></script>
 </body>
 </html>

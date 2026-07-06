@@ -48,11 +48,16 @@ function positionnerDropdown() {
   dd.style.width = rect.width + 'px';
 }
 
-function rechercheLive(e) {
+async function rechercheLive(e) {
   const q = e.target.value.trim().toLowerCase();
   const dd = document.getElementById('caisse-dropdown');
   if (!dd) return;
   if (q.length < 1) { fermerDropdown(); afficherGrille(); return; }
+
+  // Charger les produits si pas encore en cache
+  if (produitsCaisse.length === 0) {
+    try { produitsCaisse = await apiFetch('/stock') || []; afficherFiltresCategories(); afficherGrille(); } catch {}
+  }
 
   const resultats = produitsCaisse.filter(p =>
     p.nom.toLowerCase().includes(q) ||
@@ -325,29 +330,33 @@ function demarrerHorloge() {
 const BILLETS = [5, 10, 20, 50, 100, 200];
 
 function ouvrirEncaissement(mode) {
-  if (panier.length === 0) return afficherMessage('⚠️ Panier vide', 'warning');
+  if (panier.length === 0) { afficherMessage('⚠️ Panier vide', 'warning'); return; }
   if (mode !== 'Espèces') { validerVente(mode); return; }
 
   const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
   const bloc = document.getElementById('bloc-monnaie');
   const input = document.getElementById('montant-remis');
-  const rendu = document.getElementById('rendu-monnaie');
+  const renduEl = document.getElementById('rendu-monnaie');
   const raccourcis = document.getElementById('raccourcis-billets');
 
-  // Raccourcis billets arrondi sup
+  if (!bloc || !input || !raccourcis) {
+    console.error('[Caisse] éléments bloc-monnaie introuvables');
+    return;
+  }
+
   const billetsUtiles = BILLETS.filter(b => b >= total);
   if (billetsUtiles.length === 0) billetsUtiles.push(...BILLETS.slice(-2));
   raccourcis.innerHTML = billetsUtiles.slice(0, 4).map(b =>
-    `<button onclick="definirMontantRemis(${b})"
+    `<button onmousedown="definirMontantRemis(${b})"
       class="border rounded-lg py-1.5 text-sm font-semibold hover:bg-green-50 hover:border-green-400 transition-colors">${b} €</button>`
   ).join('');
 
   input.value = '';
-  rendu.classList.add('hidden');
+  if (renduEl) renduEl.classList.add('hidden');
   bloc.classList.remove('hidden');
-  document.getElementById('btn-valider-especes').classList.remove('hidden');
-  document.getElementById('btn-annuler-especes').classList.remove('hidden');
-  input.focus();
+  document.getElementById('btn-valider-especes')?.classList.remove('hidden');
+  document.getElementById('btn-annuler-especes')?.classList.remove('hidden');
+  setTimeout(() => input.focus(), 50);
 }
 
 function definirMontantRemis(val) {
@@ -430,7 +439,8 @@ function imprimerDernierTicket() {
 
 // ── Aperçu modal ──────────────────────────────────────────────────────────────
 function fermerApercu() {
-  document.getElementById('modal-apercu')?.classList.add('hidden');
+  const m = document.getElementById('modal-apercu');
+  if (m) m.style.display = 'none';
 }
 
 function apercuTicket() {
@@ -466,7 +476,7 @@ function apercuTicket() {
       <div style="text-align:center;margin-top:12px;font-size:11px;color:#888;">Merci de votre visite !</div>
     </div>`;
   document.getElementById('modal-btn-imprimer').onclick = () => { fermerApercu(); imprimerDernierTicket(); };
-  document.getElementById('modal-apercu').classList.remove('hidden');
+  document.getElementById('modal-apercu').style.display = 'flex';
 }
 
 async function apercuFactureA4() {
@@ -524,7 +534,7 @@ async function apercuFactureA4() {
       ${renduHtml}
     </div>`;
   document.getElementById('modal-btn-imprimer').onclick = () => { fermerApercu(); genererFactureA4(); };
-  document.getElementById('modal-apercu').classList.remove('hidden');
+  document.getElementById('modal-apercu').style.display = 'flex';
 }
 
 async function genererFactureA4() {

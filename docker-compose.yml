@@ -3,6 +3,8 @@ version: '3.8'
 networks:
   docker-overlay:
     external: true
+  internal:
+    driver: bridge
 
 volumes:
   db_data:
@@ -18,7 +20,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
-      - docker-overlay
+      - internal
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -41,6 +43,7 @@ services:
       db:
         condition: service_healthy
     networks:
+      - internal
       - docker-overlay
     restart: unless-stopped
 
@@ -51,6 +54,7 @@ services:
     depends_on:
       - api
     networks:
+      - internal
       - docker-overlay
     restart: unless-stopped
     labels:

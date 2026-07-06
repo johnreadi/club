@@ -209,6 +209,7 @@ async function traiterScanCaisse(code) {
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 async function chargerVentesCaisse() {
+  demarrerHorloge();
   try {
     produitsCaisse = await apiFetch('/stock') || [];
     afficherFiltresCategories();
@@ -264,8 +265,10 @@ function afficherPanier() {
       </div>`).join('');
 
   document.getElementById('montant-total').textContent = total.toFixed(2) + ' €';
+  const totalEnc = document.getElementById('total-encaissement');
+  if (totalEnc) totalEnc.textContent = total.toFixed(2) + ' €';
   const nb = document.getElementById('panier-nb-articles');
-  if (nb) nb.textContent = nbArticles + ' article' + (nbArticles > 1 ? 's' : '');
+  if (nb) nb.textContent = nbArticles;
 }
 
 function changerQte(index, delta) {
@@ -283,12 +286,93 @@ function viderPanier() {
   if (panier.length === 0) return;
   if (!confirm('Vider le panier ?')) return;
   panier = [];
+  annulerEspeces();
   afficherPanier();
 }
 
+// ── Horloge ───────────────────────────────────────────────────────────────────
+let _horlogeTimer = null;
+function demarrerHorloge() {
+  const el = document.getElementById('caisse-horloge');
+  if (!el) return;
+  const tick = () => { el.textContent = new Date().toLocaleTimeString('fr-FR'); };
+  tick();
+  clearInterval(_horlogeTimer);
+  _horlogeTimer = setInterval(tick, 1000);
+}
+
+// ── Encaissement espèces ──────────────────────────────────────────────────────
+const BILLETS = [5, 10, 20, 50, 100, 200];
+
+function ouvrirEncaissement(mode) {
+  if (panier.length === 0) return afficherMessage('⚠️ Panier vide', 'warning');
+  if (mode !== 'Espèces') { validerVente(mode); return; }
+
+  const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
+  const bloc = document.getElementById('bloc-monnaie');
+  const input = document.getElementById('montant-remis');
+  const rendu = document.getElementById('rendu-monnaie');
+  const raccourcis = document.getElementById('raccourcis-billets');
+
+  // Raccourcis billets arrondi sup
+  const billetsUtiles = BILLETS.filter(b => b >= total);
+  if (billetsUtiles.length === 0) billetsUtiles.push(...BILLETS.slice(-2));
+  raccourcis.innerHTML = billetsUtiles.slice(0, 4).map(b =>
+    `<button onclick="definirMontantRemis(${b})"
+      class="border rounded-lg py-1.5 text-sm font-semibold hover:bg-green-50 hover:border-green-400 transition-colors">${b} €</button>`
+  ).join('');
+
+  input.value = '';
+  rendu.classList.add('hidden');
+  bloc.classList.remove('hidden');
+  document.getElementById('btn-valider-especes').classList.remove('hidden');
+  document.getElementById('btn-annuler-especes').classList.remove('hidden');
+  input.focus();
+}
+
+function definirMontantRemis(val) {
+  document.getElementById('montant-remis').value = val;
+  calculerMonnaie();
+}
+
+function calculerMonnaie() {
+  const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
+  const remis = parseFloat(document.getElementById('montant-remis').value) || 0;
+  const renduEl = document.getElementById('rendu-monnaie');
+  const montantRenduEl = document.getElementById('montant-rendu');
+  if (remis <= 0) { renduEl.classList.add('hidden'); return; }
+  const rendu = remis - total;
+  montantRenduEl.textContent = (rendu >= 0 ? rendu : 0).toFixed(2) + ' €';
+  montantRenduEl.className = rendu >= 0
+    ? 'text-2xl font-bold text-green-600'
+    : 'text-2xl font-bold text-red-500';
+  if (rendu < 0) {
+    montantRenduEl.textContent = '⚠️ Insuffisant : ' + Math.abs(rendu).toFixed(2) + ' € manquants';
+  }
+  renduEl.classList.remove('hidden');
+}
+
+function annulerEspeces() {
+  document.getElementById('bloc-monnaie')?.classList.add('hidden');
+  document.getElementById('btn-valider-especes')?.classList.add('hidden');
+  document.getElementById('btn-annuler-especes')?.classList.add('hidden');
+  document.getElementById('rendu-monnaie')?.classList.add('hidden');
+  const i = document.getElementById('montant-remis');
+  if (i) i.value = '';
+}
+
+function validerEspeces() {
+  const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
+  const remis = parseFloat(document.getElementById('montant-remis').value) || 0;
+  if (remis < total) return afficherMessage('⚠️ Montant insuffisant', 'warning');
+  const rendu = (remis - total).toFixed(2);
+  validerVente('Espèces', remis, rendu);
+}
+
+// ── Validation vente ──────────────────────────────────────────────────────────
 let derniereVente = null;
 
-async function validerVente(modePaiement) {
+async function validerVente(modePaiement, montantRemis, montantRendu) {
   if (panier.length === 0) return afficherMessage('⚠️ Panier vide', 'warning');
   const montant_total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
   const articles = panier.map(l => ({ produit_id: l.produit_id, quantite: l.quantite, prix_unitaire: l.prix_unitaire }));
@@ -297,17 +381,24 @@ async function validerVente(modePaiement) {
       method: 'POST',
       body: JSON.stringify({ articles, montant_total, mode_paiement: modePaiement })
     });
-    // Sauvegarder pour reprint / facture
-    derniereVente = { ...vente, lignes: panier.map(l => ({ ...l })), montant_total, mode_paiement: modePaiement };
-    // Mettre à jour le stock local (décrémentation)
+    derniereVente = {
+      ...vente,
+      lignes: panier.map(l => ({ ...l })),
+      montant_total,
+      mode_paiement: modePaiement,
+      montant_remis: montantRemis || null,
+      montant_rendu: montantRendu || null
+    };
     articles.forEach(a => {
       const p = produitsCaisse.find(x => x.id === a.produit_id);
       if (p) p.quantite_stock = Math.max(0, p.quantite_stock - a.quantite);
     });
-    imprimerTicket(derniereVente);
+    afficherGrille();
+    annulerEspeces();
     panier = [];
     afficherPanier();
-    afficherMessage('✅ Vente enregistrée — stock mis à jour', 'success');
+    afficherMessage('✅ Vente enregistrée', 'success');
+    imprimerTicket(derniereVente);
     await chargerVentesCaisse();
   } catch {}
 }
@@ -315,6 +406,105 @@ async function validerVente(modePaiement) {
 function imprimerDernierTicket() {
   if (!derniereVente) return afficherMessage('⚠️ Aucune vente en cours de session', 'warning');
   imprimerTicket(derniereVente);
+}
+
+// ── Aperçu modal ──────────────────────────────────────────────────────────────
+function fermerApercu() {
+  document.getElementById('modal-apercu')?.classList.add('hidden');
+}
+
+function apercuTicket() {
+  const vente = derniereVente || { lignes: panier.map(l => ({...l})), montant_total: panier.reduce((s,l)=>s+l.prix_unitaire*l.quantite,0), mode_paiement:'—', montant_remis: null, montant_rendu: null };
+  const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
+  const clubNom = utilisateur.club_nom || 'Club Sportif';
+  const lignesHtml = (vente.lignes || []).map(l =>
+    `<div style="border-bottom:1px dashed #ddd;padding:5px 0;font-size:13px;">
+      <div style="font-weight:600;">${l.nom}</div>
+      ${l.description ? `<div style="font-size:11px;color:#888;font-style:italic;">${l.description}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-top:2px;">
+        <span style="color:#666;">${l.quantite} × ${parseFloat(l.prix_unitaire).toFixed(2)} €</span>
+        <strong>${(l.quantite * parseFloat(l.prix_unitaire)).toFixed(2)} €</strong>
+      </div>
+    </div>`
+  ).join('');
+  const renduHtml = vente.montant_remis
+    ? `<div style="margin-top:6px;font-size:12px;color:#555;">Remis : <strong>${parseFloat(vente.montant_remis).toFixed(2)} €</strong> — Rendu : <strong style="color:#16a34a;">${parseFloat(vente.montant_rendu||0).toFixed(2)} €</strong></div>` : '';
+
+  document.getElementById('modal-apercu-titre').textContent = 'Aperçu ticket thermique';
+  document.getElementById('modal-apercu-contenu').innerHTML = `
+    <div style="font-family:monospace;font-size:12px;max-width:280px;margin:0 auto;">
+      <div style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:4px;">${clubNom}</div>
+      <div style="text-align:center;font-size:10px;color:#888;margin-bottom:8px;">${new Date().toLocaleString('fr-FR')}</div>
+      <hr style="border:none;border-top:1px dashed #ccc;margin:4px 0;">
+      ${lignesHtml}
+      <hr style="border:none;border-top:1px dashed #ccc;margin:8px 0 4px;">
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:bold;">
+        <span>TOTAL</span><span>${parseFloat(vente.montant_total).toFixed(2)} €</span>
+      </div>
+      <div style="font-size:12px;color:#555;margin-top:2px;">Règlement : ${vente.mode_paiement}</div>
+      ${renduHtml}
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#888;">Merci de votre visite !</div>
+    </div>`;
+  document.getElementById('modal-btn-imprimer').onclick = () => { fermerApercu(); imprimerDernierTicket(); };
+  document.getElementById('modal-apercu').classList.remove('hidden');
+}
+
+async function apercuFactureA4() {
+  const vente = derniereVente;
+  if (!vente) return afficherMessage('⚠️ Aucune vente enregistrée en session', 'warning');
+  const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
+  const clubNom = utilisateur.club_nom || 'Club Sportif';
+  const now = new Date(vente.date_vente || Date.now());
+  const dateStr = now.toLocaleDateString('fr-FR');
+  const numFacture = 'FAC-' + (vente.id || '?') + '-' + now.getFullYear();
+  let lignes = vente.lignes || [];
+  try {
+    const d = await apiFetch('/ventes/' + vente.id);
+    if (d?.lignes) lignes = d.lignes.map(l => ({ nom: l.produit_nom, description: l.description||'', reference: l.reference||'', quantite: l.quantite, prix_unitaire: l.prix_unitaire }));
+  } catch {}
+
+  const lignesHtml = lignes.map((l,i) => {
+    const tot = (parseFloat(l.prix_unitaire)*parseInt(l.quantite||1)).toFixed(2);
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:5px 4px;font-size:11px;color:#aaa;">${i+1}</td>
+      <td style="padding:5px 4px;"><strong>${l.nom||''}</strong>${l.description?`<br><em style="font-size:10px;color:#888;">${l.description}</em>`:''}<br><span style="font-size:10px;color:#bbb;">Réf: ${l.reference||'-'}</span></td>
+      <td style="padding:5px 4px;text-align:right;">${parseFloat(l.prix_unitaire).toFixed(2)} €</td>
+      <td style="padding:5px 4px;text-align:center;">${l.quantite}</td>
+      <td style="padding:5px 4px;text-align:right;font-weight:bold;">${tot} €</td>
+    </tr>`;
+  }).join('');
+  const sousTotal = lignes.reduce((s,l) => s + parseFloat(l.prix_unitaire)*parseInt(l.quantite||1), 0);
+  const renduHtml = vente.montant_remis ? `<p style="margin-top:8px;font-size:11px;color:#555;">Remis : <strong>${parseFloat(vente.montant_remis).toFixed(2)} €</strong> — Monnaie rendue : <strong style="color:#16a34a;">${parseFloat(vente.montant_rendu||0).toFixed(2)} €</strong></p>` : '';
+
+  document.getElementById('modal-apercu-titre').textContent = 'Aperçu Facture A4';
+  document.getElementById('modal-apercu-contenu').innerHTML = `
+    <div style="font-family:Arial,sans-serif;font-size:11px;">
+      <div style="display:flex;justify-content:space-between;border-bottom:3px solid #165DFF;padding-bottom:10px;margin-bottom:12px;">
+        <div><strong style="font-size:16px;color:#165DFF;">${clubNom}</strong><br><span style="color:#888;">${utilisateur.email||''}</span></div>
+        <div style="text-align:right;"><strong style="font-size:14px;">FACTURE</strong><br><span style="color:#666;">N° ${numFacture}</span><br><span style="color:#666;">${dateStr}</span></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        <thead><tr style="background:#165DFF;color:white;">
+          <th style="padding:5px 4px;text-align:left;font-size:10px;">#</th>
+          <th style="padding:5px 4px;text-align:left;font-size:10px;">Désignation</th>
+          <th style="padding:5px 4px;text-align:right;font-size:10px;">P.U.</th>
+          <th style="padding:5px 4px;text-align:center;font-size:10px;">Qté</th>
+          <th style="padding:5px 4px;text-align:right;font-size:10px;">Total</th>
+        </tr></thead>
+        <tbody>${lignesHtml}</tbody>
+      </table>
+      <div style="text-align:right;">
+        <table style="display:inline-table;min-width:200px;border-collapse:collapse;">
+          <tr><td style="padding:3px 6px;">HT</td><td style="padding:3px 6px;text-align:right;">${(sousTotal/1.2).toFixed(2)} €</td></tr>
+          <tr><td style="padding:3px 6px;">TVA 20%</td><td style="padding:3px 6px;text-align:right;">${(sousTotal*0.2/1.2).toFixed(2)} €</td></tr>
+          <tr style="background:#165DFF;color:white;font-weight:bold;"><td style="padding:5px 6px;">TOTAL TTC</td><td style="padding:5px 6px;text-align:right;">${sousTotal.toFixed(2)} €</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:6px;font-size:11px;color:#555;">Règlement : <strong>${vente.mode_paiement}</strong></p>
+      ${renduHtml}
+    </div>`;
+  document.getElementById('modal-btn-imprimer').onclick = () => { fermerApercu(); genererFactureA4(); };
+  document.getElementById('modal-apercu').classList.remove('hidden');
 }
 
 async function genererFactureA4() {

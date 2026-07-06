@@ -134,72 +134,157 @@
 
         <!-- Caisse & Ventes -->
         <section id="caisse" class="module hidden">
-          <h2 class="text-2xl font-semibold mb-3">Caisse & Ventes</h2>
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-2xl font-semibold">Caisse & Ventes</h2>
+            <span id="caisse-horloge" class="text-sm text-gray-400 font-mono"></span>
+          </div>
+          <div class="grid md:grid-cols-3 gap-3">
 
-            <!-- Colonne gauche : recherche + catalogue + panier -->
-            <div class="md:col-span-2 space-y-3">
+            <!-- ── Colonne gauche : produits + panier ── -->
+            <div class="md:col-span-2 flex flex-col gap-3">
 
-              <!-- Barre de recherche / scan -->
-              <div class="card p-3">
-                <div class="relative">
-                  <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                  <input type="text" id="scan-produit"
-                    placeholder="Scanner code-barres ou taper un nom, référence..."
-                    class="w-full pl-9 pr-4 py-3 border-2 rounded-lg text-base focus:outline-none focus:border-primary transition-colors"
-                    autocomplete="off">
-                </div>
-                <!-- Résultats autocomplete -->
-                <div id="caisse-dropdown" class="hidden mt-1 border rounded-lg bg-white shadow-lg max-h-56 overflow-y-auto z-50 relative"></div>
+              <!-- Recherche / scan -->
+              <div class="relative">
+                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                <input type="text" id="scan-produit"
+                  placeholder="🔍  Nom, référence ou scanner code-barres..."
+                  class="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary shadow-sm transition-colors bg-white"
+                  autocomplete="off" spellcheck="false">
+                <button onclick="document.getElementById('scan-produit').value='';fermerDropdown();afficherGrille()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+                <!-- Dropdown autocomplete -->
+                <div id="caisse-dropdown"
+                  class="hidden absolute left-0 right-0 top-full mt-1 border border-gray-200 rounded-xl bg-white shadow-xl max-h-72 overflow-y-auto z-50"></div>
               </div>
 
               <!-- Filtres catégorie -->
-              <div class="card p-3">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-medium text-gray-600 mr-1">Catégorie :</span>
-                  <button onclick="filtrerCategorie('')" id="cat-btn-tous"
-                    class="cat-btn px-3 py-1 rounded-full text-sm bg-primary text-white">Tous</button>
-                  <div id="cat-filtres" class="flex gap-2 flex-wrap"></div>
-                </div>
+              <div class="flex items-center gap-2 flex-wrap px-1">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Cat.</span>
+                <button onclick="filtrerCategorie('')" id="cat-btn-tous"
+                  class="cat-btn px-3 py-1 rounded-full text-sm bg-primary text-white shadow-sm">Tous</button>
+                <div id="cat-filtres" class="flex gap-2 flex-wrap"></div>
               </div>
 
-              <!-- Grille produits cliquables -->
+              <!-- Grille produits -->
               <div id="grille-produits" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
 
-              <!-- Panier -->
-              <div class="card p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-base font-semibold"><i class="fa fa-shopping-cart mr-1 text-primary"></i>Panier</h3>
-                  <button onclick="viderPanier()" class="text-xs text-red-500 hover:underline"><i class="fa fa-trash mr-1"></i>Vider</button>
+              <!-- ── Panier ── -->
+              <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+                  <span class="font-semibold text-sm flex items-center gap-1">
+                    <i class="fa fa-shopping-cart text-primary"></i>
+                    Panier <span id="panier-nb-articles" class="ml-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded-full">0</span>
+                  </span>
+                  <button onclick="viderPanier()" class="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
+                    <i class="fa fa-trash"></i> Vider
+                  </button>
                 </div>
-                <div id="panier" class="min-h-[120px]"></div>
-                <div class="flex justify-between items-center mt-3 pt-3 border-t">
-                  <span class="text-gray-500 text-sm" id="panier-nb-articles">0 article(s)</span>
-                  <span class="text-xl font-bold text-primary">Total : <span id="montant-total">0.00 €</span></span>
+                <div id="panier" class="px-3 min-h-[100px] max-h-64 overflow-y-auto"></div>
+                <div class="px-4 py-3 bg-gray-50 border-t flex justify-between items-center">
+                  <span class="text-sm text-gray-500">À payer</span>
+                  <span class="text-2xl font-bold text-primary" id="montant-total">0.00 €</span>
                 </div>
               </div>
             </div>
 
-            <!-- Colonne droite : paiement + impression + historique -->
-            <div class="space-y-3">
-              <div class="card p-4">
-                <h3 class="text-base font-semibold mb-3"><i class="fa fa-credit-card mr-1 text-primary"></i>Encaisser</h3>
-                <button onclick="validerVente('Espèces')" class="w-full bg-green-600 text-white p-3 rounded-lg mb-2 hover:bg-green-700 font-medium text-base active:scale-95 transition-transform"><i class="fa fa-money mr-2"></i>Espèces</button>
-                <button onclick="validerVente('CB')" class="w-full bg-blue-600 text-white p-3 rounded-lg mb-2 hover:bg-blue-700 font-medium text-base active:scale-95 transition-transform"><i class="fa fa-credit-card mr-2"></i>Carte Bancaire</button>
-                <button onclick="validerVente('Chèque')" class="w-full bg-orange-600 text-white p-3 rounded-lg hover:bg-orange-700 font-medium text-base active:scale-95 transition-transform"><i class="fa fa-pencil mr-2"></i>Chèque</button>
+            <!-- ── Colonne droite : encaissement ── -->
+            <div class="flex flex-col gap-3">
+
+              <!-- Bloc encaissement principal -->
+              <div class="bg-white rounded-xl border shadow-sm p-4">
+                <div class="text-center mb-3">
+                  <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total à encaisser</div>
+                  <div class="text-3xl font-bold text-primary" id="total-encaissement">0.00 €</div>
+                </div>
+
+                <!-- Montant reçu (Espèces) -->
+                <div id="bloc-monnaie" class="mb-3 hidden">
+                  <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Montant remis</label>
+                  <div class="flex gap-2 mb-2">
+                    <input type="number" id="montant-remis" step="0.01" min="0" placeholder="0.00"
+                      class="flex-1 border-2 border-gray-200 rounded-lg p-2 text-xl font-bold text-center focus:outline-none focus:border-primary"
+                      oninput="calculerMonnaie()">
+                    <span class="self-center text-lg font-bold text-gray-400">€</span>
+                  </div>
+                  <!-- Raccourcis billets -->
+                  <div class="grid grid-cols-4 gap-1 mb-2" id="raccourcis-billets"></div>
+                  <!-- Rendu monnaie -->
+                  <div id="rendu-monnaie" class="rounded-lg p-3 text-center hidden">
+                    <div class="text-xs text-gray-500 mb-0.5">Monnaie à rendre</div>
+                    <div id="montant-rendu" class="text-2xl font-bold text-green-600">0.00 €</div>
+                  </div>
+                </div>
+
+                <!-- Boutons modes de paiement -->
+                <div class="space-y-2">
+                  <button onclick="ouvrirEncaissement('Espèces')"
+                    class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold text-base hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-money"></i> Espèces
+                  </button>
+                  <button onclick="validerVente('CB')"
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-base hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-credit-card"></i> Carte Bancaire
+                  </button>
+                  <button onclick="validerVente('Chèque')"
+                    class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold text-base hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa fa-pencil"></i> Chèque
+                  </button>
+                </div>
+
+                <!-- Valider espèces (affiché seulement en mode espèces) -->
+                <button id="btn-valider-especes" onclick="validerEspeces()" class="hidden w-full mt-2 bg-green-700 text-white py-3 rounded-lg font-bold text-base hover:bg-green-800 active:scale-95 transition-all">
+                  <i class="fa fa-check mr-2"></i> Confirmer le paiement
+                </button>
+                <button id="btn-annuler-especes" onclick="annulerEspeces()" class="hidden w-full mt-1 text-gray-500 text-sm hover:underline">
+                  Annuler
+                </button>
               </div>
-              <div class="card p-4">
-                <h3 class="text-base font-semibold mb-3"><i class="fa fa-print mr-1 text-gray-600"></i>Impression</h3>
-                <button onclick="imprimerDernierTicket()" class="w-full border border-gray-300 text-gray-700 p-2 rounded-lg mb-2 hover:bg-gray-50 text-sm"><i class="fa fa-print mr-1"></i> Reprint ticket</button>
-                <button onclick="genererFactureA4()" class="w-full border border-primary text-primary p-2 rounded-lg hover:bg-blue-50 text-sm"><i class="fa fa-file-text mr-1"></i> Facture A4</button>
+
+              <!-- Impression -->
+              <div class="bg-white rounded-xl border shadow-sm p-3">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"><i class="fa fa-print mr-1"></i>Impression</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="apercuTicket()" class="border border-gray-300 text-gray-600 py-2 px-2 rounded-lg text-xs hover:bg-gray-50 flex items-center justify-center gap-1">
+                    <i class="fa fa-eye"></i> Aperçu ticket
+                  </button>
+                  <button onclick="imprimerDernierTicket()" class="border border-gray-300 text-gray-600 py-2 px-2 rounded-lg text-xs hover:bg-gray-50 flex items-center justify-center gap-1">
+                    <i class="fa fa-print"></i> Imprimer ticket
+                  </button>
+                  <button onclick="apercuFactureA4()" class="border border-primary text-primary py-2 px-2 rounded-lg text-xs hover:bg-blue-50 flex items-center justify-center gap-1">
+                    <i class="fa fa-eye"></i> Aperçu A4
+                  </button>
+                  <button onclick="genererFactureA4()" class="border border-primary text-primary py-2 px-2 rounded-lg text-xs hover:bg-blue-50 flex items-center justify-center gap-1">
+                    <i class="fa fa-file-text"></i> Facture A4
+                  </button>
+                </div>
               </div>
-              <div class="card p-4">
-                <h3 class="text-base font-semibold mb-2"><i class="fa fa-history mr-1 text-gray-600"></i>Dernières ventes</h3>
-                <div id="dernieres-ventes-caisse" class="text-xs max-h-48 overflow-y-auto space-y-1"></div>
+
+              <!-- Historique ventes -->
+              <div class="bg-white rounded-xl border shadow-sm p-3 flex-1">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"><i class="fa fa-history mr-1"></i>Dernières ventes</div>
+                <div id="dernieres-ventes-caisse" class="text-xs space-y-1 max-h-48 overflow-y-auto"></div>
               </div>
             </div>
 
           </div>
+
+          <!-- ── Modal aperçu ticket ── -->
+          <div id="modal-apercu" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this)fermerApercu()">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto">
+              <div class="flex items-center justify-between p-4 border-b">
+                <h3 id="modal-apercu-titre" class="font-bold text-lg">Aperçu ticket</h3>
+                <button onclick="fermerApercu()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              </div>
+              <div id="modal-apercu-contenu" class="p-4"></div>
+              <div class="p-4 border-t flex gap-2">
+                <button id="modal-btn-imprimer" class="flex-1 bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary/90">
+                  <i class="fa fa-print mr-1"></i> Imprimer
+                </button>
+                <button onclick="fermerApercu()" class="px-4 border rounded-lg text-gray-600 hover:bg-gray-50">Fermer</button>
+              </div>
+            </div>
+          </div>
+
         </section>
 
         <!-- Inventaire -->

@@ -25,13 +25,29 @@ document.addEventListener('DOMContentLoaded', () => {
   if (input) {
     input.addEventListener('keydown', gererScanManuel);
     input.addEventListener('input', rechercheLive);
-    input.addEventListener('blur', () => setTimeout(() => fermerDropdown(), 200));
+    input.addEventListener('blur', () => setTimeout(() => fermerDropdown(), 150));
   }
   document.addEventListener('keydown', intercepterScanCaisse);
+  document.addEventListener('scroll', fermerDropdown, true);
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('caisse-dropdown');
+    const input = document.getElementById('scan-produit');
+    if (dd && !dd.contains(e.target) && e.target !== input) fermerDropdown();
+  });
   afficherPanier();
 });
 
 // ── Recherche live avec dropdown ──────────────────────────────────────────────
+function positionnerDropdown() {
+  const wrapper = document.getElementById('scan-wrapper');
+  const dd = document.getElementById('caisse-dropdown');
+  if (!wrapper || !dd) return;
+  const rect = wrapper.getBoundingClientRect();
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.left = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+}
+
 function rechercheLive(e) {
   const q = e.target.value.trim().toLowerCase();
   const dd = document.getElementById('caisse-dropdown');
@@ -44,34 +60,38 @@ function rechercheLive(e) {
     (p.code_barre || '').includes(q) ||
     (p.categorie || '').toLowerCase().includes(q) ||
     (p.description || '').toLowerCase().includes(q)
-  ).slice(0, 8);
+  ).slice(0, 10);
 
   if (resultats.length === 0) {
-    dd.innerHTML = `<div class="p-3 text-gray-400 text-sm text-center">Aucun produit trouvé</div>`;
+    dd.innerHTML = `<div class="p-4 text-gray-400 text-sm text-center"><i class="fa fa-search mr-1"></i>Aucun produit pour "<strong>${q}</strong>"</div>`;
   } else {
     dd.innerHTML = resultats.map(p => {
-      const stock = p.quantite_stock <= 0
-        ? `<span class="text-red-500 text-xs">Rupture</span>`
-        : `<span class="text-green-600 text-xs">${p.quantite_stock} en stock</span>`;
-      const cat = p.categorie ? `<span class="text-xs px-1.5 py-0.5 rounded ${couleurCat(p.categorie)} mr-1">${p.categorie}</span>` : '';
-      return `<div class="flex items-center gap-2 px-3 py-2 hover:bg-primary/10 cursor-pointer border-b last:border-0 transition-colors"
-               onclick="selectionnerProduitDropdown(${p.id})">
+      const rupture = p.quantite_stock <= 0;
+      const stockBadge = rupture
+        ? `<span class="text-red-500 text-xs font-medium">Rupture</span>`
+        : `<span class="text-green-600 text-xs font-medium">${p.quantite_stock} en stock</span>`;
+      const cat = p.categorie
+        ? `<span class="text-xs px-1.5 py-0.5 rounded-full ${couleurCat(p.categorie)} mr-1">${p.categorie}</span>` : '';
+      return `<div class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer border-b last:border-0 transition-colors ${rupture ? 'opacity-50' : ''}"
+               onmousedown="selectionnerProduitDropdown(${p.id})">
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-sm truncate">${p.nom}</div>
-          <div class="text-xs text-gray-400 flex items-center gap-1 mt-0.5">${cat}${p.description ? `<span class="truncate">${p.description}</span>` : ''}</div>
+          <div class="font-semibold text-sm">${p.nom}</div>
+          <div class="flex items-center gap-1 mt-0.5 flex-wrap">${cat}${p.description ? `<span class="text-xs text-gray-400 italic truncate">${p.description}</span>` : ''}</div>
         </div>
         <div class="text-right shrink-0">
-          <div class="font-bold text-primary">${parseFloat(p.prix_vente).toFixed(2)} €</div>
-          ${stock}
+          <div class="font-bold text-primary text-base">${parseFloat(p.prix_vente).toFixed(2)} €</div>
+          ${stockBadge}
         </div>
       </div>`;
     }).join('');
   }
+  positionnerDropdown();
   dd.classList.remove('hidden');
 }
 
 function fermerDropdown() {
-  document.getElementById('caisse-dropdown')?.classList.add('hidden');
+  const dd = document.getElementById('caisse-dropdown');
+  if (dd) dd.classList.add('hidden');
 }
 
 function selectionnerProduitDropdown(id) {

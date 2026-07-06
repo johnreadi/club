@@ -144,17 +144,14 @@
             <div class="md:col-span-2 flex flex-col gap-3">
 
               <!-- Recherche / scan -->
-              <div class="relative">
+              <div class="relative" id="scan-wrapper">
                 <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                 <input type="text" id="scan-produit"
                   placeholder="🔍  Nom, référence ou scanner code-barres..."
                   class="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary shadow-sm transition-colors bg-white"
                   autocomplete="off" spellcheck="false">
                 <button onclick="document.getElementById('scan-produit').value='';fermerDropdown();afficherGrille()"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
-                <!-- Dropdown autocomplete -->
-                <div id="caisse-dropdown"
-                  class="hidden absolute left-0 right-0 top-full mt-1 border border-gray-200 rounded-xl bg-white shadow-xl max-h-72 overflow-y-auto z-50"></div>
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 text-xl leading-none">x</button>
               </div>
 
               <!-- Filtres catégorie -->
@@ -670,6 +667,9 @@
     title="Retour en haut">
     <i class="fa fa-chevron-up"></i>
   </button>
+
+  <!-- Dropdown caisse positionné en fixed pour éviter tout clipping -->
+  <div id="caisse-dropdown" class="hidden fixed border border-gray-200 rounded-xl bg-white shadow-2xl max-h-72 overflow-y-auto" style="z-index:9999;min-width:320px;"></div>
 
   <script src="/js/app.js"></script>
   <script src="/js/auth.js"></script>

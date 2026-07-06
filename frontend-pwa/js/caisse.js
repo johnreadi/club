@@ -3,29 +3,168 @@ let panier = [];
 let produitsCaisse = [];
 let scanCaisseBuffer = '';
 let scanCaisseTimer = null;
+let categorieActive = '';
+
+// Couleurs par catégorie (auto-générées au besoin)
+const COULEURS_CAT = ['bg-blue-100 text-blue-800','bg-purple-100 text-purple-800',
+  'bg-green-100 text-green-800','bg-orange-100 text-orange-800',
+  'bg-pink-100 text-pink-800','bg-teal-100 text-teal-800','bg-yellow-100 text-yellow-800'];
+const mapCouleurCat = {};
+
+function couleurCat(cat) {
+  if (!cat) return 'bg-gray-100 text-gray-600';
+  if (!mapCouleurCat[cat]) {
+    const idx = Object.keys(mapCouleurCat).length % COULEURS_CAT.length;
+    mapCouleurCat[cat] = COULEURS_CAT[idx];
+  }
+  return mapCouleurCat[cat];
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Champ de saisie manuelle
-  document.getElementById('scan-produit')?.addEventListener('keydown', gererScanManuel);
-
-  // Douchette globale sur la page Caisse
+  const input = document.getElementById('scan-produit');
+  if (input) {
+    input.addEventListener('keydown', gererScanManuel);
+    input.addEventListener('input', rechercheLive);
+    input.addEventListener('blur', () => setTimeout(() => fermerDropdown(), 200));
+  }
   document.addEventListener('keydown', intercepterScanCaisse);
   afficherPanier();
 });
 
-// Interception douchette : accumule les touches rapides, détecte Enter
+// ── Recherche live avec dropdown ──────────────────────────────────────────────
+function rechercheLive(e) {
+  const q = e.target.value.trim().toLowerCase();
+  const dd = document.getElementById('caisse-dropdown');
+  if (!dd) return;
+  if (q.length < 1) { fermerDropdown(); afficherGrille(); return; }
+
+  const resultats = produitsCaisse.filter(p =>
+    p.nom.toLowerCase().includes(q) ||
+    (p.reference || '').toLowerCase().includes(q) ||
+    (p.code_barre || '').includes(q) ||
+    (p.categorie || '').toLowerCase().includes(q) ||
+    (p.description || '').toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (resultats.length === 0) {
+    dd.innerHTML = `<div class="p-3 text-gray-400 text-sm text-center">Aucun produit trouvé</div>`;
+  } else {
+    dd.innerHTML = resultats.map(p => {
+      const stock = p.quantite_stock <= 0
+        ? `<span class="text-red-500 text-xs">Rupture</span>`
+        : `<span class="text-green-600 text-xs">${p.quantite_stock} en stock</span>`;
+      const cat = p.categorie ? `<span class="text-xs px-1.5 py-0.5 rounded ${couleurCat(p.categorie)} mr-1">${p.categorie}</span>` : '';
+      return `<div class="flex items-center gap-2 px-3 py-2 hover:bg-primary/10 cursor-pointer border-b last:border-0 transition-colors"
+               onclick="selectionnerProduitDropdown(${p.id})">
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm truncate">${p.nom}</div>
+          <div class="text-xs text-gray-400 flex items-center gap-1 mt-0.5">${cat}${p.description ? `<span class="truncate">${p.description}</span>` : ''}</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="font-bold text-primary">${parseFloat(p.prix_vente).toFixed(2)} €</div>
+          ${stock}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  dd.classList.remove('hidden');
+}
+
+function fermerDropdown() {
+  document.getElementById('caisse-dropdown')?.classList.add('hidden');
+}
+
+function selectionnerProduitDropdown(id) {
+  const p = produitsCaisse.find(x => x.id === id);
+  if (!p) return;
+  fermerDropdown();
+  document.getElementById('scan-produit').value = '';
+  afficherGrille();
+  if (p.quantite_stock <= 0) { afficherMessage(`⚠️ Stock épuisé : ${p.nom}`, 'warning'); return; }
+  ajouterAuPanier(p);
+}
+
+// ── Grille produits ───────────────────────────────────────────────────────────
+function afficherFiltresCategories() {
+  const cats = [...new Set(produitsCaisse.map(p => p.categorie).filter(Boolean))].sort();
+  const div = document.getElementById('cat-filtres');
+  if (!div) return;
+  div.innerHTML = cats.map(c =>
+    `<button onclick="filtrerCategorie('${c}')" id="cat-btn-${c.replace(/\s+/g,'-')}"
+      class="cat-btn px-3 py-1 rounded-full text-sm border ${couleurCat(c)} hover:opacity-80 transition-opacity">${c}</button>`
+  ).join('');
+}
+
+function filtrerCategorie(cat) {
+  categorieActive = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.remove('ring-2', 'ring-offset-1', 'ring-primary');
+  });
+  const btn = cat ? document.getElementById(`cat-btn-${cat.replace(/\s+/g,'-')}`)
+                  : document.getElementById('cat-btn-tous');
+  btn?.classList.add('ring-2', 'ring-offset-1', 'ring-primary');
+  afficherGrille();
+}
+
+function afficherGrille() {
+  const grille = document.getElementById('grille-produits');
+  if (!grille) return;
+  const liste = categorieActive
+    ? produitsCaisse.filter(p => p.categorie === categorieActive)
+    : produitsCaisse;
+
+  if (liste.length === 0) {
+    grille.innerHTML = `<div class="col-span-3 text-center py-6 text-gray-400 text-sm">
+      <i class="fa fa-box-open text-2xl mb-1 block"></i>Aucun produit${categorieActive ? ` dans "${categorieActive}"` : ''}</div>`;
+    return;
+  }
+  grille.innerHTML = liste.map(p => {
+    const rupture = p.quantite_stock <= 0;
+    const alerte = p.quantite_stock > 0 && p.quantite_stock <= (p.seuil_alerte || 5);
+    const badgeStock = rupture
+      ? `<span class="absolute top-1 right-1 bg-red-500 text-white text-xs px-1.5 rounded-full">Rupture</span>`
+      : alerte
+        ? `<span class="absolute top-1 right-1 bg-orange-400 text-white text-xs px-1.5 rounded-full">${p.quantite_stock}</span>`
+        : `<span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 rounded-full">${p.quantite_stock}</span>`;
+    const catBadge = p.categorie
+      ? `<span class="text-xs px-1.5 py-0.5 rounded ${couleurCat(p.categorie)}">${p.categorie}</span>` : '';
+    return `<button onclick="cliquerProduitGrille(${p.id})"
+      class="card p-3 text-left relative hover:shadow-md hover:border-primary/50 border-2 border-transparent transition-all ${rupture ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}"
+      ${rupture ? 'disabled' : ''}>
+      ${badgeStock}
+      <div class="font-semibold text-sm leading-tight mb-1">${p.nom}</div>
+      ${p.description ? `<div class="text-xs text-gray-400 italic truncate mb-1">${p.description}</div>` : ''}
+      <div class="flex items-center justify-between mt-1">
+        ${catBadge}
+        <span class="font-bold text-primary ml-auto">${parseFloat(p.prix_vente).toFixed(2)} €</span>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function cliquerProduitGrille(id) {
+  const p = produitsCaisse.find(x => x.id === id);
+  if (!p || p.quantite_stock <= 0) return;
+  ajouterAuPanier(p);
+  // Flash visuel sur la carte
+  const btns = document.querySelectorAll('#grille-produits button');
+  btns.forEach(b => { if (b.onclick?.toString().includes(`(${id})`)) {
+    b.classList.add('border-green-400', 'bg-green-50');
+    setTimeout(() => b.classList.remove('border-green-400', 'bg-green-50'), 400);
+  }});
+}
+
+// ── Douchette ─────────────────────────────────────────────────────────────────
 function intercepterScanCaisse(e) {
   const sectionCaisse = document.getElementById('caisse');
   if (!sectionCaisse || sectionCaisse.classList.contains('hidden')) return;
   const focused = document.activeElement;
-  if (focused && focused.id === 'scan-produit') return; // déjà géré par gererScanManuel
+  if (focused && focused.id === 'scan-produit') return;
   const tag = focused?.tagName;
   if (tag === 'BUTTON' || tag === 'SELECT') return;
 
   if (e.key === 'Enter') {
-    if (scanCaisseBuffer.length > 2) {
-      traiterScanCaisse(scanCaisseBuffer);
-    }
+    if (scanCaisseBuffer.length > 2) traiterScanCaisse(scanCaisseBuffer);
     scanCaisseBuffer = '';
     clearTimeout(scanCaisseTimer);
     return;
@@ -43,26 +182,23 @@ async function gererScanManuel(e) {
   const code = e.target.value.trim();
   if (!code) return;
   e.target.value = '';
+  fermerDropdown();
   await traiterScanCaisse(code);
 }
 
 async function traiterScanCaisse(code) {
   try {
-    // Chercher d'abord dans le cache local
     let produit = produitsCaisse.find(p =>
       p.code_barre === code || p.reference === code ||
       p.nom.toLowerCase() === code.toLowerCase()
     );
-    // Si pas en cache → appel API (scan douchette d'un nouveau produit)
     if (!produit) {
       produit = await apiFetch('/stock/scan/' + encodeURIComponent(code));
-      // Mettre à jour le cache local
       const idx = produitsCaisse.findIndex(p => p.id === produit.id);
       if (idx >= 0) produitsCaisse[idx] = produit; else produitsCaisse.push(produit);
     }
     if (produit.quantite_stock <= 0) {
-      afficherMessage(`⚠️ Stock épuisé : ${produit.nom}`, 'warning');
-      return;
+      afficherMessage(`⚠️ Stock épuisé : ${produit.nom}`, 'warning'); return;
     }
     ajouterAuPanier(produit);
     afficherMessage(`✅ ${produit.nom} ajouté`, 'success');
@@ -71,28 +207,35 @@ async function traiterScanCaisse(code) {
   }
 }
 
+// ── Chargement ────────────────────────────────────────────────────────────────
 async function chargerVentesCaisse() {
   try {
     produitsCaisse = await apiFetch('/stock') || [];
+    afficherFiltresCategories();
+    filtrerCategorie('');
     const ventes = await apiFetch('/ventes') || [];
     const conteneur = document.getElementById('dernieres-ventes-caisse');
     if (conteneur) {
-      conteneur.innerHTML = ventes.slice(0, 10).map(v =>
-        `<div class="border-b py-1 flex justify-between">
-          <span>${new Date(v.date_vente).toLocaleString('fr-FR')}</span>
-          <span class="font-medium">${parseFloat(v.montant_total).toFixed(2)} €</span>
+      conteneur.innerHTML = ventes.slice(0, 15).map(v =>
+        `<div class="flex justify-between items-center border-b py-1.5 last:border-0">
+          <div>
+            <div class="text-gray-700">${new Date(v.date_vente).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+            <div class="text-gray-400">${v.mode_paiement}</div>
+          </div>
+          <span class="font-semibold text-primary">${parseFloat(v.montant_total).toFixed(2)} €</span>
         </div>`
-      ).join('') || '<p class="text-gray-500">Aucune vente</p>';
+      ).join('') || '<p class="text-gray-400 text-center py-2">Aucune vente</p>';
     }
   } catch {}
 }
 
+// ── Panier ────────────────────────────────────────────────────────────────────
 function ajouterAuPanier(produit) {
   const ligne = panier.find(l => l.produit_id === produit.id);
   if (ligne) {
     ligne.quantite++;
   } else {
-    panier.push({ produit_id: produit.id, nom: produit.nom, prix_unitaire: parseFloat(produit.prix_vente), quantite: 1 });
+    panier.push({ produit_id: produit.id, nom: produit.nom, description: produit.description || '', prix_unitaire: parseFloat(produit.prix_vente), quantite: 1 });
   }
   afficherPanier();
 }
@@ -101,20 +244,28 @@ function afficherPanier() {
   const conteneur = document.getElementById('panier');
   if (!conteneur) return;
   const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
+  const nbArticles = panier.reduce((s, l) => s + l.quantite, 0);
+
   conteneur.innerHTML = panier.length === 0
-    ? `<p class="text-center text-gray-500 py-8">Panier vide — scanner ou saisir un produit</p>`
+    ? `<div class="text-center py-8 text-gray-400"><i class="fa fa-shopping-cart text-3xl mb-2 block opacity-30"></i>Panier vide<br><span class="text-xs">Cliquer sur un produit ou scanner</span></div>`
     : panier.map((l, i) => `
-      <div class="flex justify-between items-center border-b py-2 gap-2">
-        <span class="flex-1 font-medium">${l.nom}</span>
-        <div class="flex items-center gap-1">
-          <button onclick="changerQte(${i},-1)" class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-sm">−</button>
-          <span class="w-8 text-center">${l.quantite}</span>
-          <button onclick="changerQte(${i},1)" class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-sm">+</button>
+      <div class="flex items-center gap-2 py-2 border-b last:border-0">
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm leading-tight">${l.nom}</div>
+          ${l.description ? `<div class="text-xs text-gray-400 italic truncate">${l.description}</div>` : ''}
         </div>
-        <span class="w-20 text-right">${(l.prix_unitaire * l.quantite).toFixed(2)} €</span>
-        <button onclick="supprimerLigne(${i})" class="text-red-500 font-bold text-lg leading-none">×</button>
+        <div class="flex items-center gap-1 shrink-0">
+          <button onclick="changerQte(${i},-1)" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-600 font-bold text-base leading-none transition-colors">−</button>
+          <span class="w-8 text-center font-semibold">${l.quantite}</span>
+          <button onclick="changerQte(${i},1)" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-green-100 hover:text-green-600 font-bold text-base leading-none transition-colors">+</button>
+        </div>
+        <span class="w-16 text-right font-semibold text-sm text-primary shrink-0">${(l.prix_unitaire * l.quantite).toFixed(2)} €</span>
+        <button onclick="supprimerLigne(${i})" class="text-gray-300 hover:text-red-500 transition-colors text-lg leading-none shrink-0">×</button>
       </div>`).join('');
+
   document.getElementById('montant-total').textContent = total.toFixed(2) + ' €';
+  const nb = document.getElementById('panier-nb-articles');
+  if (nb) nb.textContent = nbArticles + ' article' + (nbArticles > 1 ? 's' : '');
 }
 
 function changerQte(index, delta) {
@@ -125,6 +276,13 @@ function changerQte(index, delta) {
 
 function supprimerLigne(index) {
   panier.splice(index, 1);
+  afficherPanier();
+}
+
+function viderPanier() {
+  if (panier.length === 0) return;
+  if (!confirm('Vider le panier ?')) return;
+  panier = [];
   afficherPanier();
 }
 

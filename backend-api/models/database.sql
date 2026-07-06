@@ -59,6 +59,7 @@ CREATE TABLE produits (
   reference VARCHAR(50),
   code_barre VARCHAR(100),
   nom VARCHAR(200) NOT NULL,
+  categorie VARCHAR(100),
   description TEXT,
   prix_achat DECIMAL(10,2) DEFAULT 0,
   prix_vente DECIMAL(10,2) NOT NULL,
@@ -166,3 +167,5 @@ INSERT INTO produits (club_id, reference, code_barre, nom, description, prix_ach
 (1, 'SCF-UNI', '001234567893', 'Écharpe Club', 'Taille unique — Laine — Bleu/Blanc', 5.00, 12.00, 15, 5),
 (1, 'BON-UNI', '001234567894', 'Bonnet Club', 'Taille unique — Acrylique — Bleu marine', 4.00, 10.00, 12, 3),
 (1, 'SAC-MED', '001234567895', 'Sac de sport', 'Medium — Polyester — Logo club', 12.00, 25.00, 8, 3);
+UPDATE produits SET categorie='Textile' WHERE reference IN ('TSH-M-BL','TSH-L-BL','SCF-UNI','BON-UNI');
+UPDATE produits SET categorie='Accessoires' WHERE reference IN ('SHO-42-BL','SAC-MED');

@@ -18,6 +18,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const vente = await pool.query(
+      'SELECT v.*, u.nom as vendeur_nom, u.prenom as vendeur_prenom FROM ventes v LEFT JOIN utilisateurs u ON u.id = v.utilisateur_id WHERE v.id = $1 AND v.club_id = $2',
+      [req.params.id, club_id]
+    );
+    if (vente.rows.length === 0) return res.status(404).json({ erreur: 'Vente non trouvée' });
+    const lignes = await pool.query(
+      'SELECT lv.*, p.nom as produit_nom, p.reference, p.code_barre, p.description FROM lignes_vente lv LEFT JOIN produits p ON p.id = lv.produit_id WHERE lv.vente_id = $1',
+      [req.params.id]
+    );
+    res.json({ ...vente.rows[0], lignes: lignes.rows });
+  } catch (err) {
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
 router.post('/', async (req, res) => {
   const { club_id, id: utilisateur_id } = req.utilisateur;
   const { articles, montant_total, mode_paiement } = req.body;

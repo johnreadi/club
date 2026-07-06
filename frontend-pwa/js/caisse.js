@@ -128,6 +128,8 @@ function supprimerLigne(index) {
   afficherPanier();
 }
 
+let derniereVente = null;
+
 async function validerVente(modePaiement) {
   if (panier.length === 0) return afficherMessage('⚠️ Panier vide', 'warning');
   const montant_total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
@@ -137,17 +139,148 @@ async function validerVente(modePaiement) {
       method: 'POST',
       body: JSON.stringify({ articles, montant_total, mode_paiement: modePaiement })
     });
+    // Sauvegarder pour reprint / facture
+    derniereVente = { ...vente, lignes: panier.map(l => ({ ...l })), montant_total, mode_paiement: modePaiement };
     // Mettre à jour le stock local (décrémentation)
     articles.forEach(a => {
       const p = produitsCaisse.find(x => x.id === a.produit_id);
       if (p) p.quantite_stock = Math.max(0, p.quantite_stock - a.quantite);
     });
-    imprimerTicket({ ...vente, lignes: panier, montant_total, mode_paiement: modePaiement });
+    imprimerTicket(derniereVente);
     panier = [];
     afficherPanier();
     afficherMessage('✅ Vente enregistrée — stock mis à jour', 'success');
     await chargerVentesCaisse();
   } catch {}
+}
+
+function imprimerDernierTicket() {
+  if (!derniereVente) return afficherMessage('⚠️ Aucune vente en cours de session', 'warning');
+  imprimerTicket(derniereVente);
+}
+
+async function genererFactureA4() {
+  if (!derniereVente) return afficherMessage('⚠️ Aucune vente en cours de session', 'warning');
+  const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
+  const clubNom = utilisateur.club_nom || 'Club Sportif';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR');
+  const heureStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const numFacture = 'FAC-' + derniereVente.id + '-' + now.getFullYear();
+
+  // Récupérer les lignes détaillées depuis l'API si possible
+  let lignes = derniereVente.lignes || [];
+  try {
+    const detail = await apiFetch('/ventes/' + derniereVente.id);
+    if (detail && detail.lignes) lignes = detail.lignes.map(l => ({
+      nom: l.produit_nom,
+      description: l.description || '',
+      reference: l.reference || '',
+      quantite: l.quantite,
+      prix_unitaire: l.prix_unitaire,
+      code_barre: l.code_barre || ''
+    }));
+  } catch {}
+
+  const lignesHtml = lignes.map((l, i) => {
+    const total = (parseFloat(l.prix_unitaire) * parseInt(l.quantite || 1)).toFixed(2);
+    const desc = l.description ? `<br><span style="font-size:10px;color:#666;font-style:italic;">${l.description}</span>` : '';
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:6px 4px;font-size:11px;color:#999;">${i + 1}</td>
+      <td style="padding:6px 4px;">
+        <strong>${l.nom || l.produit_nom || ''}</strong>${desc}
+        <div style="font-size:10px;color:#aaa;">Réf: ${l.reference || '-'}</div>
+      </td>
+      <td style="padding:6px 4px;text-align:right;">${parseFloat(l.prix_unitaire).toFixed(2)} €</td>
+      <td style="padding:6px 4px;text-align:center;">${l.quantite}</td>
+      <td style="padding:6px 4px;text-align:right;font-weight:bold;">${total} €</td>
+    </tr>`;
+  }).join('');
+
+  const sousTotal = lignes.reduce((s, l) => s + parseFloat(l.prix_unitaire) * parseInt(l.quantite || 1), 0);
+  const tva = sousTotal * 0.20;
+  const ttc = sousTotal;
+
+  const fenetre = window.open('', '_blank', 'width=820,height=1100');
+  if (!fenetre) return;
+  fenetre.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family: Arial, sans-serif; font-size:12px; color:#222; padding:20px 30px; }
+      .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px; border-bottom:3px solid #165DFF; padding-bottom:16px; }
+      .club-nom { font-size:22px; font-weight:bold; color:#165DFF; }
+      .facture-titre { font-size:18px; font-weight:bold; color:#333; text-align:right; }
+      .facture-num { font-size:11px; color:#666; text-align:right; margin-top:4px; }
+      .infos { display:flex; justify-content:space-between; margin-bottom:24px; }
+      .bloc { background:#f7f9fc; border-radius:6px; padding:10px 14px; min-width:200px; }
+      .bloc-titre { font-size:10px; color:#999; text-transform:uppercase; margin-bottom:4px; }
+      table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+      thead tr { background:#165DFF; color:white; }
+      thead th { padding:8px 6px; font-size:11px; text-align:left; }
+      thead th:last-child, thead th:nth-child(3), thead th:nth-child(4) { text-align:right; }
+      .total-bloc { display:flex; justify-content:flex-end; margin-top:8px; }
+      .total-table { width:260px; }
+      .total-table td { padding:4px 6px; font-size:12px; }
+      .total-ttc { font-size:15px; font-weight:bold; background:#165DFF; color:white; }
+      .total-ttc td { padding:8px 6px; }
+      .footer { margin-top:40px; border-top:1px solid #eee; padding-top:10px; font-size:10px; color:#aaa; text-align:center; }
+      @media print { body { padding:10px 20px; } }
+    </style>
+  </head><body>
+    <div class="header">
+      <div>
+        <div class="club-nom">${clubNom}</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">${utilisateur.email || ''}</div>
+      </div>
+      <div>
+        <div class="facture-titre">FACTURE</div>
+        <div class="facture-num">N° ${numFacture}</div>
+        <div class="facture-num">Date : ${dateStr} à ${heureStr}</div>
+      </div>
+    </div>
+
+    <div class="infos">
+      <div class="bloc">
+        <div class="bloc-titre">Vendeur</div>
+        <strong>${utilisateur.prenom || ''} ${utilisateur.nom || ''}</strong><br>
+        <span style="font-size:11px;">${clubNom}</span>
+      </div>
+      <div class="bloc">
+        <div class="bloc-titre">Paiement</div>
+        <strong>${derniereVente.mode_paiement}</strong><br>
+        <span style="font-size:11px;color:#666;">Réglé le ${dateStr}</span>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30px;">#</th>
+          <th>Désignation</th>
+          <th style="width:90px;text-align:right;">P.U. TTC</th>
+          <th style="width:60px;text-align:center;">Qté</th>
+          <th style="width:90px;text-align:right;">Total</th>
+        </tr>
+      </thead>
+      <tbody>${lignesHtml}</tbody>
+    </table>
+
+    <div class="total-bloc">
+      <table class="total-table">
+        <tr><td>Sous-total HT</td><td style="text-align:right;">${(sousTotal / 1.2).toFixed(2)} €</td></tr>
+        <tr><td>TVA 20%</td><td style="text-align:right;">${tva.toFixed(2)} €</td></tr>
+        <tr class="total-ttc"><td>TOTAL TTC</td><td style="text-align:right;">${ttc.toFixed(2)} €</td></tr>
+      </table>
+    </div>
+
+    <div class="footer">
+      Document généré le ${dateStr} à ${heureStr} — ${clubNom} — Merci de votre confiance
+    </div>
+
+    <script>window.onload = function(){ window.print(); };<\/script>
+  </body></html>`);
+  fenetre.document.close();
 }
 
 function imprimerTicket(vente) {

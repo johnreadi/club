@@ -38,12 +38,12 @@ router.get('/scan/:code', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { club_id } = req.utilisateur;
-    const { reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
+    const { reference, nom, description, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
     if (!nom || !prix_vente) return res.status(400).json({ erreur: 'Nom et prix de vente requis' });
     const codeBarreFinal = code_barre || genererCodeBarre(club_id, reference);
     const result = await pool.query(
-      'INSERT INTO produits (club_id, reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-      [club_id, reference || null, nom, codeBarreFinal, prix_achat || 0, prix_vente, quantite_stock || 0, seuil_alerte || 5]
+      'INSERT INTO produits (club_id, reference, nom, description, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+      [club_id, reference || null, nom, description || null, codeBarreFinal, prix_achat || 0, prix_vente, quantite_stock || 0, seuil_alerte || 5]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -54,12 +54,12 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { club_id } = req.utilisateur;
-    const { reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
+    const { reference, nom, description, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
     const result = await pool.query(
-      `UPDATE produits SET reference=$1, nom=$2, code_barre=$3, prix_achat=$4, prix_vente=$5,
-       quantite_stock=$6, seuil_alerte=$7, mis_a_jour_le=CURRENT_TIMESTAMP
-       WHERE id=$8 AND club_id=$9 RETURNING *`,
-      [reference || null, nom, code_barre || null, prix_achat || 0, prix_vente, quantite_stock, seuil_alerte || 5, req.params.id, club_id]
+      `UPDATE produits SET reference=$1, nom=$2, description=$3, code_barre=$4, prix_achat=$5, prix_vente=$6,
+       quantite_stock=$7, seuil_alerte=$8, mis_a_jour_le=CURRENT_TIMESTAMP
+       WHERE id=$9 AND club_id=$10 RETURNING *`,
+      [reference || null, nom, description || null, code_barre || null, prix_achat || 0, prix_vente, quantite_stock, seuil_alerte || 5, req.params.id, club_id]
     );
     if (result.rows.length === 0) return res.status(404).json({ erreur: 'Produit non trouvé' });
     res.json(result.rows[0]);

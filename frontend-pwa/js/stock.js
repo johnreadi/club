@@ -100,6 +100,7 @@ async function enregistrerProduit(e) {
     reference: form.reference.value.trim(),
     code_barre: form.code_barre.value.trim() || null,
     nom: form.nom.value.trim(),
+    description: form.description.value.trim() || null,
     prix_achat: parseFloat(form.prix_achat.value) || 0,
     prix_vente: parseFloat(form.prix_vente.value) || 0,
     quantite_stock: parseInt(form.quantite.value) || 0,
@@ -129,6 +130,7 @@ function editerProduit(id) {
   form.reference.value = p.reference || '';
   form.code_barre.value = p.code_barre || '';
   form.nom.value = p.nom;
+  form.description.value = p.description || '';
   form.prix_achat.value = p.prix_achat || 0;
   form.prix_vente.value = p.prix_vente;
   form.quantite.value = p.quantite_stock;
@@ -137,12 +139,48 @@ function editerProduit(id) {
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function imprimerEtiquette(id) {
+function imprimerEtiquette(id, typeImprimante) {
   const p = produits.find(x => x.id === id);
   if (!p) return;
 
-  // Récupérer les paramètres d'étiquette sauvegardés
+  // Si typeImprimante non précisé, demander à l'utilisateur
+  if (!typeImprimante) {
+    const cfg = window.parametresActuels || {};
+    const hasTicket = cfg.imprimante_tickets_nom;
+    const hasLabel = cfg.imprimante_nom;
+    if (hasLabel && hasTicket) {
+      const choix = confirm(`Imprimer sur :\n✅ OK → Imprimante étiquettes (${cfg.imprimante_nom})\n❌ Annuler → Imprimante tickets (${cfg.imprimante_tickets_nom})`);
+      typeImprimante = choix ? 'etiquette' : 'ticket';
+    } else {
+      typeImprimante = 'etiquette';
+    }
+  }
+
   const cfg = window.parametresActuels || {};
+  const code = p.code_barre || '';
+
+  if (typeImprimante === 'ticket') {
+    // Format ticket thermique 80mm
+    const nom = cfg.imprimante_tickets_nom || 'Imprimante tickets';
+    const fenetre = window.open('', '', 'width=320,height=320');
+    fenetre.document.write(`<!DOCTYPE html><html><head>
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+      </head><body style="margin:4px;font-family:monospace;width:280px;font-size:12px;">
+      <p style="font-weight:bold;font-size:14px;margin:2px 0;">${p.nom}</p>
+      ${p.description ? `<p style="font-size:10px;margin:1px 0;color:#444;">${p.description}</p>` : ''}
+      <p style="font-size:11px;margin:1px 0;">Réf: ${p.reference || '-'}</p>
+      <p style="font-size:16px;font-weight:bold;margin:4px 0;">${parseFloat(p.prix_vente).toFixed(2)} €</p>
+      ${code ? `<svg id="bc-t" style="display:block;max-width:200px;"></svg>` : ''}
+      <script>
+        ${code ? `JsBarcode('#bc-t','${code}',{format:'CODE128',width:1.5,height:35,displayValue:true,fontSize:10,margin:2});` : ''}
+        window.onload=function(){window.print();window.close();};
+      <\/script>
+    </body></html>`);
+    fenetre.document.close();
+    return;
+  }
+
+  // Format étiquette standard (paramètres personnalisés)
   const police = cfg.etiquette_police || 'Arial';
   const tNom = cfg.etiquette_taille_nom || 14;
   const tPrix = cfg.etiquette_taille_prix || 18;
@@ -157,19 +195,20 @@ function imprimerEtiquette(id) {
   const showCode = cfg.etiquette_afficher_codebarre !== false;
   const logoUrl = cfg.etiquette_afficher_logo && cfg.etiquette_logo_url ? cfg.etiquette_logo_url : null;
 
-  const code = p.code_barre || '';
   const logoHtml = logoUrl ? `<img src="${logoUrl}" style="max-height:24px;display:block;margin:0 auto 4px;">` : '';
-  const refHtml = showRef ? `<p style="font-size:${tCode}px;margin:2px 0;color:${coulTexte};">Réf: ${p.reference || '-'}</p>` : '';
+  const refHtml = showRef ? `<p style="font-size:${tCode}px;margin:1px 0;color:${coulTexte};">Réf: ${p.reference || '-'}</p>` : '';
+  const descHtml = p.description ? `<p style="font-size:${tCode}px;margin:1px 0;color:${coulTexte};font-style:italic;">${p.description}</p>` : '';
   const prixHtml = showPrix ? `<p style="font-size:${tPrix}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${parseFloat(p.prix_vente).toFixed(2)} €</p>` : '';
   const codeHtml = showCode && code ? `<svg id="bc-print" style="display:block;margin:2px auto;"></svg>` : '';
 
-  const fenetre = window.open('', '', `width=${Math.round(largeur + 40)},height=${Math.round(hauteur + 60)}`);
+  const fenetre = window.open('', '', `width=${Math.round(largeur + 40)},height=${Math.round(hauteur + 80)}`);
   fenetre.document.write(`<!DOCTYPE html><html><head>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
     </head><body style="margin:4px;background:${coulFond};">
     <div style="width:${largeur}px;min-height:${hauteur}px;padding:6px;font-family:${police};text-align:${align};background:${coulFond};border:1px solid #ccc;box-sizing:border-box;">
       ${logoHtml}
       <p style="font-size:${tNom}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${p.nom}</p>
+      ${descHtml}
       ${refHtml}
       ${prixHtml}
       ${codeHtml}

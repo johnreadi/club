@@ -56,7 +56,19 @@ async function rechercheLive(e) {
 
   // Charger les produits si pas encore en cache
   if (produitsCaisse.length === 0) {
-    try { produitsCaisse = await apiFetch('/stock') || []; afficherFiltresCategories(); afficherGrille(); } catch {}
+    try {
+      produitsCaisse = await apiFetch('/stock') || [];
+      afficherFiltresCategories();
+      afficherGrille();
+    } catch {}
+  }
+
+  // Si toujours vide après tentative, indiquer
+  if (produitsCaisse.length === 0) {
+    dd.innerHTML = `<div class="p-4 text-gray-400 text-sm text-center">Chargement du catalogue en cours...</div>`;
+    positionnerDropdown();
+    dd.classList.remove('hidden');
+    return;
   }
 
   const resultats = produitsCaisse.filter(p =>
@@ -309,7 +321,16 @@ function supprimerLigne(index) {
 
 function viderPanier() {
   if (panier.length === 0) return;
-  if (!confirm('Vider le panier ?')) return;
+  // confirm() bloqué dans certains contextes → confirmation inline
+  const btn = document.getElementById('btn-vider-panier');
+  if (btn && !btn.dataset.confirm) {
+    btn.dataset.confirm = '1';
+    btn.textContent = '⚠️ Confirmer ?';
+    btn.classList.add('text-red-600', 'font-semibold');
+    setTimeout(() => { btn.dataset.confirm = ''; btn.innerHTML = '<i class="fa fa-trash"></i> Vider'; btn.classList.remove('text-red-600','font-semibold'); }, 2500);
+    return;
+  }
+  if (btn) { btn.dataset.confirm = ''; btn.innerHTML = '<i class="fa fa-trash"></i> Vider'; btn.classList.remove('text-red-600','font-semibold'); }
   panier = [];
   annulerEspeces();
   afficherPanier();
@@ -331,7 +352,7 @@ const BILLETS = [5, 10, 20, 50, 100, 200];
 
 function ouvrirEncaissement(mode) {
   if (panier.length === 0) { afficherMessage('⚠️ Panier vide', 'warning'); return; }
-  if (mode !== 'Espèces') { validerVente(mode); return; }
+  if (mode.toLowerCase().replace(/[^a-z]/g,'') !== 'especes') { validerVente(mode); return; }
 
   const total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
   const bloc = document.getElementById('bloc-monnaie');

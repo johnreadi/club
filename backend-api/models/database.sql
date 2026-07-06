@@ -115,11 +115,13 @@ CREATE INDEX idx_produits_codebarre ON produits(code_barre);
 CREATE INDEX idx_ventes_club_date ON ventes(club_id, date_vente);
 
 -- Données initiales
+-- Admin plateforme : admin@plateforme.fr / Admin2026!Plateforme
 INSERT INTO admins_plateforme (email, mot_de_passe_hash, nom_complet)
-VALUES ('admin@plateforme.fr', '$2a$10$EixZaYb4xR8b3T4M5N6O7P8Q9R0S1T2U3V4W5X6Y7Z8A9B0C1D2E3', 'Administrateur Principal');
+VALUES ('admin@plateforme.fr', '$2a$10$GuDW.4x1VkK1GBN9XDMruegNQD3UO8leIdryV7sMwMGTuPqgvyDES', 'Administrateur Principal');
 
 INSERT INTO clubs (nom, ville, niveau_abonnement, date_fin_abonnement)
 VALUES ('AS Rouen', 'Rouen', 'complet', CURRENT_DATE + INTERVAL '1 year');
 
+-- Proprietaire club : jean@asrouen.fr / ClubAS2026!Rouen
 INSERT INTO utilisateurs (club_id, nom, prenom, email, mot_de_passe_hash, role)
-VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$R9tU7vW2xY3zA4bC5dE6fG7hI8jK9lM0nO1pQ2rS3tU4vW5xY6z', 'proprietaire');
+VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$bpFN0y4vawEgDqzJZfcgeutJWeDRtFkAMV8CN84LFCgF5vCocUNre', 'proprietaire');

@@ -1,0 +1,68 @@
+version: '3.8'
+
+networks:
+  docker-overlay:
+    external: true
+
+volumes:
+  db_data:
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - docker-overlay
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: ../backend-api
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      SYNC_SECRET: ${SYNC_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - docker-overlay
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ../frontend-pwa
+      dockerfile: Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - docker-overlay
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gestion-clubs.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.gestion-clubs.entrypoints=websecure"
+      - "traefik.http.routers.gestion-clubs.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gestion-clubs.loadbalancer.server.port=80"

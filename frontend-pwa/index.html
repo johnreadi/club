@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Clubs - Plateforme</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            success: '#36C389',
+            warning: '#FF7D00',
+            danger: '#ED3833',
+            light: '#F8FAFC',
+            dark: '#1E293B',
+            purple: '#8B5CF6'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-light text-dark font-sans">
+
+  <!-- Écran de connexion -->
+  <div id="ecran-connexion" class="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-2xl font-bold text-center text-primary mb-6">Connexion</h2>
+      <div id="message-connexion" class="mb-4 p-2 rounded hidden"></div>
+      <form id="form-connexion" class="space-y-4">
+        <input type="email" name="email" placeholder="Adresse email" required class="w-full border p-3 rounded">
+        <input type="password" name="mot_de_passe" placeholder="Mot de passe" required class="w-full border p-3 rounded">
+        <button type="submit" class="w-full bg-primary text-white p-3 rounded hover:bg-primary/90">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Interface principale -->
+  <div id="interface-principale" class="hidden">
+    <div class="flex flex-col md:flex-row min-h-screen">
+      <aside class="w-full md:w-64 bg-white shadow-sm border-r p-4">
+        <h1 class="text-xl font-bold text-center text-primary mb-6">GESTION DES CLUBS</h1>
+        <div class="text-sm text-center mb-4 text-gray-600">
+          <span id="nom-utilisateur"></span><br>
+          <span id="nom-club" class="font-medium"></span>
+        </div>
+        <nav class="space-y-1" id="main-menu">
+          <a href="#accueil" class="menu-item active" data-section="accueil"><i class="fa fa-home"></i> Tableau de bord</a>
+          <a href="#stock" class="menu-item" data-section="stock"><i class="fa fa-cube"></i> Stock & Étiquettes</a>
+          <a href="#caisse" class="menu-item" data-section="caisse"><i class="fa fa-calculator"></i> Caisse & Ventes</a>
+          <a href="#inventaire" class="menu-item" data-section="inventaire"><i class="fa fa-list-alt"></i> Inventaire</a>
+          <a href="#rapports" class="menu-item" data-section="rapports"><i class="fa fa-bar-chart"></i> Rapports</a>
+          <a href="#utilisateurs" class="menu-item" data-section="utilisateurs"><i class="fa fa-users"></i> Utilisateurs</a>
+          <a href="#admin-plateforme" class="menu-item hidden" id="menu-admin" data-section="admin-plateforme"><i class="fa fa-cogs"></i> Administration Plateforme</a>
+          <a href="#profil" class="menu-item" data-section="profil"><i class="fa fa-user"></i> Mon profil</a>
+          <a href="#" onclick="deconnexion()" class="menu-item text-red-600"><i class="fa fa-sign-out"></i> Déconnexion</a>
+        </nav>
+      </aside>
+
+      <main class="flex-1 p-4 md:p-6">
+        <div id="zone-message" class="mb-4 p-2 rounded text-center hidden"></div>
+
+        <!-- Tableau de bord -->
+        <section id="accueil" class="module active">
+          <h2 class="text-2xl font-semibold mb-4">Tableau de bord</h2>
+          <div class="grid md:grid-cols-4 gap-4 mb-6">
+            <div class="card bg-blue-50 border-l-4 border-primary">
+              <h3 class="font-medium">Produits en stock</h3>
+              <p class="text-2xl font-bold" id="stat-produits">0</p>
+            </div>
+            <div class="card bg-green-50 border-l-4 border-success">
+              <h3 class="font-medium">Ventes du mois</h3>
+              <p class="text-2xl font-bold" id="stat-ventes">0 €</p>
+            </div>
+            <div class="card bg-orange-50 border-l-4 border-warning">
+              <h3 class="font-medium">Valeur du stock</h3>
+              <p class="text-2xl font-bold" id="stat-valeur-stock">0 €</p>
+            </div>
+            <div class="card bg-purple-50 border-l-4 border-purple">
+              <h3 class="font-medium">Utilisateurs actifs</h3>
+              <p class="text-2xl font-bold" id="stat-utilisateurs">0</p>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Dernières ventes</h3>
+              <div id="dernieres-ventes" class="text-sm"></div>
+            </div>
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Alertes stock</h3>
+              <div id="alertes-stock" class="text-sm"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stock & Étiquettes -->
+        <section id="stock" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Gestion du Stock & Étiquettes</h2>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-1 card">
+              <h3 class="text-lg font-medium mb-3">Ajouter / Modifier un produit</h3>
+              <form id="form-produit" class="space-y-3">
+                <input type="text" name="reference" placeholder="Référence produit" class="w-full border p-2 rounded">
+                <input type="text" name="code_barre" placeholder="Code-barres" class="w-full border p-2 rounded">
+                <input type="text" name="nom" placeholder="Nom du produit" required class="w-full border p-2 rounded">
+                <input type="number" step="0.01" name="prix_achat" placeholder="Prix d'achat (HT)" class="w-full border p-2 rounded">
+                <input type="number" step="0.01" name="prix_vente" placeholder="Prix de vente (TTC)" required class="w-full border p-2 rounded">
+                <input type="number" name="quantite" placeholder="Quantité en stock" min="0" class="w-full border p-2 rounded">
+                <input type="number" name="seuil" placeholder="Seuil d'alerte" min="0" value="5" class="w-full border p-2 rounded">
+                <button type="submit" class="w-full bg-primary text-white p-2 rounded hover:bg-primary/90">Enregistrer</button>
+              </form>
+            </div>
+            <div class="md:col-span-2 card overflow-x-auto">
+              <h3 class="text-lg font-medium mb-3">Liste des produits</h3>
+              <div class="mb-3">
+                <input type="text" id="recherche-produit" placeholder="Rechercher par nom, référence ou code..." class="w-full border p-2 rounded">
+              </div>
+              <table class="w-full text-sm">
+                <thead><tr class="border-b"><th class="text-left p-2">Réf</th><th class="text-left p-2">Code</th><th class="text-left p-2">Nom</th><th class="text-right p-2">Prix</th><th class="text-right p-2">Stock</th><th class="text-center p-2">Actions</th></tr></thead>
+                <tbody id="liste-produits"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Caisse & Ventes -->
+        <section id="caisse" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Caisse & Ventes</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="md:col-span-2 card">
+              <h3 class="text-lg font-medium mb-3">Recherche / Scan</h3>
+              <input type="text" id="scan-produit" placeholder="Scanner code-barres ou saisir référence..." class="w-full p-3 border rounded text-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary/50">
+              <h3 class="text-lg font-medium mb-2">Panier</h3>
+              <div id="panier" class="min-h-[220px] border rounded p-3 mb-3 bg-gray-50"></div>
+              <div class="text-right text-xl font-semibold">Total : <span id="montant-total">0.00 €</span></div>
+            </div>
+            <div class="card">
+              <h3 class="text-lg font-medium mb-4">Mode de paiement</h3>
+              <button onclick="validerVente('Espèces')" class="w-full bg-green-600 text-white p-3 rounded mb-3 hover:bg-green-700">Espèces</button>
+              <button onclick="validerVente('CB')" class="w-full bg-blue-600 text-white p-3 rounded mb-3 hover:bg-blue-700">Carte Bancaire</button>
+              <button onclick="validerVente('Chèque')" class="w-full bg-orange-600 text-white p-3 rounded hover:bg-orange-700">Chèque</button>
+              <hr class="my-4">
+              <h4 class="font-medium mb-2">Dernières ventes</h4>
+              <div id="dernieres-ventes-caisse" class="text-xs max-h-40 overflow-y-auto"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Inventaire -->
+        <section id="inventaire" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Inventaire du stock</h2>
+          <div class="card overflow-x-auto">
+            <h3 class="text-lg font-medium mb-3">Vérification physique</h3>
+            <table class="w-full text-sm mb-4">
+              <thead><tr class="border-b"><th class="text-left p-2">Produit</th><th class="text-right p-2">Stock théorique</th><th class="text-right p-2">Quantité réelle</th><th class="text-right p-2">Écart</th></tr></thead>
+              <tbody id="inventaire-liste"></tbody>
+            </table>
+            <button onclick="validerInventaire()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90">Valider et mettre à jour le stock</button>
+          </div>
+          <div class="card mt-4">
+            <h3 class="text-lg font-medium mb-3">Historique des inventaires</h3>
+            <table class="w-full text-sm">
+              <thead><tr class="border-b"><th class="text-left p-2">Date</th><th class="text-right p-2">Produits vérifiés</th><th class="text-right p-2">Écart total</th><th class="text-center p-2">Statut</th></tr></thead>
+              <tbody id="liste-inventaires"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Rapports & Statistiques -->
+        <section id="rapports" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Rapports & Statistiques</h2>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="card bg-green-50 border-l-4 border-success">
+              <h3 class="font-medium">Chiffre d'affaires</h3>
+              <p class="text-2xl font-bold" id="ca-total">0.00 €</p>
+              <p class="text-sm text-gray-600">Depuis l'ouverture</p>
+            </div>
+            <div class="card bg-blue-50 border-l-4 border-primary">
+              <h3 class="font-medium">Marge brute</h3>
+              <p class="text-2xl font-bold" id="marge-total">0.00 €</p>
+              <p class="text-sm text-gray-600">Taux : <span id="taux-marge">0</span> %</p>
+            </div>
+            <div class="card bg-purple-50 border-l-4 border-purple">
+              <h3 class="font-medium">Ventes par mois</h3>
+              <p class="text-sm text-gray-600">Voir détail ci-dessous</p>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Évolution des ventes</h3>
+              <div id="graphique-ventes" class="h-40 flex items-center justify-center text-gray-500">Graphique des ventes par mois</div>
+            </div>
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Export des données</h3>
+              <button onclick="exporterDonnees()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 mr-2">Exporter en JSON</button>
+              <button onclick="exporterCSV()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Exporter en CSV</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Utilisateurs -->
+        <section id="utilisateurs" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Gestion des utilisateurs & droits</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Ajouter un utilisateur</h3>
+              <form id="form-utilisateur" class="space-y-3">
+                <input type="text" name="prenom" placeholder="Prénom" required class="w-full border p-2 rounded">
+                <input type="text" name="nom" placeholder="Nom" required class="w-full border p-2 rounded">
+                <input type="email" name="email" placeholder="Adresse email" required class="w-full border p-2 rounded">
+                <input type="password" name="mot_de_passe" placeholder="Mot de passe" required class="w-full border p-2 rounded">
+                <select name="role" class="w-full border p-2 rounded">
+                  <option value="caissier">Caissier</option>
+                  <option value="responsable_stock">Responsable Stock</option>
+                  <option value="gestionnaire">Gestionnaire</option>
+                  <option value="proprietaire">Propriétaire</option>
+                </select>
+                <button type="submit" class="w-full bg-primary text-white p-2 rounded hover:bg-primary/90">Enregistrer</button>
+              </form>
+            </div>
+            <div class="md:col-span-2 card overflow-x-auto">
+              <h3 class="text-lg font-medium mb-3">Liste des utilisateurs</h3>
+              <table class="w-full text-sm">
+                <thead><tr class="border-b"><th class="text-left p-2">Nom & Prénom</th><th class="text-left p-2">Email</th><th class="text-left p-2">Rôle</th><th class="text-center p-2">Statut</th><th class="text-center p-2">Actions</th></tr></thead>
+                <tbody id="liste-utilisateurs"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Administration Plateforme -->
+        <section id="admin-plateforme" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Administration Générale de la Plateforme</h2>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="card">
+              <h3 class="text-lg font-medium mb-3">Créer un nouveau club</h3>
+              <form id="form-nouveau-club" class="space-y-3">
+                <input type="text" name="nom" placeholder="Nom du club" required class="w-full border p-2 rounded">
+                <input type="text" name="adresse" placeholder="Adresse" class="w-full border p-2 rounded">
+                <div class="flex gap-2">
+                  <input type="text" name="cp" placeholder="Code postal" class="w-1/3 border p-2 rounded">
+                  <input type="text" name="ville" placeholder="Ville" required class="w-2/3 border p-2 rounded">
+                </div>
+                <input type="tel" name="telephone" placeholder="Téléphone" class="w-full border p-2 rounded">
+                <input type="email" name="email" placeholder="Email de contact" required class="w-full border p-2 rounded">
+                <select name="abonnement" class="w-full border p-2 rounded">
+                  <option value="de_base">Formule de base</option>
+                  <option value="essentiel">Formule essentielle</option>
+                  <option value="complet">Formule complète</option>
+                </select>
+                <button type="submit" class="w-full bg-primary text-white p-2 rounded hover:bg-primary/90">Créer le club</button>
+              </form>
+            </div>
+            <div class="md:col-span-2 card overflow-x-auto">
+              <h3 class="text-lg font-medium mb-3">Liste des clubs enregistrés</h3>
+              <table class="w-full text-sm">
+                <thead><tr class="border-b"><th class="text-left p-2">Nom</th><th class="text-left p-2">Ville</th><th class="text-left p-2">Formule</th><th class="text-left p-2">Expiration</th><th class="text-center p-2">Statut</th><th class="text-center p-2">Actions</th></tr></thead>
+                <tbody id="liste-clubs-plateforme"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mon profil -->
+        <section id="profil" class="module hidden">
+          <h2 class="text-2xl font-semibold mb-4">Mon profil</h2>
+          <div class="card max-w-xl">
+            <h3 class="text-lg font-medium mb-4">Informations personnelles</h3>
+            <form id="form-profil" class="space-y-4">
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm mb-1">Prénom</label>
+                  <input type="text" name="prenom" class="w-full border p-2 rounded">
+                </div>
+                <div>
+                  <label class="block text-sm mb-1">Nom</label>
+                  <input type="text" name="nom" class="w-full border p-2 rounded">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Adresse email</label>
+                <input type="email" name="email" readonly class="w-full border p-2 rounded bg-gray-100">
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Nouveau mot de passe (si changement)</label>
+                <input type="password" name="nouveau_mdp" class="w-full border p-2 rounded">
+              </div>
+              <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90">Enregistrer les modifications</button>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Bouton Back to Top -->
+  <button id="btn-back-top"
+    class="hidden fixed bottom-6 right-6 z-50 bg-primary text-white w-11 h-11 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all"
+    title="Retour en haut">
+    <i class="fa fa-chevron-up"></i>
+  </button>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/stock.js"></script>
+  <script src="/js/caisse.js"></script>
+  <script src="/js/inventaire.js"></script>
+  <script src="/js/rapports.js"></script>
+  <script src="/js/utilisateurs.js"></script>
+  <script src="/js/admin-plateforme.js"></script>
+</body>
+</html>

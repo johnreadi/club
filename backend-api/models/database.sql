@@ -1,0 +1,125 @@
+-- ==============================
+-- Base de données Gestion des Clubs
+-- ==============================
+
+-- Suppression si existant
+DROP TABLE IF EXISTS lignes_vente CASCADE;
+DROP TABLE IF EXISTS ventes CASCADE;
+DROP TABLE IF EXISTS inventaires_lignes CASCADE;
+DROP TABLE IF EXISTS inventaires CASCADE;
+DROP TABLE IF EXISTS produits CASCADE;
+DROP TABLE IF EXISTS utilisateurs CASCADE;
+DROP TABLE IF EXISTS clubs CASCADE;
+DROP TABLE IF EXISTS admins_plateforme CASCADE;
+
+-- Administrateurs de la plateforme
+CREATE TABLE admins_plateforme (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  mot_de_passe_hash VARCHAR(255) NOT NULL,
+  nom_complet VARCHAR(150),
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Clubs
+CREATE TABLE clubs (
+  id SERIAL PRIMARY KEY,
+  nom VARCHAR(150) NOT NULL,
+  adresse TEXT,
+  code_postal VARCHAR(10),
+  ville VARCHAR(100),
+  telephone VARCHAR(20),
+  email_contact VARCHAR(100),
+  niveau_abonnement VARCHAR(30) DEFAULT 'de_base',
+  date_debut_abonnement DATE DEFAULT CURRENT_DATE,
+  date_fin_abonnement DATE,
+  actif BOOLEAN DEFAULT TRUE,
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Utilisateurs
+CREATE TABLE utilisateurs (
+  id SERIAL PRIMARY KEY,
+  club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
+  nom VARCHAR(100) NOT NULL,
+  prenom VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  mot_de_passe_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  derniere_connexion TIMESTAMP WITH TIME ZONE,
+  actif BOOLEAN DEFAULT TRUE,
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Produits
+CREATE TABLE produits (
+  id SERIAL PRIMARY KEY,
+  club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
+  reference VARCHAR(50),
+  code_barre VARCHAR(100),
+  nom VARCHAR(200) NOT NULL,
+  description TEXT,
+  prix_achat DECIMAL(10,2) DEFAULT 0,
+  prix_vente DECIMAL(10,2) NOT NULL,
+  quantite_stock INT DEFAULT 0,
+  seuil_alerte INT DEFAULT 5,
+  actif BOOLEAN DEFAULT TRUE,
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Ventes
+CREATE TABLE ventes (
+  id SERIAL PRIMARY KEY,
+  club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
+  utilisateur_id INT REFERENCES utilisateurs(id),
+  montant_total DECIMAL(10,2) NOT NULL,
+  mode_paiement VARCHAR(50) NOT NULL,
+  statut VARCHAR(30) DEFAULT 'valide',
+  date_vente TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Lignes de vente
+CREATE TABLE lignes_vente (
+  id SERIAL PRIMARY KEY,
+  vente_id INT REFERENCES ventes(id) ON DELETE CASCADE,
+  produit_id INT REFERENCES produits(id),
+  quantite INT NOT NULL,
+  prix_unitaire DECIMAL(10,2) NOT NULL
+);
+
+-- Inventaires
+CREATE TABLE inventaires (
+  id SERIAL PRIMARY KEY,
+  club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
+  date_inventaire DATE NOT NULL,
+  utilisateur_id INT REFERENCES utilisateurs(id),
+  motif_ecarts TEXT,
+  valide BOOLEAN DEFAULT FALSE,
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inventaires_lignes (
+  id SERIAL PRIMARY KEY,
+  inventaire_id INT REFERENCES inventaires(id) ON DELETE CASCADE,
+  produit_id INT REFERENCES produits(id),
+  quantite_theorique INT NOT NULL,
+  quantite_reelle INT NOT NULL,
+  ecart INT NOT NULL
+);
+
+-- Index
+CREATE INDEX idx_clubs_actif ON clubs(actif);
+CREATE INDEX idx_produits_club ON produits(club_id);
+CREATE INDEX idx_produits_codebarre ON produits(code_barre);
+CREATE INDEX idx_ventes_club_date ON ventes(club_id, date_vente);
+
+-- Données initiales
+INSERT INTO admins_plateforme (email, mot_de_passe_hash, nom_complet)
+VALUES ('admin@plateforme.fr', '$2a$10$EixZaYb4xR8b3T4M5N6O7P8Q9R0S1T2U3V4W5X6Y7Z8A9B0C1D2E3', 'Administrateur Principal');
+
+INSERT INTO clubs (nom, ville, niveau_abonnement, date_fin_abonnement)
+VALUES ('AS Rouen', 'Rouen', 'complet', CURRENT_DATE + INTERVAL '1 year');
+
+INSERT INTO utilisateurs (club_id, nom, prenom, email, mot_de_passe_hash, role)
+VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$R9tU7vW2xY3zA4bC5dE6fG7hI8jK9lM0nO1pQ2rS3tU4vW5xY6z', 'proprietaire');

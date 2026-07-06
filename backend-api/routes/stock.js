@@ -1,0 +1,52 @@
+const express = require('express');
+const pool = require('../db');
+const { verifierToken } = require('../middleware/auth');
+const router = express.Router();
+
+router.use(verifierToken);
+
+router.get('/', async (req, res) => {
+  const { club_id } = req.utilisateur;
+  const result = await pool.query('SELECT * FROM produits WHERE club_id = $1 ORDER BY nom', [club_id]);
+  res.json(result.rows);
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const { reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
+    if (!nom || !prix_vente) return res.status(400).json({ erreur: 'Nom et prix de vente requis' });
+    const result = await pool.query(
+      'INSERT INTO produits (club_id, reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [club_id, reference || null, nom, code_barre || null, prix_achat || 0, prix_vente, quantite_stock || 0, seuil_alerte || 5]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const { reference, nom, code_barre, prix_achat, prix_vente, quantite_stock, seuil_alerte } = req.body;
+    const result = await pool.query(
+      `UPDATE produits SET reference=$1, nom=$2, code_barre=$3, prix_achat=$4, prix_vente=$5,
+       quantite_stock=$6, seuil_alerte=$7, mis_a_jour_le=CURRENT_TIMESTAMP
+       WHERE id=$8 AND club_id=$9 RETURNING *`,
+      [reference || null, nom, code_barre || null, prix_achat || 0, prix_vente, quantite_stock, seuil_alerte || 5, req.params.id, club_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ erreur: 'Produit non trouvé' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  const { club_id } = req.utilisateur;
+  await pool.query('DELETE FROM produits WHERE id=$1 AND club_id=$2', [req.params.id, club_id]);
+  res.json({ succes: true });
+});
+
+module.exports = router;

@@ -414,7 +414,225 @@
 </button>
 
 <script>
-  function ouvrirModal(type) {
+// ── Application siteConfig depuis l'admin ─────────────────────────────────────
+(function applySiteConfig() {
+  try {
+    var D = {
+      logoTexte:'READI', logoSuffix:'.Fr',
+      colorPrimary:'#165DFF', colorSidebar:'#0f2d6b', colorAccent:'#60a5fa',
+      navbarBtnConnexion:'Connexion', navbarBtnCta:'Essai gratuit',
+      navbarBgColor:'#ffffff', navbarShowLogo:true, navbarSticky:true,
+      navbarLinks:[{label:'Fonctionnalités',href:'#fonctionnalites'},{label:'Comment ça marche',href:'#comment-ca-marche'},{label:'Tarifs',href:'#tarifs'}],
+      slideSpeed:5000, slideAutoplay:true, slideShowDots:true, slideShowStats:true,
+      slides:[
+        {gradient:'linear-gradient(135deg,#0f2d6b 0%,#165DFF 55%,#0ea5e9 100%)'},
+        {gradient:'linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%)'},
+        {gradient:'linear-gradient(135deg,#064e3b 0%,#065f46 45%,#059669 100%)'},
+        {gradient:'linear-gradient(135deg,#4c1d95 0%,#5b21b6 45%,#7c3aed 100%)'}
+      ],
+      typewriterPhrases:['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'],
+      heroStats:[{valeur:'+200',label:'Clubs'},{valeur:'50k+',label:'Étiquettes'},{valeur:'100%',label:'En ligne'}],
+      sectFonctVisible:true, sectFonctBadge:'Tout-en-un',
+      sectFonctTitre:'Tout ce dont votre club a besoin',
+      sectFonctSous:'Une plateforme complète pour professionnaliser la gestion de votre boutique sportive.',
+      fonctCards:null,
+      sectHowVisible:true, sectHowBadge:'Simple & rapide', sectHowTitre:'Opérationnel en 3 étapes',
+      howSteps:null,
+      sectTarifsVisible:true, sectTarifsBadge:'Tarification', sectTarifsTitre:'Gratuit pour commencer',
+      sectTarifsSous:'Profitez de toutes les fonctionnalités sans limitation.',
+      sectTarifsPrix:'0 €', sectTarifsBadgeLabel:'LANCEMENT GRATUIT', sectTarifsCta:'Commencer gratuitement',
+      sectCtaVisible:true, sectCtaTitre:'Prêt à professionnaliser votre boutique ?',
+      sectCtaSous:'Rejoignez des centaines de clubs qui gèrent leur stock avec READI.Fr.',
+      sectCtaBtn:'Créer mon espace gratuitement', sectCtaNote:'Aucune carte bancaire · Activation immédiate',
+      landCta1:'Créer mon espace gratuit', landCta2:'Découvrir',
+      font:'Inter, sans-serif', fontSize:14
+    };
+    var saved = localStorage.getItem('siteConfig');
+    var cfg = saved ? Object.assign({}, D, JSON.parse(saved)) : D;
+    var p = cfg.colorPrimary || '#165DFF';
+    var s = cfg.colorSidebar || '#0f2d6b';
+    var a = cfg.colorAccent  || '#60a5fa';
+
+    // --- Navbar ---
+    var navLinks = document.querySelector('#navbar .hidden.md\\:flex');
+    if (navLinks && cfg.navbarLinks) {
+      navLinks.innerHTML = cfg.navbarLinks.map(function(l){
+        return '<a href="'+l.href+'" class="hover:text-white transition-colors">'+l.label+'</a>';
+      }).join('');
+    }
+    var btnConn = document.querySelector('#navbar button:first-of-type');
+    var allBtns = document.querySelectorAll('#navbar button');
+    allBtns.forEach(function(b){
+      if (b.textContent.trim().indexOf('Connexion') !== -1 || b.textContent.trim().indexOf(D.navbarBtnConnexion) !== -1) b.innerHTML = b.innerHTML.replace(/Connexion|Connexion/g, cfg.navbarBtnConnexion);
+      if (b.textContent.trim().indexOf('Essai gratuit') !== -1 || b.textContent.trim().indexOf(D.navbarBtnCta) !== -1) b.innerHTML = b.innerHTML.replace(/Essai gratuit/g, cfg.navbarBtnCta);
+    });
+    var nav = document.getElementById('navbar');
+    if (nav && !cfg.navbarSticky) nav.style.position = 'relative';
+
+    // --- Logo (navbar + footer) ---
+    document.querySelectorAll('.font-black').forEach(function(el){
+      if (el.textContent.indexOf('READI') !== -1 && el.querySelector('span')) {
+        el.innerHTML = '<span style="color:'+p+'">'+cfg.logoTexte+'</span><span style="color:'+a+'">'+cfg.logoSuffix+'</span>';
+      }
+    });
+
+    // --- Slides ---
+    var slideEls = document.querySelectorAll('.slide');
+    if (cfg.slides && cfg.slides.length) {
+      cfg.slides.forEach(function(sl, i){
+        if (slideEls[i]) {
+          slideEls[i].style.background = sl.gradient;
+          slideEls[i].className = 'slide' + (i===0?' active':'');
+        } else if (i >= slideEls.length) {
+          // Ajouter de nouveaux slides si besoin
+          var hero = document.getElementById('hero');
+          var newDiv = document.createElement('div');
+          newDiv.className = 'slide';
+          newDiv.style.background = sl.gradient;
+          hero.insertBefore(newDiv, hero.querySelector('.absolute'));
+        }
+      });
+      // Mettre à jour les dots
+      var dotsContainer = document.querySelector('#hero .flex.gap-3');
+      if (dotsContainer) {
+        dotsContainer.style.display = cfg.slideShowDots ? '' : 'none';
+        dotsContainer.innerHTML = cfg.slides.map(function(_, i){
+          return '<div class="dot'+(i===0?' active':'')+'" onclick="goToSlide('+i+')"></div>';
+        }).join('');
+      }
+    }
+
+    // --- Stats hero ---
+    var statsEl = document.querySelector('#hero .hidden.md\\:flex.gap-8');
+    if (statsEl) {
+      statsEl.style.display = cfg.slideShowStats ? '' : 'none';
+      if (cfg.heroStats) {
+        statsEl.innerHTML = cfg.heroStats.map(function(st){
+          return '<div class="text-white text-center"><div class="text-2xl font-black">'+st.valeur+'</div><div class="text-white/50 text-xs">'+st.label+'</div></div>';
+        }).join('');
+      }
+    }
+
+    // --- Typewriter phrases ---
+    if (cfg.typewriterPhrases && cfg.typewriterPhrases.length) {
+      window.__twPhrases = cfg.typewriterPhrases;
+    }
+
+    // --- CTA hero ---
+    var ctaBtns = document.querySelectorAll('#hero button, #hero a');
+    ctaBtns.forEach(function(b){
+      if (b.textContent.indexOf('Créer') !== -1 || b.textContent.indexOf('espace') !== -1) {
+        var icon = b.querySelector('i');
+        b.innerHTML = (icon ? icon.outerHTML : '<i class="fa fa-rocket mr-2"></i>') + cfg.landCta1;
+      }
+      if (b.textContent.indexOf('couvrir') !== -1 || b.textContent.indexOf('D\u00e9c') !== -1) {
+        var icon2 = b.querySelector('i');
+        b.innerHTML = (icon2 ? icon2.outerHTML : '<i class="fa fa-arrow-down mr-2"></i>') + cfg.landCta2;
+      }
+    });
+
+    // --- Section Fonctionnalités ---
+    var sectFonct = document.getElementById('fonctionnalites');
+    if (sectFonct) {
+      sectFonct.style.display = cfg.sectFonctVisible ? '' : 'none';
+      var badgeEl = sectFonct.querySelector('span.text-primary');
+      if (badgeEl) badgeEl.textContent = cfg.sectFonctBadge;
+      var titreEl = sectFonct.querySelector('h2');
+      if (titreEl) titreEl.textContent = cfg.sectFonctTitre;
+      var sousEl  = sectFonct.querySelector('.text-gray-500.text-lg');
+      if (sousEl) sousEl.textContent = cfg.sectFonctSous;
+      if (cfg.fonctCards && cfg.fonctCards.length) {
+        var grid = sectFonct.querySelector('.grid');
+        if (grid) {
+          grid.innerHTML = cfg.fonctCards.map(function(c){
+            var pts = (c.points||[]).map(function(pt){
+              return '<li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> '+pt+'</li>';
+            }).join('');
+            return '<div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">'
+              +'<div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa '+c.icone+' text-white text-lg"></i></div>'
+              +'<h3 class="font-bold text-lg mb-2">'+c.titre+'</h3>'
+              +'<p class="text-gray-500 text-sm leading-relaxed">'+c.desc+'</p>'
+              +'<ul class="mt-4 space-y-1.5 text-sm text-gray-600">'+pts+'</ul></div>';
+          }).join('');
+        }
+      }
+    }
+
+    // --- Section Comment ça marche ---
+    var sectHow = document.getElementById('comment-ca-marche');
+    if (sectHow) {
+      sectHow.style.display = cfg.sectHowVisible ? '' : 'none';
+      var badgeHow = sectHow.querySelector('span.text-primary');
+      if (badgeHow) badgeHow.textContent = cfg.sectHowBadge;
+      var titreHow = sectHow.querySelector('h2');
+      if (titreHow) titreHow.textContent = cfg.sectHowTitre;
+      if (cfg.howSteps && cfg.howSteps.length) {
+        var gridHow = sectHow.querySelector('.grid');
+        if (gridHow) {
+          gridHow.innerHTML = cfg.howSteps.map(function(step, i){
+            return '<div class="text-center"><div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl"><span class="text-white font-black text-2xl">'+(i+1)+'</span></div>'
+              +'<h3 class="font-bold text-lg mb-2">'+step.titre+'</h3>'
+              +'<p class="text-gray-500 text-sm leading-relaxed">'+step.desc+'</p></div>';
+          }).join('');
+        }
+      }
+    }
+
+    // --- Section Tarifs ---
+    var sectTarifs = document.getElementById('tarifs');
+    if (sectTarifs) {
+      sectTarifs.style.display = cfg.sectTarifsVisible ? '' : 'none';
+      var badgeTar = sectTarifs.querySelector('span.text-primary');
+      if (badgeTar) badgeTar.textContent = cfg.sectTarifsBadge;
+      var titreTar = sectTarifs.querySelector('h2');
+      if (titreTar) titreTar.textContent = cfg.sectTarifsTitre;
+      var sousTar = sectTarifs.querySelector('.text-gray-500.text-lg');
+      if (sousTar) sousTar.textContent = cfg.sectTarifsSous;
+      var prixEl = sectTarifs.querySelector('.text-5xl');
+      if (prixEl) prixEl.textContent = cfg.sectTarifsPrix;
+      var badgeLabelEl = sectTarifs.querySelector('.absolute span');
+      if (badgeLabelEl) badgeLabelEl.textContent = cfg.sectTarifsBadgeLabel;
+      var ctaTarEl = sectTarifs.querySelector('button.bg-primary');
+      if (ctaTarEl) ctaTarEl.innerHTML = '<i class="fa fa-rocket mr-2"></i>'+cfg.sectTarifsCta;
+    }
+
+    // --- Section CTA Finale ---
+    var sectCta = document.querySelector('section.py-20');
+    if (sectCta) {
+      sectCta.style.display = cfg.sectCtaVisible ? '' : 'none';
+      var titreCta = sectCta.querySelector('h2');
+      if (titreCta) titreCta.textContent = cfg.sectCtaTitre;
+      var sousCta = sectCta.querySelector('p');
+      if (sousCta) sousCta.textContent = cfg.sectCtaSous;
+      var btnCta = sectCta.querySelector('button');
+      if (btnCta) btnCta.innerHTML = '<i class="fa fa-rocket mr-2"></i>'+cfg.sectCtaBtn;
+      var noteCta = sectCta.querySelector('p.mt-4');
+      if (noteCta) noteCta.textContent = cfg.sectCtaNote;
+    }
+
+    // --- Police ---
+    if (cfg.font) document.body.style.fontFamily = cfg.font;
+    if (cfg.fontSize) document.body.style.fontSize = cfg.fontSize + 'px';
+
+    // --- Footer copyright ---
+    if (cfg.footerCopyright) {
+      var fcop = document.querySelector('footer .border-t span');
+      if (fcop) fcop.textContent = cfg.footerCopyright;
+    }
+
+    // Injecter CSS variable primaire
+    document.documentElement.style.setProperty('--tw-primary', p);
+    // Patch tailwind primary color
+    if (window.tailwind && window.tailwind.config) {
+      window.tailwind.config.theme = window.tailwind.config.theme || {};
+      window.tailwind.config.theme.extend = window.tailwind.config.theme.extend || {};
+      window.tailwind.config.theme.extend.colors = window.tailwind.config.theme.extend.colors || {};
+      window.tailwind.config.theme.extend.colors.primary = p;
+    }
+  } catch(e) { console.warn('siteConfig apply error:', e); }
+})();
+
+function ouvrirModal(type) {
     fermerModals();
     document.getElementById('modal-' + type).classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -460,7 +678,7 @@
   timer=setInterval(nextSlide,5000);
   dots.forEach(function(d,i){ d.addEventListener('click',function(){ clearInterval(timer); goToSlide(i); timer=setInterval(nextSlide,5000); }); });
 
-  var phrases=['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'];
+  var phrases = window.__twPhrases || ['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'];
   var pi=0,ci=0,del=false;
   var tw=document.getElementById('typewriter');
   function typeStep(){

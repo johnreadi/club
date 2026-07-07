@@ -25,9 +25,62 @@ const SITE_DEFAULTS = {
     { section: 'parametres',   label: 'Paramètres',      icone: 'fa-sliders',     visible: true }
   ],
   navShowLogo: true, navSidebarCollapsed: false,
-  footerCopyright: '© 2026 READI.Fr — Tous droits réservés',
+  footerCopyright: '\u00a9 2026 READI.Fr \u2014 Tous droits r\u00e9serv\u00e9s',
   footerMentions: '', footerCgu: '', footerPrivacy: '',
-  footerFacebook: '', footerTwitter: '', footerInstagram: '', footerLinkedin: ''
+  footerFacebook: '', footerTwitter: '', footerInstagram: '', footerLinkedin: '',
+  // Navbar landing
+  navbarBtnConnexion: 'Connexion', navbarBtnCta: 'Essai gratuit',
+  navbarBgColor: '#ffffff', navbarShowLogo: true, navbarSticky: true,
+  navbarLinks: [
+    { label: 'Fonctionnalit\u00e9s', href: '#fonctionnalites' },
+    { label: 'Comment \u00e7a marche', href: '#comment-ca-marche' },
+    { label: 'Tarifs', href: '#tarifs' }
+  ],
+  // Slideshow
+  slideSpeed: 5000, slideAutoplay: true, slideShowDots: true, slideShowStats: true,
+  slides: [
+    { gradient: 'linear-gradient(135deg,#0f2d6b 0%,#165DFF 55%,#0ea5e9 100%)' },
+    { gradient: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%)' },
+    { gradient: 'linear-gradient(135deg,#064e3b 0%,#065f46 45%,#059669 100%)' },
+    { gradient: 'linear-gradient(135deg,#4c1d95 0%,#5b21b6 45%,#7c3aed 100%)' }
+  ],
+  typewriterPhrases: [
+    'G\u00e9rez votre stock en temps r\u00e9el.',
+    'Cr\u00e9ez vos \u00e9tiquettes avec codes-barres.',
+    'Encaissez vos ventes facilement.',
+    'Suivez vos performances en un clic.'
+  ],
+  heroStats: [
+    { valeur: '+200', label: 'Clubs' },
+    { valeur: '50k+', label: '\u00c9tiquettes' },
+    { valeur: '100%', label: 'En ligne' }
+  ],
+  // Sections landing
+  sectFonctVisible: true, sectFonctBadge: 'Tout-en-un',
+  sectFonctTitre: 'Tout ce dont votre club a besoin',
+  sectFonctSous: 'Une plateforme compl\u00e8te pour professionnaliser la gestion de votre boutique sportive.',
+  fonctCards: [
+    { icone: 'fa-cubes',      titre: 'Gestion du stock',            desc: 'Ajoutez vos produits, suivez les quantit\u00e9s en temps r\u00e9el.', points: ['Ajout par douchette ou manuel','Cat\u00e9gories personnalis\u00e9es','Alertes de seuil automatiques'] },
+    { icone: 'fa-barcode',    titre: '\u00c9tiquettes professionnelles', desc: 'G\u00e9n\u00e9rez et imprimez vos \u00e9tiquettes avec code-barres.', points: ['Code-barres CODE128 int\u00e9gr\u00e9','Personnalisation couleurs','Impression par lot'] },
+    { icone: 'fa-calculator', titre: 'Caisse enregistreuse',         desc: 'Encaissez vos ventes, g\u00e9rez le rendu monnaie.', points: ['Recherche produit live','Rendu monnaie automatique','Ticket & facture imprimables'] },
+    { icone: 'fa-bar-chart',  titre: 'Rapports & statistiques',      desc: 'Visualisez vos performances de vente \u00e0 tout moment.', points: ['CA mensuel et annuel','Top produits vendus','Export des donn\u00e9es'] },
+    { icone: 'fa-users',      titre: 'Multi-utilisateurs',           desc: 'Invitez b\u00e9n\u00e9voles et g\u00e9rants avec des droits configurables.', points: ['R\u00f4les admin / vendeur','Historique par utilisateur','Connexion JWT s\u00e9curis\u00e9e'] },
+    { icone: 'fa-mobile',     titre: 'Application mobile (PWA)',     desc: 'Installez l\u2019app sur votre t\u00e9l\u00e9phone sans passer par l\u2019App Store.', points: ['iOS, Android, PC','Compatible douchette Bluetooth','Interface responsive'] }
+  ],
+  sectHowVisible: true, sectHowBadge: 'Simple & rapide', sectHowTitre: 'Op\u00e9rationnel en 3 \u00e9tapes',
+  howSteps: [
+    { titre: 'Cr\u00e9ez votre compte', desc: 'Cliquez sur \u00ab\u00a0Connexion\u00a0\u00bb puis \u00ab\u00a0S\u2019inscrire\u00a0\u00bb. Votre espace est actif imm\u00e9diatement.' },
+    { titre: 'Ajoutez vos produits', desc: 'Importez votre catalogue, scannez les codes-barres ou saisissez vos articles manuellement.' },
+    { titre: 'G\u00e9rez & vendez', desc: 'Imprimez vos \u00e9tiquettes, encaissez vos ventes et consultez vos rapports en temps r\u00e9el.' }
+  ],
+  sectTarifsVisible: true, sectTarifsBadge: 'Tarification', sectTarifsTitre: 'Gratuit pour commencer',
+  sectTarifsSous: 'Profitez de toutes les fonctionnalit\u00e9s sans limitation.',
+  sectTarifsPrix: '0 \u20ac', sectTarifsBadgeLabel: 'LANCEMENT GRATUIT', sectTarifsCta: 'Commencer gratuitement',
+  sectCtaVisible: true,
+  sectCtaTitre: 'Pr\u00eat \u00e0 professionnaliser votre boutique\u00a0?',
+  sectCtaSous: 'Rejoignez des centaines de clubs qui g\u00e8rent leur stock avec READI.Fr.',
+  sectCtaBtn: 'Cr\u00e9er mon espace gratuitement',
+  sectCtaNote: 'Aucune carte bancaire \u00b7 Activation imm\u00e9diate'
 };
 
 const THEMES = [
@@ -422,6 +475,274 @@ function reinitialiserSite() {
   previewNav();
   appliquerSiteEnDirect(siteConfig);
   afficherMessage('Réglages réinitialisés', 'info');
+}
+
+// ── Navbar landing ────────────────────────────────────────────────────────────
+function rendreNavbarLinks() {
+  const cont = document.getElementById('navbar-links');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.navbarLinks || []).map((l, i) => `
+    <div class="flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2">
+      <input type="text" value="${l.label}" placeholder="Label" class="flex-1 text-sm bg-transparent focus:outline-none border-b border-transparent focus:border-gray-300" oninput="editNavbarLink(${i},'label',this.value)">
+      <input type="text" value="${l.href}" placeholder="#section" class="w-28 text-xs text-gray-400 bg-transparent focus:outline-none border-b border-transparent focus:border-gray-300 font-mono" oninput="editNavbarLink(${i},'href',this.value)">
+      <button onclick="supprimerNavbarLink(${i})" class="text-red-400 hover:text-red-600 text-xs"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+
+function editNavbarLink(idx, champ, val) {
+  if (siteConfig.navbarLinks[idx]) siteConfig.navbarLinks[idx][champ] = val;
+  previewNavbar();
+}
+function supprimerNavbarLink(idx) {
+  siteConfig.navbarLinks.splice(idx, 1);
+  rendreNavbarLinks();
+  previewNavbar();
+}
+function ajouterLienNavbar() {
+  siteConfig.navbarLinks = siteConfig.navbarLinks || [];
+  siteConfig.navbarLinks.push({ label: 'Nouveau lien', href: '#section' });
+  rendreNavbarLinks();
+  previewNavbar();
+}
+
+function previewNavbar() {
+  const connexion = document.getElementById('nav-btn-connexion')?.value || 'Connexion';
+  const cta = document.getElementById('nav-btn-cta')?.value || 'Essai gratuit';
+  const primary = document.getElementById('site-color-primary')?.value || '#3B82F6';
+  const sidebar = document.getElementById('site-color-sidebar')?.value || '#1e3a5f';
+  const el = document.getElementById('prev-nav-connexion');
+  if (el) el.textContent = connexion;
+  const elCta = document.getElementById('prev-nav-cta');
+  if (elCta) { elCta.textContent = cta; elCta.style.color = primary; }
+  const bg = document.getElementById('prev-navbar-bg');
+  if (bg) bg.style.background = `linear-gradient(135deg,${sidebar},${primary})`;
+  const linksEl = document.getElementById('prev-navbar-links');
+  if (linksEl) linksEl.innerHTML = (siteConfig.navbarLinks || []).map(l => `<span>${l.label}</span>`).join('');
+}
+
+// ── Slideshow ─────────────────────────────────────────────────────────────────
+function rendreSlidesEditor() {
+  const cont = document.getElementById('slides-editor');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.slides || []).map((s, i) => `
+    <div class="flex items-center gap-3 bg-gray-50 border rounded-lg px-3 py-2">
+      <div class="w-8 h-8 rounded flex-shrink-0 border" style="background:${s.gradient}"></div>
+      <div class="flex-1">
+        <label class="block text-xs text-gray-400 mb-1">Dégradé CSS (gradient)</label>
+        <input type="text" value="${s.gradient}" class="w-full text-xs border p-1 rounded font-mono" oninput="editSlide(${i},'gradient',this.value)">
+      </div>
+      <div class="flex flex-col gap-1">
+        <input type="color" value="#165DFF" class="w-8 h-5 cursor-pointer rounded border" title="Couleur de fin rapide" oninput="editSlideColor(${i},this.value)">
+        <button onclick="supprimerSlide(${i})" class="text-red-400 hover:text-red-600 text-xs"><i class="fa fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function editSlide(idx, champ, val) {
+  if (siteConfig.slides[idx]) { siteConfig.slides[idx][champ] = val; previewSlideshow(); }
+}
+function editSlideColor(idx, color) {
+  if (siteConfig.slides[idx]) {
+    siteConfig.slides[idx].gradient = `linear-gradient(135deg,${color}cc 0%,${color} 100%)`;
+    rendreSlidesEditor();
+    previewSlideshow();
+  }
+}
+function supprimerSlide(idx) {
+  if (siteConfig.slides.length <= 1) return;
+  siteConfig.slides.splice(idx, 1);
+  rendreSlidesEditor();
+  previewSlideshow();
+}
+function ajouterSlide() {
+  siteConfig.slides.push({ gradient: 'linear-gradient(135deg,#1e3a5f 0%,#3B82F6 100%)' });
+  rendreSlidesEditor();
+  previewSlideshow();
+}
+
+function rendreTypewriterEditor() {
+  const cont = document.getElementById('typewriter-phrases');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.typewriterPhrases || []).map((p, i) => `
+    <div class="flex items-center gap-2">
+      <input type="text" value="${p}" class="flex-1 border p-2 rounded-lg text-sm" oninput="editPhrase(${i},this.value)">
+      <button onclick="supprimerPhrase(${i})" class="text-red-400 hover:text-red-600 text-xs px-2"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+function editPhrase(idx, val) { if (siteConfig.typewriterPhrases[idx] !== undefined) { siteConfig.typewriterPhrases[idx] = val; previewSlideshow(); } }
+function supprimerPhrase(idx) { siteConfig.typewriterPhrases.splice(idx, 1); rendreTypewriterEditor(); previewSlideshow(); }
+function ajouterPhrase() { siteConfig.typewriterPhrases.push('Nouvelle phrase...'); rendreTypewriterEditor(); previewSlideshow(); }
+
+function rendreHeroStatsEditor() {
+  const cont = document.getElementById('hero-stats-editor');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.heroStats || []).map((s, i) => `
+    <div class="flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2">
+      <input type="text" value="${s.valeur}" placeholder="Valeur" class="w-20 border p-1.5 rounded text-sm font-bold text-center" oninput="editStat(${i},'valeur',this.value)">
+      <input type="text" value="${s.label}" placeholder="Label" class="flex-1 border p-1.5 rounded text-sm" oninput="editStat(${i},'label',this.value)">
+      <button onclick="supprimerStat(${i})" class="text-red-400 hover:text-red-600 text-xs"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+function editStat(idx, champ, val) { if (siteConfig.heroStats[idx]) { siteConfig.heroStats[idx][champ] = val; previewSlideshow(); } }
+function supprimerStat(idx) { siteConfig.heroStats.splice(idx, 1); rendreHeroStatsEditor(); previewSlideshow(); }
+
+function previewSlideshow() {
+  const slide0 = siteConfig.slides?.[0];
+  const bg = document.getElementById('prev-slide-bg');
+  if (bg && slide0) bg.style.background = slide0.gradient;
+  const tw = document.getElementById('prev-slide-typewriter');
+  if (tw) tw.textContent = siteConfig.typewriterPhrases?.[0] || '';
+  const c1 = document.getElementById('prev-slide-cta1');
+  if (c1) c1.textContent = document.getElementById('land-cta1')?.value || siteConfig.landCta1;
+  const c2 = document.getElementById('prev-slide-cta2');
+  if (c2) c2.textContent = document.getElementById('land-cta2')?.value || siteConfig.landCta2;
+  const dotsEl = document.getElementById('prev-slide-dots');
+  if (dotsEl) {
+    const show = document.getElementById('slide-show-dots')?.checked ?? siteConfig.slideShowDots;
+    dotsEl.style.display = show ? 'flex' : 'none';
+    dotsEl.innerHTML = (siteConfig.slides || []).map((_, i) =>
+      `<div class="w-2 h-2 rounded-full ${i===0?'bg-white':'bg-white/40'}"></div>`).join('');
+  }
+  const statsEl = document.getElementById('prev-slide-stats');
+  if (statsEl) {
+    const show = document.getElementById('slide-show-stats')?.checked ?? siteConfig.slideShowStats;
+    statsEl.style.display = show ? 'flex' : 'none';
+    statsEl.innerHTML = (siteConfig.heroStats || []).map(s =>
+      `<div class="text-white text-center text-xs"><div class="font-black">${s.valeur}</div><div class="opacity-50">${s.label}</div></div>`).join('');
+  }
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────────
+function rendreFonctCardsEditor() {
+  const cont = document.getElementById('fonct-cards-editor');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.fonctCards || []).map((c, i) => `
+    <div class="border rounded-xl p-3 mb-2 bg-gray-50">
+      <div class="flex items-center gap-2 mb-2">
+        <select class="border rounded px-1 py-1 text-xs" onchange="editFonctCard(${i},'icone',this.value)">
+          ${['fa-cubes','fa-barcode','fa-calculator','fa-bar-chart','fa-users','fa-mobile','fa-star','fa-globe','fa-shield','fa-bolt'].map(ic =>
+            `<option value="${ic}" ${c.icone===ic?'selected':''}>${ic.replace('fa-','')}</option>`).join('')}
+        </select>
+        <input type="text" value="${c.titre}" placeholder="Titre" class="flex-1 border p-1.5 rounded text-sm font-medium" oninput="editFonctCard(${i},'titre',this.value)">
+        <button onclick="supprimerFonctCard(${i})" class="text-red-400 hover:text-red-600 text-xs px-1"><i class="fa fa-trash"></i></button>
+      </div>
+      <input type="text" value="${c.desc}" placeholder="Description" class="w-full border p-1.5 rounded text-xs text-gray-500 mb-2" oninput="editFonctCard(${i},'desc',this.value)">
+      <div class="space-y-1" id="fonct-points-${i}">
+        ${(c.points||[]).map((pt,j) => `
+          <div class="flex items-center gap-1">
+            <input type="text" value="${pt}" class="flex-1 border p-1 rounded text-xs" oninput="editFonctPoint(${i},${j},this.value)">
+            <button onclick="supprimerFonctPoint(${i},${j})" class="text-red-400 text-xs px-1"><i class="fa fa-minus"></i></button>
+          </div>`).join('')}
+      </div>
+      <button onclick="ajouterFonctPoint(${i})" class="mt-1 text-xs text-primary hover:underline"><i class="fa fa-plus mr-1"></i>Point</button>
+    </div>`).join('');
+}
+function editFonctCard(idx, champ, val) { if (siteConfig.fonctCards[idx]) { siteConfig.fonctCards[idx][champ] = val; if (champ==='icone') rendreFonctCardsEditor(); } }
+function supprimerFonctCard(idx) { siteConfig.fonctCards.splice(idx, 1); rendreFonctCardsEditor(); }
+function ajouterCartefonct() { siteConfig.fonctCards.push({ icone: 'fa-star', titre: 'Nouvelle fonctionnalit\u00e9', desc: 'Description...', points: [] }); rendreFonctCardsEditor(); }
+function editFonctPoint(ci, pi, val) { if (siteConfig.fonctCards[ci]?.points[pi] !== undefined) siteConfig.fonctCards[ci].points[pi] = val; }
+function supprimerFonctPoint(ci, pi) { siteConfig.fonctCards[ci]?.points.splice(pi, 1); rendreFonctCardsEditor(); }
+function ajouterFonctPoint(ci) { siteConfig.fonctCards[ci]?.points.push('Nouveau point'); rendreFonctCardsEditor(); }
+
+function rendreHowStepsEditor() {
+  const cont = document.getElementById('how-steps-editor');
+  if (!cont) return;
+  cont.innerHTML = (siteConfig.howSteps || []).map((s, i) => `
+    <div class="flex items-start gap-2 bg-gray-50 border rounded-lg px-3 py-2">
+      <div class="w-7 h-7 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-1">${i+1}</div>
+      <div class="flex-1 space-y-1">
+        <input type="text" value="${s.titre}" placeholder="Titre étape" class="w-full border p-1.5 rounded text-sm font-medium" oninput="editStep(${i},'titre',this.value)">
+        <textarea rows="2" class="w-full border p-1.5 rounded text-xs text-gray-500 resize-none" oninput="editStep(${i},'desc',this.value)">${s.desc}</textarea>
+      </div>
+      <button onclick="supprimerStep(${i})" class="text-red-400 hover:text-red-600 text-xs mt-1"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+function editStep(idx, champ, val) { if (siteConfig.howSteps[idx]) siteConfig.howSteps[idx][champ] = val; }
+function supprimerStep(idx) { siteConfig.howSteps.splice(idx, 1); rendreHowStepsEditor(); }
+
+// ── Chargement étendu ─────────────────────────────────────────────────────────
+const _origChargerFormulairesSite = chargerFormulairesSite;
+function chargerFormulairesSite() {
+  _origChargerFormulairesSite();
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+  // Navbar
+  set('nav-btn-connexion', siteConfig.navbarBtnConnexion || 'Connexion');
+  set('nav-btn-cta', siteConfig.navbarBtnCta || 'Essai gratuit');
+  set('navbar-bg-color', siteConfig.navbarBgColor || '#ffffff');
+  chk('navbar-show-logo', siteConfig.navbarShowLogo !== false);
+  chk('navbar-sticky', siteConfig.navbarSticky !== false);
+  rendreNavbarLinks();
+  // Slideshow
+  set('slide-speed', siteConfig.slideSpeed || 5000);
+  chk('slide-autoplay', siteConfig.slideAutoplay !== false);
+  chk('slide-show-dots', siteConfig.slideShowDots !== false);
+  chk('slide-show-stats', siteConfig.slideShowStats !== false);
+  rendreSlidesEditor();
+  rendreTypewriterEditor();
+  rendreHeroStatsEditor();
+  // Sections
+  chk('sect-fonct-visible', siteConfig.sectFonctVisible !== false);
+  set('sect-fonct-badge', siteConfig.sectFonctBadge || '');
+  set('sect-fonct-titre', siteConfig.sectFonctTitre || '');
+  set('sect-fonct-sous', siteConfig.sectFonctSous || '');
+  rendreFonctCardsEditor();
+  chk('sect-how-visible', siteConfig.sectHowVisible !== false);
+  set('sect-how-badge', siteConfig.sectHowBadge || '');
+  set('sect-how-titre', siteConfig.sectHowTitre || '');
+  rendreHowStepsEditor();
+  chk('sect-tarifs-visible', siteConfig.sectTarifsVisible !== false);
+  set('sect-tarifs-badge', siteConfig.sectTarifsBadge || '');
+  set('sect-tarifs-titre', siteConfig.sectTarifsTitre || '');
+  set('sect-tarifs-sous', siteConfig.sectTarifsSous || '');
+  set('sect-tarifs-prix', siteConfig.sectTarifsPrix || '');
+  set('sect-tarifs-badge-label', siteConfig.sectTarifsBadgeLabel || '');
+  set('sect-tarifs-cta', siteConfig.sectTarifsCta || '');
+  chk('sect-cta-visible', siteConfig.sectCtaVisible !== false);
+  set('sect-cta-titre', siteConfig.sectCtaTitre || '');
+  set('sect-cta-sous', siteConfig.sectCtaSous || '');
+  set('sect-cta-btn', siteConfig.sectCtaBtn || '');
+  set('sect-cta-note', siteConfig.sectCtaNote || '');
+  previewNavbar();
+  previewSlideshow();
+}
+
+// ── Sauvegarde étendue ────────────────────────────────────────────────────────
+const _origSauvegarderSite = sauvegarderSite;
+function sauvegarderSite() {
+  // Navbar
+  siteConfig.navbarBtnConnexion = document.getElementById('nav-btn-connexion')?.value || 'Connexion';
+  siteConfig.navbarBtnCta       = document.getElementById('nav-btn-cta')?.value || 'Essai gratuit';
+  siteConfig.navbarBgColor      = document.getElementById('navbar-bg-color')?.value || '#ffffff';
+  siteConfig.navbarShowLogo     = document.getElementById('navbar-show-logo')?.checked ?? true;
+  siteConfig.navbarSticky       = document.getElementById('navbar-sticky')?.checked ?? true;
+  // Slideshow
+  siteConfig.slideSpeed    = parseInt(document.getElementById('slide-speed')?.value) || 5000;
+  siteConfig.slideAutoplay = document.getElementById('slide-autoplay')?.checked ?? true;
+  siteConfig.slideShowDots = document.getElementById('slide-show-dots')?.checked ?? true;
+  siteConfig.slideShowStats= document.getElementById('slide-show-stats')?.checked ?? true;
+  // Sections
+  siteConfig.sectFonctVisible = document.getElementById('sect-fonct-visible')?.checked ?? true;
+  siteConfig.sectFonctBadge   = document.getElementById('sect-fonct-badge')?.value || '';
+  siteConfig.sectFonctTitre   = document.getElementById('sect-fonct-titre')?.value || '';
+  siteConfig.sectFonctSous    = document.getElementById('sect-fonct-sous')?.value || '';
+  siteConfig.sectHowVisible   = document.getElementById('sect-how-visible')?.checked ?? true;
+  siteConfig.sectHowBadge     = document.getElementById('sect-how-badge')?.value || '';
+  siteConfig.sectHowTitre     = document.getElementById('sect-how-titre')?.value || '';
+  siteConfig.sectTarifsVisible    = document.getElementById('sect-tarifs-visible')?.checked ?? true;
+  siteConfig.sectTarifsBadge      = document.getElementById('sect-tarifs-badge')?.value || '';
+  siteConfig.sectTarifsTitre      = document.getElementById('sect-tarifs-titre')?.value || '';
+  siteConfig.sectTarifsSous       = document.getElementById('sect-tarifs-sous')?.value || '';
+  siteConfig.sectTarifsPrix       = document.getElementById('sect-tarifs-prix')?.value || '';
+  siteConfig.sectTarifsBadgeLabel = document.getElementById('sect-tarifs-badge-label')?.value || '';
+  siteConfig.sectTarifsCta        = document.getElementById('sect-tarifs-cta')?.value || '';
+  siteConfig.sectCtaVisible  = document.getElementById('sect-cta-visible')?.checked ?? true;
+  siteConfig.sectCtaTitre    = document.getElementById('sect-cta-titre')?.value || '';
+  siteConfig.sectCtaSous     = document.getElementById('sect-cta-sous')?.value || '';
+  siteConfig.sectCtaBtn      = document.getElementById('sect-cta-btn')?.value || '';
+  siteConfig.sectCtaNote     = document.getElementById('sect-cta-note')?.value || '';
+  // Appel original
+  _origSauvegarderSite();
 }
 
 // Appliquer au démarrage si config sauvegardée

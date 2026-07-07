@@ -175,6 +175,29 @@ function editerProduit(id) {
 // ── Aperçu étiquettes ──────────────────────────────────────────────────────────
 let _idsEnCours = [];
 
+function _getCfgLive() {
+  const base = window.parametresActuels || {};
+  const g = (id, fb) => { const el = document.getElementById(id); return el ? el.value : (fb !== undefined ? fb : base[id]); };
+  const c = (id, fb) => { const el = document.getElementById(id); return el ? el.checked : (fb !== undefined ? fb : base[id]); };
+  return {
+    etiquette_largeur:              parseFloat(g('etiq-largeur'))      || base.etiquette_largeur       || 60,
+    etiquette_hauteur:              parseFloat(g('etiq-hauteur'))      || base.etiquette_hauteur       || 40,
+    etiquette_police:               g('etiq-police')                   || base.etiquette_police        || 'Arial',
+    etiquette_taille_nom:           parseInt(g('etiq-taille-nom'))     || base.etiquette_taille_nom    || 12,
+    etiquette_taille_prix:          parseInt(g('etiq-taille-prix'))    || base.etiquette_taille_prix   || 16,
+    etiquette_taille_code:          parseInt(g('etiq-taille-code'))    || base.etiquette_taille_code   || 9,
+    etiquette_couleur_texte:        g('etiq-couleur-texte')            || base.etiquette_couleur_texte || '#000000',
+    etiquette_couleur_fond:         g('etiq-couleur-fond')             || base.etiquette_couleur_fond  || '#ffffff',
+    etiquette_alignement:           window.alignementActuel            || base.etiquette_alignement    || 'center',
+    etiquette_afficher_prix:        c('etiq-show-prix',   base.etiquette_afficher_prix   !== false),
+    etiquette_afficher_description: c('etiq-show-desc',   base.etiquette_afficher_description !== false),
+    etiquette_afficher_reference:   c('etiq-show-ref',    base.etiquette_afficher_reference   !== false),
+    etiquette_afficher_codebarre:   c('etiq-show-code',   base.etiquette_afficher_codebarre   !== false),
+    etiquette_afficher_logo:        c('etiq-show-logo',   !!base.etiquette_afficher_logo),
+    etiquette_logo_url:             g('etiq-logo-url')                 || base.etiquette_logo_url      || null,
+  };
+}
+
 function ouvrirApercuEtiquette(ids) {
   _idsEnCours = ids;
   const modal = document.getElementById('modal-apercu-etiquette');
@@ -232,7 +255,7 @@ function _construireHtmlEtiquette(p, cfg) {
 function rafraichirApercuEtiquette() {
   const zone = document.getElementById('apercu-etiquettes-zone');
   if (!zone) return;
-  const cfg = window.parametresActuels || {};
+  const cfg = _getCfgLive();
   const copies = Math.max(1, parseInt(document.getElementById('etiq-copies')?.value) || 1);
   const parLigne = parseInt(document.getElementById('etiq-par-ligne')?.value) || 3;
 
@@ -286,7 +309,7 @@ function _runJsBarcode(scripts) {
 }
 
 function lancerImpression() {
-  const cfg = window.parametresActuels || {};
+  const cfg = _getCfgLive();
   const copies = Math.max(1, parseInt(document.getElementById('etiq-copies')?.value) || 1);
   const parLigne = parseInt(document.getElementById('etiq-par-ligne')?.value) || 3;
 

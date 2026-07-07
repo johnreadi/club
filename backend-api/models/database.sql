@@ -2,19 +2,8 @@
 -- Base de données Gestion des Clubs
 -- ==============================
 
--- Suppression si existant
-DROP TABLE IF EXISTS lignes_vente CASCADE;
-DROP TABLE IF EXISTS ventes CASCADE;
-DROP TABLE IF EXISTS inventaires_lignes CASCADE;
-DROP TABLE IF EXISTS inventaires CASCADE;
-DROP TABLE IF EXISTS produits CASCADE;
-DROP TABLE IF EXISTS utilisateurs CASCADE;
-DROP TABLE IF EXISTS parametres_club CASCADE;
-DROP TABLE IF EXISTS clubs CASCADE;
-DROP TABLE IF EXISTS admins_plateforme CASCADE;
-
 -- Administrateurs de la plateforme
-CREATE TABLE admins_plateforme (
+CREATE TABLE IF NOT EXISTS admins_plateforme (
   id SERIAL PRIMARY KEY,
   email VARCHAR(100) UNIQUE NOT NULL,
   mot_de_passe_hash VARCHAR(255) NOT NULL,
@@ -23,7 +12,7 @@ CREATE TABLE admins_plateforme (
 );
 
 -- Clubs
-CREATE TABLE clubs (
+CREATE TABLE IF NOT EXISTS clubs (
   id SERIAL PRIMARY KEY,
   nom VARCHAR(150) NOT NULL,
   adresse TEXT,
@@ -39,7 +28,7 @@ CREATE TABLE clubs (
 );
 
 -- Utilisateurs
-CREATE TABLE utilisateurs (
+CREATE TABLE IF NOT EXISTS utilisateurs (
   id SERIAL PRIMARY KEY,
   club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
   nom VARCHAR(100) NOT NULL,
@@ -53,7 +42,7 @@ CREATE TABLE utilisateurs (
 );
 
 -- Produits
-CREATE TABLE produits (
+CREATE TABLE IF NOT EXISTS produits (
   id SERIAL PRIMARY KEY,
   club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
   reference VARCHAR(50),
@@ -71,7 +60,7 @@ CREATE TABLE produits (
 );
 
 -- Ventes
-CREATE TABLE ventes (
+CREATE TABLE IF NOT EXISTS ventes (
   id SERIAL PRIMARY KEY,
   club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
   utilisateur_id INT REFERENCES utilisateurs(id),
@@ -82,7 +71,7 @@ CREATE TABLE ventes (
 );
 
 -- Lignes de vente
-CREATE TABLE lignes_vente (
+CREATE TABLE IF NOT EXISTS lignes_vente (
   id SERIAL PRIMARY KEY,
   vente_id INT REFERENCES ventes(id) ON DELETE CASCADE,
   produit_id INT REFERENCES produits(id),
@@ -91,7 +80,7 @@ CREATE TABLE lignes_vente (
 );
 
 -- Inventaires
-CREATE TABLE inventaires (
+CREATE TABLE IF NOT EXISTS inventaires (
   id SERIAL PRIMARY KEY,
   club_id INT REFERENCES clubs(id) ON DELETE CASCADE,
   date_inventaire DATE NOT NULL,
@@ -101,7 +90,7 @@ CREATE TABLE inventaires (
   cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE inventaires_lignes (
+CREATE TABLE IF NOT EXISTS inventaires_lignes (
   id SERIAL PRIMARY KEY,
   inventaire_id INT REFERENCES inventaires(id) ON DELETE CASCADE,
   produit_id INT REFERENCES produits(id),
@@ -111,7 +100,7 @@ CREATE TABLE inventaires_lignes (
 );
 
 -- Paramètres club
-CREATE TABLE parametres_club (
+CREATE TABLE IF NOT EXISTS parametres_club (
   id SERIAL PRIMARY KEY,
   club_id INT UNIQUE REFERENCES clubs(id) ON DELETE CASCADE,
   -- Périphériques
@@ -142,30 +131,20 @@ CREATE TABLE parametres_club (
 );
 
 -- Index
-CREATE INDEX idx_clubs_actif ON clubs(actif);
-CREATE INDEX idx_produits_club ON produits(club_id);
-CREATE INDEX idx_produits_codebarre ON produits(code_barre);
-CREATE INDEX idx_ventes_club_date ON ventes(club_id, date_vente);
+CREATE INDEX IF NOT EXISTS idx_clubs_actif ON clubs(actif);
+CREATE INDEX IF NOT EXISTS idx_produits_club ON produits(club_id);
+CREATE INDEX IF NOT EXISTS idx_produits_codebarre ON produits(code_barre);
+CREATE INDEX IF NOT EXISTS idx_ventes_club_date ON ventes(club_id, date_vente);
 
--- Données initiales
--- Admin plateforme : admin@plateforme.fr / Admin2026!Plateforme
+-- Données initiales (idempotentes)
 INSERT INTO admins_plateforme (email, mot_de_passe_hash, nom_complet)
-VALUES ('admin@plateforme.fr', '$2a$10$GuDW.4x1VkK1GBN9XDMruegNQD3UO8leIdryV7sMwMGTuPqgvyDES', 'Administrateur Principal');
+VALUES ('admin@plateforme.fr', '$2a$10$GuDW.4x1VkK1GBN9XDMruegNQD3UO8leIdryV7sMwMGTuPqgvyDES', 'Administrateur Principal')
+ON CONFLICT (email) DO NOTHING;
 
-INSERT INTO clubs (nom, ville, niveau_abonnement, date_fin_abonnement)
-VALUES ('AS Rouen', 'Rouen', 'complet', CURRENT_DATE + INTERVAL '1 year');
+INSERT INTO clubs (id, nom, ville, niveau_abonnement, date_fin_abonnement)
+VALUES (1, 'AS Rouen', 'Rouen', 'complet', CURRENT_DATE + INTERVAL '1 year')
+ON CONFLICT (id) DO NOTHING;
 
--- Proprietaire club : jean@asrouen.fr / ClubAS2026!Rouen
 INSERT INTO utilisateurs (club_id, nom, prenom, email, mot_de_passe_hash, role)
-VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$bpFN0y4vawEgDqzJZfcgeutJWeDRtFkAMV8CN84LFCgF5vCocUNre', 'proprietaire');
-
--- Produits de démonstration pour AS Rouen
-INSERT INTO produits (club_id, reference, code_barre, nom, description, prix_achat, prix_vente, quantite_stock, seuil_alerte) VALUES
-(1, 'TSH-M-BL', '001234567890', 'T-shirt Club', 'Taille M — Coton 100% — Bleu marine', 8.00, 15.00, 25, 5),
-(1, 'TSH-L-BL', '001234567891', 'T-shirt Club', 'Taille L — Coton 100% — Bleu marine', 8.00, 15.00, 20, 5),
-(1, 'SHO-42-BL', '001234567892', 'Chaussettes Club', 'Pointure 42-45 — Blanc', 2.50, 5.00, 50, 10),
-(1, 'SCF-UNI', '001234567893', 'Écharpe Club', 'Taille unique — Laine — Bleu/Blanc', 5.00, 12.00, 15, 5),
-(1, 'BON-UNI', '001234567894', 'Bonnet Club', 'Taille unique — Acrylique — Bleu marine', 4.00, 10.00, 12, 3),
-(1, 'SAC-MED', '001234567895', 'Sac de sport', 'Medium — Polyester — Logo club', 12.00, 25.00, 8, 3);
-UPDATE produits SET categorie='Textile' WHERE reference IN ('TSH-M-BL','TSH-L-BL','SCF-UNI','BON-UNI');
-UPDATE produits SET categorie='Accessoires' WHERE reference IN ('SHO-42-BL','SAC-MED');
+VALUES (1, 'Dupont', 'Jean', 'jean@asrouen.fr', '$2a$10$bpFN0y4vawEgDqzJZfcgeutJWeDRtFkAMV8CN84LFCgF5vCocUNre', 'proprietaire')
+ON CONFLICT (email) DO NOTHING;

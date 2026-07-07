@@ -19,7 +19,7 @@ async function apiFetch(url, options = {}) {
       return null;
     }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erreur || `Erreur ${res.status}`);
+    if (!res.ok) throw new Error((data.erreur || `Erreur ${res.status}`) + (data.detail ? ` — ${data.detail}` : ''));
     return data;
   } catch (err) {
     if (err.name !== 'TypeError') afficherMessage('❌ ' + err.message, 'danger');

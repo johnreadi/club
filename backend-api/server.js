@@ -26,15 +26,10 @@ async function waitForDB(retries = 10, delay = 3000) {
 // Initialisation BDD
 async function initDB() {
   await waitForDB();
-  try {
-    await pool.query('SELECT 1 FROM admins_plateforme LIMIT 1');
-    console.log('✅ Base de données déjà initialisée');
-  } catch {
-    console.log('⚙️  Initialisation de la base de données...');
-    const sql = fs.readFileSync(path.join(__dirname, 'models/database.sql'), 'utf8');
-    await pool.query(sql);
-    console.log('✅ Base initialisée avec succès');
-  }
+  console.log('⚙️  Application du schéma SQL...');
+  const sql = fs.readFileSync(path.join(__dirname, 'models/database.sql'), 'utf8');
+  await pool.query(sql);
+  console.log('✅ Schéma appliqué avec succès');
 }
 
 // Middlewares

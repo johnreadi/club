@@ -76,11 +76,14 @@ function afficherListeProduits() {
   const conteneur = document.getElementById('liste-produits');
   if (!conteneur) return;
   if (produits.length === 0) {
-    conteneur.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-500">Aucun produit enregistré</td></tr>`;
+    conteneur.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-500">Aucun produit enregistré</td></tr>`;
     return;
   }
   conteneur.innerHTML = produits.map(p => `
     <tr class="border-b hover:bg-gray-50">
+      <td class="p-2">
+        <input type="checkbox" class="chk-produit rounded" data-id="${p.id}" onchange="majBoutonImpression()">
+      </td>
       <td class="p-2 text-xs">${p.reference || '-'}</td>
       <td class="p-2 text-xs font-mono">${p.code_barre || '-'}</td>
       <td class="p-2 font-medium">${p.nom}</td>
@@ -88,11 +91,39 @@ function afficherListeProduits() {
       <td class="p-2 text-right font-medium ${p.quantite_stock <= (p.seuil_alerte || 5) ? 'text-red-600' : 'text-green-700'}">${p.quantite_stock}</td>
       <td class="p-2 text-center whitespace-nowrap">
         <button onclick="editerProduit(${p.id})" class="text-blue-600 hover:text-blue-800 mr-1" title="Modifier">✏️</button>
-        <button onclick="imprimerEtiquette(${p.id})" class="text-green-600 hover:text-green-800 mr-1" title="Étiquette">🖨️</button>
+        <button onclick="ouvrirApercuEtiquette([${p.id}])" class="text-green-600 hover:text-green-800 mr-1" title="Aperçu &amp; imprimer étiquette">🖨️</button>
         <button onclick="supprimerProduit(${p.id})" class="text-red-600 hover:text-red-800" title="Supprimer">🗑️</button>
       </td>
     </tr>
   `).join('');
+  // reset checkbox global
+  const chkAll = document.getElementById('chk-all');
+  if (chkAll) chkAll.checked = false;
+  majBoutonImpression();
+}
+
+function toggleTousCheckbox(val) {
+  document.querySelectorAll('.chk-produit').forEach(c => c.checked = val);
+  majBoutonImpression();
+}
+
+function majBoutonImpression() {
+  const sel = document.querySelectorAll('.chk-produit:checked');
+  const btn = document.getElementById('btn-imprimer-selection');
+  const txt = document.getElementById('txt-imprimer-selection');
+  if (!btn) return;
+  if (sel.length > 0) {
+    btn.classList.remove('hidden');
+    if (txt) txt.textContent = `Imprimer sélection (${sel.length})`;
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+function imprimerSelection() {
+  const ids = Array.from(document.querySelectorAll('.chk-produit:checked')).map(c => parseInt(c.dataset.id));
+  if (ids.length === 0) return;
+  ouvrirApercuEtiquette(ids);
 }
 
 async function enregistrerProduit(e) {
@@ -141,88 +172,185 @@ function editerProduit(id) {
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function imprimerEtiquette(id, typeImprimante) {
-  const p = produits.find(x => x.id === id);
-  if (!p) return;
+// ── Aperçu étiquettes ──────────────────────────────────────────────────────────
+let _idsEnCours = [];
 
-  // Si typeImprimante non précisé, demander à l'utilisateur
-  if (!typeImprimante) {
-    const cfg = window.parametresActuels || {};
-    const hasTicket = cfg.imprimante_tickets_nom;
-    const hasLabel = cfg.imprimante_nom;
-    if (hasLabel && hasTicket) {
-      const choix = confirm(`Imprimer sur :\n✅ OK → Imprimante étiquettes (${cfg.imprimante_nom})\n❌ Annuler → Imprimante tickets (${cfg.imprimante_tickets_nom})`);
-      typeImprimante = choix ? 'etiquette' : 'ticket';
-    } else {
-      typeImprimante = 'etiquette';
-    }
-  }
+function ouvrirApercuEtiquette(ids) {
+  _idsEnCours = ids;
+  const modal = document.getElementById('modal-apercu-etiquette');
+  if (modal) modal.classList.remove('hidden');
+  document.getElementById('etiq-copies').value = 1;
+  document.getElementById('etiq-par-ligne').value = 3;
+  rafraichirApercuEtiquette();
+}
 
-  const cfg = window.parametresActuels || {};
-  const code = p.code_barre || '';
+function fermerApercuEtiquette() {
+  const modal = document.getElementById('modal-apercu-etiquette');
+  if (modal) modal.classList.add('hidden');
+}
 
-  if (typeImprimante === 'ticket') {
-    // Format ticket thermique 80mm
-    const nom = cfg.imprimante_tickets_nom || 'Imprimante tickets';
-    const fenetre = window.open('', '', 'width=320,height=320');
-    fenetre.document.write(`<!DOCTYPE html><html><head>
-      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-      </head><body style="margin:4px;font-family:monospace;width:280px;font-size:12px;">
-      <p style="font-weight:bold;font-size:14px;margin:2px 0;">${p.nom}</p>
-      ${p.description ? `<p style="font-size:10px;margin:1px 0;color:#444;">${p.description}</p>` : ''}
-      <p style="font-size:11px;margin:1px 0;">Réf: ${p.reference || '-'}</p>
-      <p style="font-size:16px;font-weight:bold;margin:4px 0;">${parseFloat(p.prix_vente).toFixed(2)} €</p>
-      ${code ? `<svg id="bc-t" style="display:block;max-width:200px;"></svg>` : ''}
-      <script>
-        ${code ? `JsBarcode('#bc-t','${code}',{format:'CODE128',width:1.5,height:35,displayValue:true,fontSize:10,margin:2});` : ''}
-        window.onload=function(){window.print();window.close();};
-      <\/script>
-    </body></html>`);
-    fenetre.document.close();
-    return;
-  }
-
-  // Format étiquette standard (paramètres personnalisés)
-  const police = cfg.etiquette_police || 'Arial';
-  const tNom = cfg.etiquette_taille_nom || 14;
-  const tPrix = cfg.etiquette_taille_prix || 18;
-  const tCode = cfg.etiquette_taille_code || 10;
+function _construireHtmlEtiquette(p, cfg) {
+  const code = (p.code_barre || '').trim();
+  const police = cfg.etiquette_police || 'Arial, sans-serif';
+  const tNom   = parseInt(cfg.etiquette_taille_nom)  || 12;
+  const tPrix  = parseInt(cfg.etiquette_taille_prix) || 16;
+  const tCode  = parseInt(cfg.etiquette_taille_code) || 9;
   const coulTexte = cfg.etiquette_couleur_texte || '#000000';
-  const coulFond = cfg.etiquette_couleur_fond || '#ffffff';
-  const align = cfg.etiquette_alignement || 'center';
-  const largeur = (cfg.etiquette_largeur || 60) * 3.78;
-  const hauteur = (cfg.etiquette_hauteur || 40) * 3.78;
-  const showPrix = cfg.etiquette_afficher_prix !== false;
-  const showRef = cfg.etiquette_afficher_reference !== false;
-  const showCode = cfg.etiquette_afficher_codebarre !== false;
-  const logoUrl = cfg.etiquette_afficher_logo && cfg.etiquette_logo_url ? cfg.etiquette_logo_url : null;
+  const coulFond  = cfg.etiquette_couleur_fond  || '#ffffff';
+  const align     = cfg.etiquette_alignement    || 'center';
+  const largeur   = Math.round((cfg.etiquette_largeur || 60) * 3.7795); // mm -> px 96dpi
+  const hauteur   = Math.round((cfg.etiquette_hauteur || 40) * 3.7795);
+  const showPrix  = cfg.etiquette_afficher_prix !== false;
+  const showRef   = cfg.etiquette_afficher_reference !== false;
+  const showDesc  = cfg.etiquette_afficher_description !== false;
+  const showCode  = cfg.etiquette_afficher_codebarre !== false;
+  const logoUrl   = cfg.etiquette_afficher_logo && cfg.etiquette_logo_url ? cfg.etiquette_logo_url : null;
+  const uid = 'bc_' + p.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
 
-  const logoHtml = logoUrl ? `<img src="${logoUrl}" style="max-height:24px;display:block;margin:0 auto 4px;">` : '';
-  const refHtml = showRef ? `<p style="font-size:${tCode}px;margin:1px 0;color:${coulTexte};">Réf: ${p.reference || '-'}</p>` : '';
-  const descHtml = p.description ? `<p style="font-size:${tCode}px;margin:1px 0;color:${coulTexte};font-style:italic;">${p.description}</p>` : '';
-  const prixHtml = showPrix ? `<p style="font-size:${tPrix}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${parseFloat(p.prix_vente).toFixed(2)} €</p>` : '';
-  const codeHtml = showCode && code ? `<svg id="bc-print" style="display:block;margin:2px auto;"></svg>` : '';
+  const logoHtml = logoUrl ? `<img src="${logoUrl}" style="max-height:20px;display:block;margin:0 auto 2px;">` : '';
+  const refHtml  = showRef  ? `<div style="font-size:${tCode}px;color:${coulTexte};margin:1px 0;">Réf: ${p.reference || '-'}</div>` : '';
+  const descHtml = showDesc && p.description ? `<div style="font-size:${tCode}px;color:${coulTexte};font-style:italic;margin:1px 0;">${p.description}</div>` : '';
+  const prixHtml = showPrix ? `<div style="font-size:${tPrix}px;font-weight:900;color:${coulTexte};margin:2px 0;">${parseFloat(p.prix_vente).toFixed(2)} €</div>` : '';
+  // Code-barres : SVG inline généré par JsBarcode
+  const bcHtml   = showCode && code ? `<svg id="${uid}" style="display:block;margin:2px auto 0;"></svg>` : '';
+  const bcScript = showCode && code ? `
+    if(typeof JsBarcode!=='undefined'){
+      try{
+        JsBarcode('#${uid}','${code.replace(/'/g,"\\'")}',{format:'CODE128',width:1.6,height:42,displayValue:true,fontSize:${tCode},margin:2,background:'${coulFond}',lineColor:'${coulTexte}'});
+      }catch(e){console.warn('JsBarcode error',e);}
+    }` : '';
 
-  const fenetre = window.open('', '', `width=${Math.round(largeur + 40)},height=${Math.round(hauteur + 80)}`);
-  fenetre.document.write(`<!DOCTYPE html><html><head>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-    </head><body style="margin:4px;background:${coulFond};">
-    <div style="width:${largeur}px;min-height:${hauteur}px;padding:6px;font-family:${police};text-align:${align};background:${coulFond};border:1px solid #ccc;box-sizing:border-box;">
+  return { uid, largeur, hauteur, coulFond, align, police, coulTexte,
+    html: `<div id="etiq-${uid}" style="width:${largeur}px;min-height:${hauteur}px;padding:5px 6px;font-family:${police};text-align:${align};background:${coulFond};border:1px solid #bbb;box-sizing:border-box;display:inline-block;">
       ${logoHtml}
-      <p style="font-size:${tNom}px;font-weight:bold;margin:2px 0;color:${coulTexte};">${p.nom}</p>
-      ${descHtml}
-      ${refHtml}
-      ${prixHtml}
-      ${codeHtml}
-    </div>
-    <script>
-      if(document.getElementById('bc-print')){
-        JsBarcode('#bc-print','${code}',{format:'CODE128',width:1.5,height:40,displayValue:true,fontSize:${tCode},margin:2});
+      <div style="font-size:${tNom}px;font-weight:700;color:${coulTexte};margin:1px 0;line-height:1.2;">${p.nom}</div>
+      ${descHtml}${refHtml}${prixHtml}${bcHtml}
+    </div>`,
+    script: bcScript };
+}
+
+function rafraichirApercuEtiquette() {
+  const zone = document.getElementById('apercu-etiquettes-zone');
+  if (!zone) return;
+  const cfg = window.parametresActuels || {};
+  const copies = Math.max(1, parseInt(document.getElementById('etiq-copies')?.value) || 1);
+  const parLigne = parseInt(document.getElementById('etiq-par-ligne')?.value) || 3;
+
+  const items = [];
+  _idsEnCours.forEach(id => {
+    const p = produits.find(x => x.id === id);
+    if (!p) return;
+    for (let c = 0; c < copies; c++) items.push(p);
+  });
+
+  let htmlAll = '';
+  const scripts = [];
+  items.forEach((p, idx) => {
+    const { html, script } = _construireHtmlEtiquette(p, cfg);
+    // Insère un saut de ligne après chaque groupe de parLigne
+    const sep = (idx > 0 && idx % parLigne === 0) ? '<div style="width:100%;height:0;"></div>' : '';
+    htmlAll += sep + html;
+    if (script) scripts.push(script);
+  });
+
+  zone.innerHTML = htmlAll || '<p class="text-gray-400 text-sm text-center w-full py-8">Aucun produit sélectionné</p>';
+
+  // Générer les codes-barres via JsBarcode (injecté si besoin)
+  _runJsBarcode(scripts);
+}
+
+function _runJsBarcode(scripts) {
+  const run = () => {
+    if (!window.JsBarcode) { console.warn('JsBarcode non chargé'); return; }
+    const cfg = window.parametresActuels || {};
+    const tCode = parseInt(cfg.etiquette_taille_code) || 9;
+    const coulFond = cfg.etiquette_couleur_fond || '#ffffff';
+    const coulTexte = cfg.etiquette_couleur_texte || '#000000';
+    // Générer tous les SVG présents dans la zone
+    document.querySelectorAll('#apercu-etiquettes-zone svg[id^="bc_"]').forEach(svg => {
+      const code = svg.closest('div')?.querySelector('[data-code]')?.dataset.code ||
+        svg.id; // fallback
+    });
+    // Exécuter les scripts injectés
+    scripts.forEach(s => {
+      try { new Function('JsBarcode', s)(window.JsBarcode); } catch(e) { console.warn('script bc', e); }
+    });
+  };
+  if (window.JsBarcode) { run(); }
+  else {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js';
+    sc.onload = run;
+    document.head.appendChild(sc);
+  }
+}
+
+function lancerImpression() {
+  const cfg = window.parametresActuels || {};
+  const copies = Math.max(1, parseInt(document.getElementById('etiq-copies')?.value) || 1);
+  const parLigne = parseInt(document.getElementById('etiq-par-ligne')?.value) || 3;
+
+  const items = [];
+  _idsEnCours.forEach(id => {
+    const p = produits.find(x => x.id === id);
+    if (!p) return;
+    for (let c = 0; c < copies; c++) items.push(p);
+  });
+  if (!items.length) return;
+
+  const police = cfg.etiquette_police || 'Arial, sans-serif';
+  const coulFond = cfg.etiquette_couleur_fond || '#ffffff';
+  const coulTexte = cfg.etiquette_couleur_texte || '#000000';
+  const tCode = parseInt(cfg.etiquette_taille_code) || 9;
+  const parLigneNum = parLigne;
+
+  let etiquettesHtml = '';
+  const bcIds = [];
+  const bcData = []; // {id, code}
+
+  items.forEach((p, idx) => {
+    const d = _construireHtmlEtiquette(p, cfg);
+    etiquettesHtml += d.html;
+    if (p.code_barre) bcData.push({ id: d.uid, code: (p.code_barre || '').trim() });
+  });
+
+  const bcScripts = bcData.map(({id, code}) =>
+    `try{JsBarcode('#${id}','${code.replace(/'/g,"\\'").replace(/"/g,"&quot;")}',{format:'CODE128',width:1.6,height:42,displayValue:true,fontSize:${tCode},margin:2,background:'${coulFond}',lineColor:'${coulTexte}'});}catch(e){console.warn(e);}`
+  ).join('\n');
+
+  const fenetre = window.open('', '_blank', 'width=900,height=700');
+  fenetre.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Impression étiquettes</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>
+      @media print {
+        @page { margin: 8mm; }
+        body { margin:0; }
+        .etiq-grid { display:flex; flex-wrap:wrap; gap:3mm; }
+        .no-print { display:none; }
       }
-      window.onload=function(){window.print();window.close();};
+      body { font-family:${police}; background:#f5f5f5; padding:12px; }
+      .etiq-grid { display:flex; flex-wrap:wrap; gap:4px; align-items:flex-start; }
+      .no-print { text-align:center; margin-bottom:12px; }
+      .no-print button { padding:8px 24px; background:#165DFF; color:#fff; border:none; border-radius:6px; font-size:14px; cursor:pointer; margin:0 4px; }
+      .no-print button.cancel { background:#6b7280; }
+    </style>
+  </head><body>
+    <div class="no-print">
+      <strong>${items.length} étiquette${items.length>1?'s':''}</strong> —
+      <button onclick="window.print()"><i>&#128424;</i> Imprimer</button>
+      <button class="cancel" onclick="window.close()">Fermer</button>
+    </div>
+    <div class="etiq-grid">${etiquettesHtml}</div>
+    <script>
+      window.onload = function() {
+        ${bcScripts}
+      };
     <\/script>
   </body></html>`);
   fenetre.document.close();
+  fermerApercuEtiquette();
 }
 
 async function supprimerProduit(id) {

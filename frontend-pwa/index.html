@@ -177,17 +177,55 @@
               </form>
             </div>
             <div class="md:col-span-2 card overflow-x-auto">
-              <h3 class="text-lg font-medium mb-3">Liste des produits</h3>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-medium">Liste des produits</h3>
+                <button id="btn-imprimer-selection" onclick="imprimerSelection()" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-700 flex items-center gap-1">
+                  <i class="fa fa-print mr-1"></i><span id="txt-imprimer-selection">Imprimer sélection</span>
+                </button>
+              </div>
               <div class="mb-3">
                 <input type="text" id="recherche-produit" placeholder="Rechercher par nom, référence ou code..." class="w-full border p-2 rounded">
               </div>
               <table class="w-full text-sm">
-                <thead><tr class="border-b"><th class="text-left p-2">Réf</th><th class="text-left p-2">Code</th><th class="text-left p-2">Nom</th><th class="text-right p-2">Prix</th><th class="text-right p-2">Stock</th><th class="text-center p-2">Actions</th></tr></thead>
+                <thead><tr class="border-b">
+                  <th class="p-2 w-8"><input type="checkbox" id="chk-all" onchange="toggleTousCheckbox(this.checked)" title="Tout sélectionner" class="rounded"></th>
+                  <th class="text-left p-2">Réf</th><th class="text-left p-2">Code</th><th class="text-left p-2">Nom</th><th class="text-right p-2">Prix</th><th class="text-right p-2">Stock</th><th class="text-center p-2">Actions</th>
+                </tr></thead>
                 <tbody id="liste-produits"></tbody>
               </table>
             </div>
           </div>
         </section>
+
+        <!-- Modal aperçu étiquette -->
+        <div id="modal-apercu-etiquette" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this)fermerApercuEtiquette()">
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-4 border-b">
+              <h2 class="text-lg font-bold flex items-center gap-2"><i class="fa fa-print text-primary"></i>Aperçu avant impression</h2>
+              <button onclick="fermerApercuEtiquette()" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="p-4">
+              <!-- Options quantité -->
+              <div class="flex items-center gap-4 mb-4 bg-gray-50 p-3 rounded-lg">
+                <label class="text-sm font-medium text-gray-600">Copies par étiquette :</label>
+                <input type="number" id="etiq-copies" value="1" min="1" max="100" class="border p-1.5 rounded w-20 text-sm" oninput="rafraichirApercuEtiquette()">
+                <label class="text-sm font-medium text-gray-600 ml-4">Étiquettes / ligne :</label>
+                <select id="etiq-par-ligne" class="border p-1.5 rounded text-sm" onchange="rafraichirApercuEtiquette()">
+                  <option value="1">1</option><option value="2">2</option>
+                  <option value="3" selected>3</option><option value="4">4</option>
+                </select>
+              </div>
+              <!-- Zone aperçu -->
+              <div id="apercu-etiquettes-zone" class="border rounded-xl p-4 bg-gray-50 min-h-32 flex flex-wrap gap-3 justify-start"></div>
+            </div>
+            <div class="flex justify-end gap-3 p-4 border-t bg-gray-50 rounded-b-2xl">
+              <button onclick="fermerApercuEtiquette()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">Annuler</button>
+              <button onclick="lancerImpression()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2">
+                <i class="fa fa-print"></i> Imprimer
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Caisse & Ventes -->
         <section id="caisse" class="module hidden">

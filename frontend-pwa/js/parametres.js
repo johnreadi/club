@@ -4,7 +4,7 @@ let logoBase64 = null;
 
 async function chargerParametres() {
   try {
-    const data = await apiFetch('/api/parametres');
+    const data = await apiFetch('/parametres');
     parametresActuels = data;
     remplirFormulaire(data);
     appliquerInterface(data);
@@ -245,7 +245,7 @@ async function sauvegarderParametres() {
       interface_couleur_sidebar: document.getElementById('pref-couleur-sidebar')?.value || '#1e3a5f',
       interface_theme: parametresActuels.interface_theme || 'clair'
     };
-    const data = await apiFetch('/api/parametres', { method: 'PUT', body: JSON.stringify(payload) });
+    const data = await apiFetch('/parametres', { method: 'PUT', body: JSON.stringify(payload) });
     parametresActuels = data;
     appliquerInterface(data);
     afficherMessage('✅ Paramètres sauvegardés avec succès', 'success');

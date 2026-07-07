@@ -48,7 +48,8 @@ router.post('/', async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ erreur: 'Erreur serveur' });
+    console.error('[STOCK POST]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
   }
 });
 
@@ -65,7 +66,8 @@ router.put('/:id', async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ erreur: 'Produit non trouvé' });
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ erreur: 'Erreur serveur' });
+    console.error('[STOCK PUT]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
   }
 });
 
@@ -75,7 +77,8 @@ router.delete('/:id', async (req, res) => {
     await pool.query('DELETE FROM produits WHERE id=$1 AND club_id=$2', [req.params.id, club_id]);
     res.json({ succes: true });
   } catch (err) {
-    res.status(500).json({ erreur: 'Erreur serveur' });
+    console.error('[STOCK DELETE]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
   }
 });
 

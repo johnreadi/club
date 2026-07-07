@@ -157,6 +157,25 @@ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS date_debut_abonnement DATE DEFAULT CU
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS date_fin_abonnement DATE;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS derniere_connexion TIMESTAMP WITH TIME ZONE;
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_afficher_description BOOLEAN DEFAULT TRUE;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_afficher_prix BOOLEAN DEFAULT TRUE;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_afficher_reference BOOLEAN DEFAULT TRUE;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_afficher_codebarre BOOLEAN DEFAULT TRUE;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_afficher_logo BOOLEAN DEFAULT FALSE;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_logo_url TEXT;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_alignement VARCHAR(10) DEFAULT 'center';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_couleur_texte VARCHAR(10) DEFAULT '#000000';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_couleur_fond VARCHAR(10) DEFAULT '#FFFFFF';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_taille_nom INT DEFAULT 14;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_taille_prix INT DEFAULT 18;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_taille_code INT DEFAULT 10;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_police VARCHAR(50) DEFAULT 'Arial';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_largeur INT DEFAULT 60;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS etiquette_hauteur INT DEFAULT 40;
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_couleur_primaire VARCHAR(10) DEFAULT '#3B82F6';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_couleur_sidebar VARCHAR(10) DEFAULT '#1e3a5f';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_theme VARCHAR(20) DEFAULT 'clair';
+ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_clubs_actif ON clubs(actif);

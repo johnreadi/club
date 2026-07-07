@@ -81,6 +81,7 @@ function naviguerVers(section) {
     'admin-parametres': () => typeof chargerAdminParametres === 'function' && chargerAdminParametres(),
     'admin-reglage-site': () => typeof chargerReglagesSite === 'function' && chargerReglagesSite(),
     'parametres': () => typeof chargerParametres === 'function' && chargerParametres(),
+    'messagerie': () => typeof chargerMessagerie_club === 'function' && chargerMessagerie_club(),
   };
   if (loaders[section]) loaders[section]();
 }

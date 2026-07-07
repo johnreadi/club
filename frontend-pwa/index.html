@@ -91,6 +91,7 @@
           <a href="#" class="menu-item" data-section="rapports"><i class="fa fa-bar-chart"></i> Rapports</a>
           <a href="#" class="menu-item" data-section="utilisateurs"><i class="fa fa-users"></i> Utilisateurs</a>
           <a href="#" class="menu-item" data-section="parametres"><i class="fa fa-sliders"></i> Param&egrave;tres</a>
+          <a href="#" class="menu-item" data-section="messagerie"><i class="fa fa-envelope"></i> Messagerie <span id="badge-msg-club" class="hidden ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">0</span></a>
           <a href="#" class="menu-item" data-section="profil"><i class="fa fa-user"></i> Mon profil</a>
           <hr class="my-2 border-gray-200">
           <a href="#" onclick="deconnexion()" class="menu-item text-red-600"><i class="fa fa-sign-out"></i> D&eacute;connexion</a>
@@ -1510,6 +1511,103 @@
 
         </section>
 
+        <!-- Messagerie Club -->
+        <section id="messagerie" class="module hidden">
+
+          <!-- En-tête -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800">Messagerie</h2>
+              <p class="text-sm text-gray-500 mt-0.5">Communication avec l'administration READI.Fr</p>
+            </div>
+            <button onclick="msg_nouveauMessage()" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl shadow hover:bg-primary/90 transition-all text-sm font-medium">
+              <i class="fa fa-edit"></i> Nouveau message
+            </button>
+          </div>
+
+          <div class="flex gap-4" style="min-height:600px">
+
+            <!-- Colonne gauche : liste des messages -->
+            <div class="w-80 flex-shrink-0 flex flex-col rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden">
+              <!-- Onglets -->
+              <div class="flex border-b border-gray-100">
+                <button id="msg-tab-club-tous"    onclick="msg_filtre('tous')"    class="flex-1 py-3 text-xs font-medium text-primary border-b-2 border-primary">Tous</button>
+                <button id="msg-tab-club-recus"   onclick="msg_filtre('recus')"   class="flex-1 py-3 text-xs font-medium text-gray-400 hover:text-gray-600">Re&ccedil;us</button>
+                <button id="msg-tab-club-envoyes" onclick="msg_filtre('envoyes')" class="flex-1 py-3 text-xs font-medium text-gray-400 hover:text-gray-600">Envoy&eacute;s</button>
+              </div>
+              <!-- Recherche -->
+              <div class="p-2 border-b border-gray-50">
+                <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5">
+                  <i class="fa fa-search text-gray-400 text-xs"></i>
+                  <input type="text" id="msg-search-club" placeholder="Rechercher..." class="bg-transparent text-sm outline-none flex-1 text-gray-700" oninput="msg_filtrer()">
+                </div>
+              </div>
+              <!-- Liste -->
+              <div id="msg-liste-club" class="flex-1 overflow-y-auto divide-y divide-gray-50">
+                <p class="p-4 text-sm text-gray-400 text-center">Chargement...</p>
+              </div>
+            </div>
+
+            <!-- Colonne droite : fil de conversation -->
+            <div class="flex-1 flex flex-col rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden">
+
+              <!-- Header conversation -->
+              <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
+                    <i class="fa fa-headset text-white text-sm"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-800 text-sm" id="msg-conv-titre">S&eacute;lectionnez un message</p>
+                    <p class="text-xs text-gray-400" id="msg-conv-sous-titre">Administration READI.Fr</p>
+                  </div>
+                </div>
+                <div class="flex gap-2" id="msg-conv-actions" style="display:none!important">
+                  <button onclick="msg_supprimerActif()" class="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"><i class="fa fa-trash-o"></i></button>
+                </div>
+              </div>
+
+              <!-- Fil des messages -->
+              <div id="msg-fil-club" class="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50/50">
+                <div class="text-center text-gray-300 text-sm mt-16">
+                  <i class="fa fa-envelope-o text-5xl mb-3 block"></i>
+                  S&eacute;lectionnez un message ou r&eacute;digez-en un nouveau
+                </div>
+              </div>
+
+              <!-- Zone de rédaction -->
+              <div id="msg-redaction-club" class="border-t border-gray-100 bg-white p-4">
+                <!-- Champs nouveau message -->
+                <div id="msg-champs-nouveaux" class="hidden mb-3 space-y-2">
+                  <input type="text" id="msg-sujet-club" placeholder="Objet du message..." class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30">
+                </div>
+                <!-- Barre outils éditeur -->
+                <div class="flex items-center gap-1 mb-2 border border-gray-200 rounded-lg px-2 py-1 bg-gray-50">
+                  <button onclick="msg_fmt('bold')"    class="w-7 h-7 rounded hover:bg-gray-200 text-gray-600 font-bold text-sm" title="Gras"><b>B</b></button>
+                  <button onclick="msg_fmt('italic')"  class="w-7 h-7 rounded hover:bg-gray-200 text-gray-600 italic text-sm" title="Italique"><i>I</i></button>
+                  <button onclick="msg_fmt('underline')" class="w-7 h-7 rounded hover:bg-gray-200 text-gray-600 underline text-sm" title="Souligné">U</button>
+                  <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                  <button onclick="msg_emoji()" class="w-7 h-7 rounded hover:bg-gray-200 text-gray-600 text-sm" title="Emoji">😊</button>
+                  <div class="flex-1"></div>
+                  <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                    <input type="checkbox" id="msg-urgent-club" class="rounded"> <span class="text-red-500 font-medium">Urgent</span>
+                  </label>
+                </div>
+                <!-- Zone saisie -->
+                <div id="msg-contenu-club" contenteditable="true" class="w-full min-h-20 max-h-36 overflow-y-auto border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-white" data-placeholder="Rédigez votre message..."></div>
+                <!-- Bouton envoyer -->
+                <div class="flex justify-end mt-2">
+                  <button onclick="msg_envoyer()" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-all shadow-sm">
+                    <i class="fa fa-paper-plane"></i> Envoyer
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
         <!-- Mon profil -->
         <section id="profil" class="module hidden">
           <h2 class="text-2xl font-semibold mb-4">Mon profil</h2>
@@ -1563,5 +1661,6 @@
   <script src="/js/admin-plateforme.js"></script>
   <script src="/js/reglage-site.js"></script>
   <script src="/js/parametres.js"></script>
+  <script src="/js/messagerie.js"></script>
 </body>
 </html>

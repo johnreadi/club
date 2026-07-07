@@ -59,6 +59,7 @@ app.use('/api/rapports', require('./routes/rapports'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/utilisateurs', require('./routes/utilisateurs'));
 app.use('/api/parametres', require('./routes/parametres'));
+app.use('/api/messages', require('./routes/messages'));
 
 // 404 pour routes API inconnues
 app.use('/api/*', (req, res) => {

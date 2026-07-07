@@ -177,10 +177,11 @@ function importerLogo(event) {
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) { alert('Fichier trop lourd (max 2 Mo)'); return; }
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     logoBase64 = e.target.result;
     document.getElementById('etiq-logo-url').value = logoBase64;
     afficherAperçuLogo(logoBase64);
+    await _sauvegarderLogoEnBase(logoBase64, document.getElementById('etiq-show-logo')?.checked);
   };
   reader.readAsDataURL(file);
 }
@@ -191,6 +192,22 @@ function dropLogo(event) {
   if (file) {
     const fakeEvent = { target: { files: [file] } };
     importerLogo(fakeEvent);
+  }
+}
+
+async function _sauvegarderLogoEnBase(logoUrl, afficher) {
+  try {
+    const res = await apiFetch('/parametres/logo', {
+      method: 'PUT',
+      body: JSON.stringify({ etiquette_logo_url: logoUrl, etiquette_afficher_logo: afficher !== false })
+    });
+    if (res && res.ok) {
+      parametresActuels.etiquette_logo_url = logoUrl;
+      parametresActuels.etiquette_afficher_logo = afficher !== false;
+      afficherMessage('✅ Logo sauvegardé en base de données', 'success');
+    }
+  } catch (e) {
+    afficherMessage('❌ Erreur sauvegarde logo : ' + (e.message || 'Erreur réseau'), 'danger');
   }
 }
 
@@ -212,16 +229,27 @@ function afficherAperçuLogo(src) {
   apLogo.src = src;
 }
 
-function supprimerLogo() {
+async function supprimerLogo() {
   logoBase64 = null;
   document.getElementById('etiq-logo-url').value = '';
   document.getElementById('apercu-logo')?.classList.add('hidden');
   const apLogo = document.getElementById('ap-logo');
   if (apLogo) apLogo.remove();
+  await _sauvegarderLogoEnBase(null, false);
+  mettreAJourApercu();
 }
 
 async function sauvegarderParametres() {
   try {
+    const logoUrl = document.getElementById('etiq-logo-url')?.value || null;
+    const afficherLogo = document.getElementById('etiq-show-logo')?.checked || false;
+
+    // Sauvegarder le logo séparément (évite payload trop lourd)
+    if (logoUrl !== parametresActuels.etiquette_logo_url || afficherLogo !== parametresActuels.etiquette_afficher_logo) {
+      await _sauvegarderLogoEnBase(logoUrl, afficherLogo);
+    }
+
+    // Payload sans le logo (déjà sauvegardé)
     const payload = {
       imprimante_nom: document.getElementById('peri-imprimante-nom')?.value,
       imprimante_tickets_nom: document.getElementById('peri-ticket-nom')?.value,
@@ -236,8 +264,8 @@ async function sauvegarderParametres() {
       etiquette_couleur_fond: document.getElementById('etiq-couleur-fond')?.value || '#ffffff',
       etiquette_alignement: alignementActuel,
       etiquette_afficher_description: document.getElementById('etiq-show-desc')?.checked,
-      etiquette_afficher_logo: document.getElementById('etiq-show-logo')?.checked,
-      etiquette_logo_url: document.getElementById('etiq-logo-url')?.value || null,
+      etiquette_afficher_logo: afficherLogo,
+      etiquette_logo_url: logoUrl,
       etiquette_afficher_prix: document.getElementById('etiq-show-prix')?.checked,
       etiquette_afficher_reference: document.getElementById('etiq-show-ref')?.checked,
       etiquette_afficher_codebarre: document.getElementById('etiq-show-code')?.checked,
@@ -246,11 +274,11 @@ async function sauvegarderParametres() {
       interface_theme: parametresActuels.interface_theme || 'clair'
     };
     const data = await apiFetch('/parametres', { method: 'PUT', body: JSON.stringify(payload) });
-    parametresActuels = data;
+    parametresActuels = { ...data, etiquette_logo_url: logoUrl }; // conserver le logo en mémoire
     appliquerInterface(data);
     afficherMessage('✅ Paramètres sauvegardés avec succès', 'success');
   } catch (e) {
-    afficherMessage('❌ Erreur lors de la sauvegarde', 'error');
+    afficherMessage('❌ Erreur lors de la sauvegarde : ' + (e.message || ''), 'danger');
   }
 }
 

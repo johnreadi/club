@@ -79,7 +79,30 @@ router.put('/', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ erreur: 'Erreur serveur' });
+    console.error('PUT /parametres erreur:', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
+  }
+});
+
+// ── Route dédiée logo (évite d'envoyer tout le payload à chaque sauvegarde) ──
+router.put('/logo', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const { etiquette_logo_url, etiquette_afficher_logo } = req.body;
+    const result = await pool.query(
+      `INSERT INTO parametres_club (club_id, etiquette_logo_url, etiquette_afficher_logo)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (club_id) DO UPDATE SET
+         etiquette_logo_url = EXCLUDED.etiquette_logo_url,
+         etiquette_afficher_logo = EXCLUDED.etiquette_afficher_logo,
+         mis_a_jour_le = CURRENT_TIMESTAMP
+       RETURNING etiquette_logo_url, etiquette_afficher_logo`,
+      [club_id, etiquette_logo_url || null, etiquette_afficher_logo !== false]
+    );
+    res.json({ ok: true, ...result.rows[0] });
+  } catch (err) {
+    console.error('PUT /parametres/logo erreur:', err.message);
+    res.status(500).json({ erreur: 'Erreur sauvegarde logo', detail: err.message });
   }
 });
 

@@ -3,19 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>READI.Fr â€” GÃ©rez votre boutique de club sportif</title>
+  <title>READI.Fr &mdash; G&eacute;rez votre boutique de club sportif</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          colors: {
-            primary: '#165DFF',
-            primaryDark: '#0A3FCC',
-            success: '#36C389',
-            accent: '#FF7D00',
-          },
+          colors: { primary: '#165DFF', primaryDark: '#0A3FCC', success: '#36C389', accent: '#FF7D00' },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
         }
       }
@@ -26,649 +21,501 @@
     html { scroll-behavior: smooth; }
     * { box-sizing: border-box; }
     body { margin: 0; overflow-x: hidden; }
-    .gradient-hero { background: linear-gradient(135deg, #0f2d6b 0%, #165DFF 60%, #0ea5e9 100%); }
-    .gradient-card { background: linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%); }
     .feature-icon { background: linear-gradient(135deg, #165DFF, #0ea5e9); }
     .glass { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
-    .badge-free { background: linear-gradient(135deg, #36C389, #059669); }
+    .gradient-card { background: linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%); }
     input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(22,93,255,0.18); }
-
-    /* â”€â”€ Slideshow â”€â”€ */
     .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
     .slide.active { opacity: 1; }
     .slide-1 { background: linear-gradient(135deg, #0f2d6b 0%, #165DFF 55%, #0ea5e9 100%); }
     .slide-2 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%); }
     .slide-3 { background: linear-gradient(135deg, #064e3b 0%, #065f46 45%, #059669 100%); }
     .slide-4 { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 45%, #7c3aed 100%); }
-
-    /* Indicateurs slideshow */
-    .dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.4); cursor:pointer; transition:all 0.3s; }
+    .dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.4); cursor:pointer; transition:all 0.3s; display:inline-block; }
     .dot.active { background:#fff; transform:scale(1.3); }
-
-    /* Animations */
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-    .float { animation: float 5s ease-in-out infinite; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
     .fade-up { animation: fadeUp 0.8s ease forwards; }
     .fade-up-2 { animation: fadeUp 0.8s 0.2s ease both; }
     .fade-up-3 { animation: fadeUp 0.8s 0.4s ease both; }
-
-    /* Typewriter cursor */
-    .cursor { border-right: 3px solid #7dd3fc; animation: blink 0.8s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-    /* Modal */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); z-index:200; display:none; align-items:center; justify-content:center; padding:1rem; }
     .modal-overlay.open { display:flex; }
-
-    /* BackToTop */
     #btn-top { position:fixed; bottom:1.5rem; right:1.5rem; z-index:100; width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#165DFF,#0ea5e9); color:#fff; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(22,93,255,0.4); transition:all 0.3s; }
-    #btn-top:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(22,93,255,0.5); }
+    #btn-top:hover { transform:translateY(-3px); }
     #btn-top.visible { display:flex; }
   </style>
 </head>
 <body class="bg-white font-sans text-gray-900 antialiased">
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       MODAL CONNEXION
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <div id="modal-connexion" class="modal-overlay" onclick="if(event.target===this)fermerModals()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative">
-      <button onclick="fermerModals()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-600 text-xl leading-none">Ã—</button>
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl feature-icon mb-3">
-          <i class="fa fa-cube text-white text-lg"></i>
-        </div>
-        <h2 class="text-xl font-bold text-gray-900">Connexion</h2>
-        <p class="text-sm text-gray-400 mt-1">AccÃ©dez Ã  votre espace READI.Fr</p>
+<!-- MODAL CONNEXION -->
+<div id="modal-connexion" class="modal-overlay" onclick="if(event.target===this)fermerModals()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative">
+    <button onclick="fermerModals()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl feature-icon mb-3">
+        <i class="fa fa-cube text-white text-lg"></i>
       </div>
-      <div id="msg-connexion" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
-      <form id="form-connexion-landing" class="space-y-4" onsubmit="soumettreConnexion(event)">
-        <input type="email" name="email" placeholder="Email" required
-          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        <input type="password" name="mot_de_passe" placeholder="Mot de passe" required
-          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        <button type="submit" class="w-full bg-primary text-white font-bold p-3 rounded-xl hover:bg-blue-700 transition-colors">
-          <i class="fa fa-sign-in mr-2"></i>Se connecter
-        </button>
-      </form>
-      <p class="text-center text-sm text-gray-400 mt-5">
-        Pas de compte ?
-        <button onclick="ouvrirModal('inscription')" class="text-primary font-bold hover:underline">S'inscrire gratuitement</button>
-      </p>
+      <h2 class="text-xl font-bold text-gray-900">Connexion</h2>
+      <p class="text-sm text-gray-400 mt-1">Acc&eacute;dez &agrave; votre espace READI.Fr</p>
     </div>
-  </div>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       MODAL INSCRIPTION
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <div id="modal-inscription" class="modal-overlay" onclick="if(event.target===this)fermerModals()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative overflow-y-auto max-h-[95vh]">
-      <button onclick="fermerModals()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-600 text-xl leading-none">Ã—</button>
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl feature-icon mb-3">
-          <i class="fa fa-rocket text-white text-lg"></i>
-        </div>
-        <h2 class="text-xl font-bold text-gray-900">CrÃ©er mon espace club</h2>
-        <p class="text-sm text-gray-400 mt-1">Gratuit Â· Activation immÃ©diate Â· Sans engagement</p>
-      </div>
-      <div id="msg-inscription" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
-      <form id="form-inscription" class="space-y-4" onsubmit="soumettreInscription(event)">
-        <div class="grid grid-cols-2 gap-3">
-          <input type="text" name="nom_club" placeholder="Nom du club *" required
-            class="col-span-2 w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-          <input type="text" name="prenom" placeholder="PrÃ©nom *" required
-            class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-          <input type="text" name="nom" placeholder="Nom *" required
-            class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        </div>
-        <input type="text" name="ville" placeholder="Ville"
-          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        <input type="email" name="email" placeholder="Email professionnel *" required
-          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        <input type="tel" name="telephone" placeholder="TÃ©lÃ©phone (optionnel)"
-          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="relative">
-            <input type="password" name="mot_de_passe" id="mdp1" placeholder="Mot de passe *" required minlength="6"
-              class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors pr-10">
-            <button type="button" onclick="togglePwd('mdp1','ico1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <i id="ico1" class="fa fa-eye"></i>
-            </button>
-          </div>
-          <div class="relative">
-            <input type="password" name="mdp_confirm" id="mdp2" placeholder="Confirmer *" required
-              class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors pr-10">
-            <button type="button" onclick="togglePwd('mdp2','ico2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <i id="ico2" class="fa fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <label class="flex items-start gap-2 text-xs text-gray-500 cursor-pointer">
-          <input type="checkbox" required class="mt-0.5 accent-primary">
-          J'accepte les <a href="#" class="text-primary hover:underline mx-1">conditions d'utilisation</a> et la <a href="#" class="text-primary hover:underline mx-1">politique de confidentialitÃ©</a>.
-        </label>
-        <button type="submit" id="btn-submit-inscription"
-          class="w-full bg-primary text-white font-bold p-3 rounded-xl hover:bg-blue-700 transition-colors shadow">
-          <i class="fa fa-rocket mr-2"></i><span id="btn-inscription-txt">CrÃ©er mon espace gratuitement</span>
-        </button>
-      </form>
-      <p class="text-center text-sm text-gray-400 mt-4">
-        DÃ©jÃ  inscrit ?
-        <button onclick="ouvrirModal('connexion')" class="text-primary font-bold hover:underline">Se connecter</button>
-      </p>
-    </div>
-  </div>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       NAVBAR
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" style="background:transparent;">
-    <div class="w-full px-6 h-18 flex items-center justify-between py-4">
-      <!-- Logo -->
-      <div class="flex items-center gap-2">
-        <div class="w-9 h-9 rounded-xl feature-icon flex items-center justify-center shadow-lg">
-          <i class="fa fa-cube text-white"></i>
-        </div>
-        <span class="font-black text-2xl text-white drop-shadow">READI<span class="text-blue-200">.Fr</span></span>
-      </div>
-      <!-- Menu desktop -->
-      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-white/90">
-        <a href="#fonctionnalites" class="hover:text-white transition-colors">FonctionnalitÃ©s</a>
-        <a href="#comment-ca-marche" class="hover:text-white transition-colors">Comment Ã§a marche</a>
-        <a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a>
-      </div>
-      <!-- Actions -->
-      <div class="flex items-center gap-3">
-        <button onclick="ouvrirModal('connexion')"
-          class="text-sm font-semibold text-white/90 hover:text-white border border-white/30 px-4 py-2 rounded-full hover:bg-white/10 transition-all">
-          <i class="fa fa-sign-in mr-1"></i>Connexion
-        </button>
-        <button onclick="ouvrirModal('inscription')"
-          class="text-sm font-bold bg-white text-primary px-5 py-2 rounded-full hover:bg-gray-100 transition-all shadow-lg">
-          <i class="fa fa-rocket mr-1"></i>Essai gratuit
-        </button>
-        <!-- Burger mobile -->
-        <button id="burger" onclick="toggleMenu()" class="md:hidden text-white text-xl ml-2">
-          <i class="fa fa-bars"></i>
-        </button>
-      </div>
-    </div>
-    <!-- Menu mobile -->
-    <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur border-t border-white/20 px-6 py-4 space-y-3">
-      <a href="#fonctionnalites" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">FonctionnalitÃ©s</a>
-      <a href="#comment-ca-marche" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">Comment Ã§a marche</a>
-      <a href="#tarifs" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">Tarifs</a>
-      <button onclick="ouvrirModal('connexion');toggleMenu()" class="block w-full text-left text-primary font-semibold py-2">Se connecter</button>
-      <button onclick="ouvrirModal('inscription');toggleMenu()" class="block w-full bg-primary text-white font-bold py-3 rounded-xl text-center">S'inscrire gratuitement</button>
-    </div>
-  </nav>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       HERO PLEINE PAGE + SLIDESHOW
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <section id="hero" class="relative w-full" style="height:100vh;min-height:600px;overflow:hidden;">
-
-    <!-- Slides background -->
-    <div class="slide slide-1 active"></div>
-    <div class="slide slide-2"></div>
-    <div class="slide slide-3"></div>
-    <div class="slide slide-4"></div>
-
-    <!-- Overlay motif -->
-    <div class="absolute inset-0 z-10" style="background:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIj48ZyBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDMiPjxwYXRoIGQ9Ik0zNiAzNHY2aDZ2LTZoLTZ6bTYgNnY2aDZ2LTZoLTZ6bS0xMiAwaDF2NGgtMXYtNHptMTIgMGg2djZoLTZ2LTZ6Ii8+PC9nPjwvZz48L3N2Zz4=') repeat;opacity:0.4;"></div>
-
-    <!-- DÃ©corations lumineuses -->
-    <div class="absolute top-20 right-20 w-96 h-96 rounded-full blur-3xl z-10" style="background:rgba(255,255,255,0.06);"></div>
-    <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full blur-3xl z-10" style="background:rgba(0,0,0,0.15);"></div>
-
-    <!-- Contenu Hero -->
-    <div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4">
-      <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-white/90 text-xs font-semibold fade-up"
-        style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2);">
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        100% gratuit au dÃ©marrage &nbsp;Â·&nbsp; Aucune carte bancaire requise
-      </div>
-      <h1 class="text-5xl md:text-7xl font-black text-white leading-tight mb-4 fade-up-2" style="text-shadow:0 2px 30px rgba(0,0,0,0.3);">
-        READI<span class="text-blue-200">.Fr</span>
-      </h1>
-      <p id="typewriter" class="text-xl md:text-2xl text-white/80 font-medium mb-2 fade-up-2 h-8"></p>
-      <p class="text-white/60 text-base mb-10 fade-up-3 max-w-xl">
-        La plateforme tout-en-un pour les clubs sportifs : stock, Ã©tiquettes, caisse, rapports.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 fade-up-3">
-        <button onclick="ouvrirModal('inscription')"
-          class="bg-white text-primary font-black px-10 py-4 rounded-xl text-base hover:bg-gray-50 transition-all shadow-2xl active:scale-95">
-          <i class="fa fa-rocket mr-2"></i>CrÃ©er mon espace gratuit
-        </button>
-        <a href="#fonctionnalites"
-          class="font-semibold px-10 py-4 rounded-xl text-base text-white transition-all active:scale-95"
-          style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);">
-          <i class="fa fa-arrow-down mr-2"></i>DÃ©couvrir
-        </a>
-      </div>
-    </div>
-
-    <!-- Indicateurs slideshow -->
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-3">
-      <div class="dot active" onclick="goToSlide(0)"></div>
-      <div class="dot" onclick="goToSlide(1)"></div>
-      <div class="dot" onclick="goToSlide(2)"></div>
-      <div class="dot" onclick="goToSlide(3)"></div>
-    </div>
-
-    <!-- FlÃ¨che scroll -->
-    <div class="absolute bottom-16 right-8 z-30 text-white/40 animate-bounce hidden md:block">
-      <i class="fa fa-chevron-down text-2xl"></i>
-    </div>
-
-    <!-- Stats en bas Ã  gauche -->
-    <div class="absolute bottom-8 left-6 z-30 hidden md:flex gap-8">
-      <div class="text-white text-center">
-        <div class="text-2xl font-black">+200</div>
-        <div class="text-white/50 text-xs">Clubs</div>
-      </div>
-      <div class="text-white text-center">
-        <div class="text-2xl font-black">50k+</div>
-        <div class="text-white/50 text-xs">Ã‰tiquettes</div>
-      </div>
-      <div class="text-white text-center">
-        <div class="text-2xl font-black">100%</div>
-        <div class="text-white/50 text-xs">En ligne</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- â”€â”€ FonctionnalitÃ©s â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       FONCTIONNALITÃ‰S
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <section id="fonctionnalites" class="py-24 px-4 bg-white">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <span class="text-primary text-sm font-semibold uppercase tracking-widest">Tout-en-un</span>
-        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">Tout ce dont votre club a besoin</h2>
-        <p class="text-gray-500 text-lg max-w-2xl mx-auto">Une plateforme complÃ¨te pour professionnaliser la gestion de votre boutique sportive.</p>
-      </div>
-      <div class="grid md:grid-cols-3 gap-6">
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-cubes text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Gestion du stock</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Ajoutez vos produits, suivez les quantitÃ©s en temps rÃ©el, recevez des alertes de rupture, gÃ©rez les catÃ©gories.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Ajout par douchette ou manuel</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> CatÃ©gories personnalisÃ©es</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Alertes de seuil automatiques</li>
-          </ul>
-        </div>
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-barcode text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Ã‰tiquettes professionnelles</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">GÃ©nÃ©rez et imprimez vos Ã©tiquettes avec code-barres, prix et description. Formats A4 ou thermique.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Code-barres CODE128 intÃ©grÃ©</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Personnalisation couleurs</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Impression par lot</li>
-          </ul>
-        </div>
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-calculator text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Caisse enregistreuse</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Encaissez vos ventes, gÃ©rez le rendu monnaie, imprimez tickets et factures A4 instantanÃ©ment.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Recherche produit live</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Rendu monnaie automatique</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Ticket & facture imprimables</li>
-          </ul>
-        </div>
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-bar-chart text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Rapports & statistiques</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Visualisez vos performances de vente, produits phares et valeur de stock Ã  tout moment.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> CA mensuel et annuel</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Top produits vendus</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Export des donnÃ©es</li>
-          </ul>
-        </div>
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-users text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Multi-utilisateurs</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Invitez bÃ©nÃ©voles et gÃ©rants avec des droits d'accÃ¨s configurables selon les rÃ´les.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> RÃ´les admin / vendeur</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Historique par utilisateur</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Connexion JWT sÃ©curisÃ©e</li>
-          </ul>
-        </div>
-        <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
-          <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i class="fa fa-mobile text-white text-lg"></i>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Application mobile (PWA)</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Installez l'app sur votre tÃ©lÃ©phone ou tablette sans passer par l'App Store.</p>
-          <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> iOS, Android, PC</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Compatible douchette Bluetooth</li>
-            <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Interface responsive</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       COMMENT Ã‡A MARCHE
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <section id="comment-ca-marche" class="py-24 px-4 bg-gray-50">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16">
-        <span class="text-primary text-sm font-semibold uppercase tracking-widest">Simple & rapide</span>
-        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">OpÃ©rationnel en 3 Ã©tapes</h2>
-      </div>
-      <div class="grid md:grid-cols-3 gap-10">
-        <div class="text-center">
-          <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
-            <span class="text-white font-black text-2xl">1</span>
-          </div>
-          <h3 class="font-bold text-lg mb-2">CrÃ©ez votre compte</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Cliquez sur "Connexion" dans le menu, puis "S'inscrire". Votre espace est actif immÃ©diatement.</p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
-            <span class="text-white font-black text-2xl">2</span>
-          </div>
-          <h3 class="font-bold text-lg mb-2">Ajoutez vos produits</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Importez votre catalogue, scannez les codes-barres ou saisissez vos articles manuellement.</p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
-            <span class="text-white font-black text-2xl">3</span>
-          </div>
-          <h3 class="font-bold text-lg mb-2">GÃ©rez & vendez</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Imprimez vos Ã©tiquettes, encaissez vos ventes et consultez vos rapports en temps rÃ©el.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       TARIFS
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <section id="tarifs" class="py-24 px-4 bg-white">
-    <div class="max-w-3xl mx-auto text-center">
-      <span class="text-primary text-sm font-semibold uppercase tracking-widest">Tarification</span>
-      <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">Gratuit pour commencer</h2>
-      <p class="text-gray-500 text-lg mb-10">Profitez de toutes les fonctionnalitÃ©s sans limitation pendant la pÃ©riode de lancement.</p>
-      <div class="bg-white rounded-2xl border-2 border-primary shadow-xl p-8 max-w-sm mx-auto relative">
-        <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span class="text-white text-xs font-bold px-4 py-1.5 rounded-full shadow" style="background:linear-gradient(135deg,#36C389,#059669)">LANCEMENT GRATUIT</span>
-        </div>
-        <div class="text-5xl font-black text-primary mb-1">0 â‚¬</div>
-        <div class="text-gray-400 text-sm mb-6">pour toujours Â· sans carte bancaire</div>
-        <ul class="text-left space-y-3 text-sm text-gray-700 mb-8">
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Produits illimitÃ©s</li>
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Ventes illimitÃ©es</li>
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Impression Ã©tiquettes</li>
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Caisse enregistreuse complÃ¨te</li>
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Multi-utilisateurs (5 max)</li>
-          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Support par email</li>
-        </ul>
-        <button onclick="ouvrirModal('inscription')"
-          class="block w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors text-center shadow">
-          <i class="fa fa-rocket mr-2"></i>Commencer gratuitement
-        </button>
-        <p class="text-xs text-gray-400 mt-3">Des formules premium seront proposÃ©es ultÃ©rieurement.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       CTA FINAL
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <section class="py-20 px-4" style="background:linear-gradient(135deg,#0f2d6b 0%,#165DFF 60%,#0ea5e9 100%);">
-    <div class="max-w-2xl mx-auto text-center text-white">
-      <h2 class="text-3xl md:text-4xl font-black mb-4">PrÃªt Ã  professionnaliser<br>votre boutique ?</h2>
-      <p class="text-white/70 text-lg mb-8">Rejoignez des centaines de clubs qui gÃ¨rent leur stock avec READI.Fr.</p>
-      <button onclick="ouvrirModal('inscription')"
-        class="bg-white text-primary font-black px-12 py-4 rounded-xl text-base hover:bg-gray-50 transition-all shadow-2xl">
-        <i class="fa fa-rocket mr-2"></i>CrÃ©er mon espace gratuitement
+    <div id="msg-connexion" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+    <form id="form-connexion-landing" class="space-y-4" onsubmit="soumettreConnexion(event)">
+      <input type="email" name="email" placeholder="Email" required
+        class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      <input type="password" name="mot_de_passe" placeholder="Mot de passe" required
+        class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      <button type="submit" class="w-full bg-primary text-white font-bold p-3 rounded-xl hover:bg-blue-700 transition-colors">
+        <i class="fa fa-sign-in mr-2"></i>Se connecter
       </button>
-      <p class="mt-4 text-white/40 text-sm">Aucune carte bancaire Â· Activation immÃ©diate</p>
-    </div>
-  </section>
+    </form>
+    <p class="text-center text-sm text-gray-400 mt-5">
+      Pas de compte ?
+      <button onclick="ouvrirModal('inscription')" class="text-primary font-bold hover:underline">S&apos;inscrire gratuitement</button>
+    </p>
+  </div>
+</div>
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       FOOTER
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <footer class="bg-gray-950 text-white py-12 px-4">
-    <div class="max-w-6xl mx-auto">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
-        <div class="md:col-span-2">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-8 h-8 rounded-xl feature-icon flex items-center justify-center">
-              <i class="fa fa-cube text-white text-sm"></i>
-            </div>
-            <span class="font-black text-xl">READI<span class="text-blue-400">.Fr</span></span>
+<!-- MODAL INSCRIPTION -->
+<div id="modal-inscription" class="modal-overlay" onclick="if(event.target===this)fermerModals()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative overflow-y-auto" style="max-height:95vh">
+    <button onclick="fermerModals()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl feature-icon mb-3">
+        <i class="fa fa-rocket text-white text-lg"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900">Cr&eacute;er mon espace club</h2>
+      <p class="text-sm text-gray-400 mt-1">Gratuit &middot; Activation imm&eacute;diate &middot; Sans engagement</p>
+    </div>
+    <div id="msg-inscription" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+    <form id="form-inscription" class="space-y-4" onsubmit="soumettreInscription(event)">
+      <div class="grid grid-cols-2 gap-3">
+        <input type="text" name="nom_club" placeholder="Nom du club *" required
+          class="col-span-2 w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+        <input type="text" name="prenom" placeholder="Pr&eacute;nom *" required
+          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+        <input type="text" name="nom" placeholder="Nom *" required
+          class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      </div>
+      <input type="text" name="ville" placeholder="Ville"
+        class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      <input type="email" name="email" placeholder="Email professionnel *" required
+        class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      <input type="tel" name="telephone" placeholder="T&eacute;l&eacute;phone (optionnel)"
+        class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="relative">
+          <input type="password" name="mot_de_passe" id="mdp1" placeholder="Mot de passe *" required minlength="6"
+            class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors pr-10">
+          <button type="button" onclick="togglePwd('mdp1','ico1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <i id="ico1" class="fa fa-eye"></i>
+          </button>
+        </div>
+        <div class="relative">
+          <input type="password" name="mdp_confirm" id="mdp2" placeholder="Confirmer *" required
+            class="w-full border-2 border-gray-100 bg-gray-50 p-3 rounded-xl text-sm focus:border-primary transition-colors pr-10">
+          <button type="button" onclick="togglePwd('mdp2','ico2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <i id="ico2" class="fa fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <label class="flex items-start gap-2 text-xs text-gray-500 cursor-pointer">
+        <input type="checkbox" required class="mt-0.5 accent-primary">
+        J&apos;accepte les <a href="#" class="text-primary hover:underline mx-1">conditions d&apos;utilisation</a> et la <a href="#" class="text-primary hover:underline mx-1">politique de confidentialit&eacute;</a>.
+      </label>
+      <button type="submit" id="btn-submit-inscription"
+        class="w-full bg-primary text-white font-bold p-3 rounded-xl hover:bg-blue-700 transition-colors shadow">
+        <i class="fa fa-rocket mr-2"></i><span id="btn-inscription-txt">Cr&eacute;er mon espace gratuitement</span>
+      </button>
+    </form>
+    <p class="text-center text-sm text-gray-400 mt-4">
+      D&eacute;j&agrave; inscrit ?
+      <button onclick="ouvrirModal('connexion')" class="text-primary font-bold hover:underline">Se connecter</button>
+    </p>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" style="background:transparent">
+  <div class="w-full px-6 flex items-center justify-between py-4">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-xl feature-icon flex items-center justify-center shadow-lg">
+        <i class="fa fa-cube text-white"></i>
+      </div>
+      <span class="font-black text-2xl text-white drop-shadow">READI<span class="text-blue-200">.Fr</span></span>
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium text-white/90">
+      <a href="#fonctionnalites" class="hover:text-white transition-colors">Fonctionnalit&eacute;s</a>
+      <a href="#comment-ca-marche" class="hover:text-white transition-colors">Comment &ccedil;a marche</a>
+      <a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="ouvrirModal('connexion')"
+        class="text-sm font-semibold text-white/90 hover:text-white border border-white/30 px-4 py-2 rounded-full hover:bg-white/10 transition-all">
+        <i class="fa fa-sign-in mr-1"></i>Connexion
+      </button>
+      <button onclick="ouvrirModal('inscription')"
+        class="text-sm font-bold bg-white text-primary px-5 py-2 rounded-full hover:bg-gray-100 transition-all shadow-lg">
+        <i class="fa fa-rocket mr-1"></i>Essai gratuit
+      </button>
+      <button id="burger" onclick="toggleMenu()" class="md:hidden text-white text-xl ml-2">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur px-6 py-4 space-y-3">
+    <a href="#fonctionnalites" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">Fonctionnalit&eacute;s</a>
+    <a href="#comment-ca-marche" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">Comment &ccedil;a marche</a>
+    <a href="#tarifs" onclick="toggleMenu()" class="block text-gray-700 font-medium py-2 border-b border-gray-100">Tarifs</a>
+    <button onclick="ouvrirModal('connexion');toggleMenu()" class="block w-full text-left text-primary font-semibold py-2">Se connecter</button>
+    <button onclick="ouvrirModal('inscription');toggleMenu()" class="block w-full bg-primary text-white font-bold py-3 rounded-xl text-center">S&apos;inscrire gratuitement</button>
+  </div>
+</nav>
+
+<!-- HERO PLEINE PAGE + SLIDESHOW -->
+<section id="hero" class="relative w-full" style="height:100vh;min-height:600px;overflow:hidden">
+  <div class="slide slide-1 active"></div>
+  <div class="slide slide-2"></div>
+  <div class="slide slide-3"></div>
+  <div class="slide slide-4"></div>
+  <div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4">
+    <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-white/90 text-xs font-semibold fade-up"
+      style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2)">
+      <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+      100% gratuit au d&eacute;marrage &nbsp;&middot;&nbsp; Aucune carte bancaire requise
+    </div>
+    <h1 class="text-5xl md:text-7xl font-black text-white leading-tight mb-4 fade-up-2" style="text-shadow:0 2px 30px rgba(0,0,0,0.3)">
+      READI<span class="text-blue-200">.Fr</span>
+    </h1>
+    <p id="typewriter" class="text-xl md:text-2xl text-white/80 font-medium mb-2 fade-up-2" style="min-height:2rem"></p>
+    <p class="text-white/60 text-base mb-10 fade-up-3 max-w-xl">
+      La plateforme tout-en-un pour les clubs sportifs : stock, &eacute;tiquettes, caisse, rapports.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 fade-up-3">
+      <button onclick="ouvrirModal('inscription')"
+        class="bg-white text-primary font-black px-10 py-4 rounded-xl text-base hover:bg-gray-50 transition-all shadow-2xl">
+        <i class="fa fa-rocket mr-2"></i>Cr&eacute;er mon espace gratuit
+      </button>
+      <a href="#fonctionnalites"
+        class="font-semibold px-10 py-4 rounded-xl text-base text-white transition-all"
+        style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25)">
+        <i class="fa fa-arrow-down mr-2"></i>D&eacute;couvrir
+      </a>
+    </div>
+  </div>
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-3">
+    <div class="dot active" onclick="goToSlide(0)"></div>
+    <div class="dot" onclick="goToSlide(1)"></div>
+    <div class="dot" onclick="goToSlide(2)"></div>
+    <div class="dot" onclick="goToSlide(3)"></div>
+  </div>
+  <div class="absolute bottom-8 left-6 z-30 hidden md:flex gap-8">
+    <div class="text-white text-center"><div class="text-2xl font-black">+200</div><div class="text-white/50 text-xs">Clubs</div></div>
+    <div class="text-white text-center"><div class="text-2xl font-black">50k+</div><div class="text-white/50 text-xs">&Eacute;tiquettes</div></div>
+    <div class="text-white text-center"><div class="text-2xl font-black">100%</div><div class="text-white/50 text-xs">En ligne</div></div>
+  </div>
+</section>
+
+<!-- FONCTIONNALITES -->
+<section id="fonctionnalites" class="py-24 px-4 bg-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="text-primary text-sm font-semibold uppercase tracking-widest">Tout-en-un</span>
+      <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">Tout ce dont votre club a besoin</h2>
+      <p class="text-gray-500 text-lg max-w-2xl mx-auto">Une plateforme compl&egrave;te pour professionnaliser la gestion de votre boutique sportive.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-cubes text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Gestion du stock</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Ajoutez vos produits, suivez les quantit&eacute;s en temps r&eacute;el, recevez des alertes de rupture, g&eacute;rez les cat&eacute;gories.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Ajout par douchette ou manuel</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Cat&eacute;gories personnalis&eacute;es</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Alertes de seuil automatiques</li>
+        </ul>
+      </div>
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-barcode text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">&Eacute;tiquettes professionnelles</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">G&eacute;n&eacute;rez et imprimez vos &eacute;tiquettes avec code-barres, prix et description. Formats A4 ou thermique.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Code-barres CODE128 int&eacute;gr&eacute;</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Personnalisation couleurs</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Impression par lot</li>
+        </ul>
+      </div>
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-calculator text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Caisse enregistreuse</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Encaissez vos ventes, g&eacute;rez le rendu monnaie, imprimez tickets et factures A4 instantan&eacute;ment.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Recherche produit live</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Rendu monnaie automatique</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Ticket &amp; facture imprimables</li>
+        </ul>
+      </div>
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-bar-chart text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Rapports &amp; statistiques</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Visualisez vos performances de vente, produits phares et valeur de stock &agrave; tout moment.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> CA mensuel et annuel</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Top produits vendus</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Export des donn&eacute;es</li>
+        </ul>
+      </div>
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-users text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Multi-utilisateurs</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Invitez b&eacute;n&eacute;voles et g&eacute;rants avec des droits d&apos;acc&egrave;s configurables selon les r&ocirc;les.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> R&ocirc;les admin / vendeur</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Historique par utilisateur</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Connexion JWT s&eacute;curis&eacute;e</li>
+        </ul>
+      </div>
+      <div class="gradient-card rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all group">
+        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa fa-mobile text-white text-lg"></i>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Application mobile (PWA)</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Installez l&apos;app sur votre t&eacute;l&eacute;phone ou tablette sans passer par l&apos;App Store.</p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> iOS, Android, PC</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Compatible douchette Bluetooth</li>
+          <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500 text-xs"></i> Interface responsive</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMENT CA MARCHE -->
+<section id="comment-ca-marche" class="py-24 px-4 bg-gray-50">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="text-primary text-sm font-semibold uppercase tracking-widest">Simple &amp; rapide</span>
+      <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">Op&eacute;rationnel en 3 &eacute;tapes</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-10">
+      <div class="text-center">
+        <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
+          <span class="text-white font-black text-2xl">1</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Cr&eacute;ez votre compte</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Cliquez sur &laquo;&nbsp;Connexion&nbsp;&raquo; dans le menu, puis &laquo;&nbsp;S&apos;inscrire&nbsp;&raquo;. Votre espace est actif imm&eacute;diatement.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
+          <span class="text-white font-black text-2xl">2</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Ajoutez vos produits</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Importez votre catalogue, scannez les codes-barres ou saisissez vos articles manuellement.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 feature-icon rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl">
+          <span class="text-white font-black text-2xl">3</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">G&eacute;rez &amp; vendez</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Imprimez vos &eacute;tiquettes, encaissez vos ventes et consultez vos rapports en temps r&eacute;el.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TARIFS -->
+<section id="tarifs" class="py-24 px-4 bg-white">
+  <div class="max-w-3xl mx-auto text-center">
+    <span class="text-primary text-sm font-semibold uppercase tracking-widest">Tarification</span>
+    <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-4">Gratuit pour commencer</h2>
+    <p class="text-gray-500 text-lg mb-10">Profitez de toutes les fonctionnalit&eacute;s sans limitation pendant la p&eacute;riode de lancement.</p>
+    <div class="bg-white rounded-2xl border-2 border-primary shadow-xl p-8 max-w-sm mx-auto relative">
+      <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+        <span class="text-white text-xs font-bold px-4 py-1.5 rounded-full shadow" style="background:linear-gradient(135deg,#36C389,#059669)">LANCEMENT GRATUIT</span>
+      </div>
+      <div class="text-5xl font-black text-primary mb-1">0 &euro;</div>
+      <div class="text-gray-400 text-sm mb-6">pour toujours &middot; sans carte bancaire</div>
+      <ul class="text-left space-y-3 text-sm text-gray-700 mb-8">
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Produits illimit&eacute;s</li>
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Ventes illimit&eacute;es</li>
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Impression &eacute;tiquettes</li>
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Caisse enregistreuse compl&egrave;te</li>
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Multi-utilisateurs (5 max)</li>
+        <li class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> Support par email</li>
+      </ul>
+      <button onclick="ouvrirModal('inscription')" class="block w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors text-center shadow">
+        <i class="fa fa-rocket mr-2"></i>Commencer gratuitement
+      </button>
+      <p class="text-xs text-gray-400 mt-3">Des formules premium seront propos&eacute;es ult&eacute;rieurement.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="py-20 px-4" style="background:linear-gradient(135deg,#0f2d6b 0%,#165DFF 60%,#0ea5e9 100%)">
+  <div class="max-w-2xl mx-auto text-center text-white">
+    <h2 class="text-3xl md:text-4xl font-black mb-4">Pr&ecirc;t &agrave; professionnaliser<br>votre boutique&nbsp;?</h2>
+    <p class="text-white/70 text-lg mb-8">Rejoignez des centaines de clubs qui g&egrave;rent leur stock avec READI.Fr.</p>
+    <button onclick="ouvrirModal('inscription')" class="bg-white text-primary font-black px-12 py-4 rounded-xl text-base hover:bg-gray-50 transition-all shadow-2xl">
+      <i class="fa fa-rocket mr-2"></i>Cr&eacute;er mon espace gratuitement
+    </button>
+    <p class="mt-4 text-white/40 text-sm">Aucune carte bancaire &middot; Activation imm&eacute;diate</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-950 text-white py-12 px-4">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-4 gap-8 mb-8">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-xl feature-icon flex items-center justify-center">
+            <i class="fa fa-cube text-white text-sm"></i>
           </div>
-          <p class="text-gray-400 text-sm leading-relaxed max-w-xs">La solution de gestion de boutique dÃ©diÃ©e aux clubs sportifs. Simple, efficace, professionnel.</p>
+          <span class="font-black text-xl">READI<span class="text-blue-400">.Fr</span></span>
         </div>
-        <div>
-          <h4 class="font-semibold text-sm mb-3 text-gray-300">Produit</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="#fonctionnalites" class="hover:text-white transition-colors">FonctionnalitÃ©s</a></li>
-            <li><a href="#comment-ca-marche" class="hover:text-white transition-colors">Comment Ã§a marche</a></li>
-            <li><a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-sm mb-3 text-gray-300">Compte</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><button onclick="ouvrirModal('inscription')" class="hover:text-white transition-colors text-left">S'inscrire</button></li>
-            <li><button onclick="ouvrirModal('connexion')" class="hover:text-white transition-colors text-left">Se connecter</button></li>
-          </ul>
-        </div>
+        <p class="text-gray-400 text-sm leading-relaxed max-w-xs">La solution de gestion de boutique d&eacute;di&eacute;e aux clubs sportifs. Simple, efficace, professionnel.</p>
       </div>
-      <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-        <span>Â© 2026 READI.Fr â€” Tous droits rÃ©servÃ©s.</span>
-        <span>Fait avec <i class="fa fa-heart text-red-500"></i> pour les clubs sportifs</span>
+      <div>
+        <h4 class="font-semibold text-sm mb-3 text-gray-300">Produit</h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li><a href="#fonctionnalites" class="hover:text-white transition-colors">Fonctionnalit&eacute;s</a></li>
+          <li><a href="#comment-ca-marche" class="hover:text-white transition-colors">Comment &ccedil;a marche</a></li>
+          <li><a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-3 text-gray-300">Compte</h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li><button onclick="ouvrirModal('inscription')" class="hover:text-white transition-colors text-left">S&apos;inscrire</button></li>
+          <li><button onclick="ouvrirModal('connexion')" class="hover:text-white transition-colors text-left">Se connecter</button></li>
+        </ul>
       </div>
     </div>
-  </footer>
+    <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+      <span>&copy; 2026 READI.Fr &mdash; Tous droits r&eacute;serv&eacute;s.</span>
+      <span>Fait avec <i class="fa fa-heart text-red-500"></i> pour les clubs sportifs</span>
+    </div>
+  </div>
+</footer>
 
-  <!-- BackToTop -->
-  <button id="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Retour en haut">
-    <i class="fa fa-chevron-up"></i>
-  </button>
+<!-- BackToTop -->
+<button id="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Retour en haut">
+  <i class="fa fa-chevron-up"></i>
+</button>
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       SCRIPTS
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <script>
-    /* â”€â”€ Modals â”€â”€ */
-    function ouvrirModal(type) {
-      fermerModals();
-      document.getElementById('modal-' + type).classList.add('open');
-      document.body.style.overflow = 'hidden';
+<script>
+  function ouvrirModal(type) {
+    fermerModals();
+    document.getElementById('modal-' + type).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function fermerModals() {
+    document.querySelectorAll('.modal-overlay').forEach(function(m){ m.classList.remove('open'); });
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') fermerModals(); });
+
+  var navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', function(){
+    if(window.scrollY > 80){
+      navbar.style.background='rgba(255,255,255,0.96)';
+      navbar.style.backdropFilter='blur(12px)';
+      navbar.style.borderBottom='1px solid #e5e7eb';
+      navbar.style.boxShadow='0 1px 12px rgba(0,0,0,0.08)';
+    } else {
+      navbar.style.background='transparent';
+      navbar.style.backdropFilter='none';
+      navbar.style.borderBottom='none';
+      navbar.style.boxShadow='none';
     }
-    function fermerModals() {
-      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
-      document.body.style.overflow = '';
-    }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerModals(); });
+  });
 
-    /* â”€â”€ Navbar scroll effect â”€â”€ */
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 80) {
-        navbar.style.background = 'rgba(255,255,255,0.96)';
-        navbar.style.backdropFilter = 'blur(12px)';
-        navbar.style.borderBottom = '1px solid #e5e7eb';
-        navbar.style.boxShadow = '0 1px 12px rgba(0,0,0,0.08)';
-        navbar.querySelectorAll('.text-white\\/90, .text-white').forEach(el => {
-          if (!el.classList.contains('bg-white') && !el.closest('button.bg-white')) {
-            el.style.color = '#374151';
-          }
-        });
-      } else {
-        navbar.style.background = 'transparent';
-        navbar.style.backdropFilter = 'none';
-        navbar.style.borderBottom = 'none';
-        navbar.style.boxShadow = 'none';
-        navbar.querySelectorAll('[style*="color"]').forEach(el => el.style.color = '');
-      }
+  function toggleMenu(){
+    var m=document.getElementById('mobile-menu');
+    m.classList.toggle('hidden');
+  }
+
+  window.addEventListener('scroll', function(){
+    document.getElementById('btn-top').classList.toggle('visible', window.scrollY > 400);
+  });
+
+  var slides=document.querySelectorAll('.slide');
+  var dots=document.querySelectorAll('.dot');
+  var cur=0, timer;
+  function goToSlide(n){
+    slides[cur].classList.remove('active'); dots[cur].classList.remove('active');
+    cur=n; slides[cur].classList.add('active'); dots[cur].classList.add('active');
+  }
+  function nextSlide(){ goToSlide((cur+1)%slides.length); }
+  timer=setInterval(nextSlide,5000);
+  dots.forEach(function(d,i){ d.addEventListener('click',function(){ clearInterval(timer); goToSlide(i); timer=setInterval(nextSlide,5000); }); });
+
+  var phrases=['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'];
+  var pi=0,ci=0,del=false;
+  var tw=document.getElementById('typewriter');
+  function typeStep(){
+    var p=phrases[pi];
+    if(!del){ tw.textContent=p.substring(0,ci+1); ci++; if(ci===p.length){del=true;setTimeout(typeStep,1800);return;} }
+    else { tw.textContent=p.substring(0,ci-1); ci--; if(ci===0){del=false;pi=(pi+1)%phrases.length;} }
+    setTimeout(typeStep,del?40:70);
+  }
+  typeStep();
+
+  function togglePwd(id,iconId){
+    var inp=document.getElementById(id),ico=document.getElementById(iconId);
+    inp.type=inp.type==='password'?'text':'password';
+    ico.className=inp.type==='password'?'fa fa-eye':'fa fa-eye-slash';
+  }
+
+  async function soumettreConnexion(e){
+    e.preventDefault();
+    var fd=new FormData(e.target), data=Object.fromEntries(fd.entries());
+    var msg=document.getElementById('msg-connexion');
+    msg.className='hidden';
+    try{
+      var resp=await fetch('/api/auth/connexion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:data.email,mot_de_passe:data.mot_de_passe})});
+      var json=await resp.json();
+      if(!resp.ok){ msg.textContent='Identifiants incorrects'; msg.className='mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700'; return; }
+      localStorage.setItem('token',json.token);
+      localStorage.setItem('utilisateur',JSON.stringify(json.utilisateur));
+      window.location.href='/index.html';
+    } catch(err){ msg.textContent='Erreur reseau.'; msg.className='mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700'; }
+  }
+
+  async function soumettreInscription(e){
+    e.preventDefault();
+    var fd=new FormData(e.target), data=Object.fromEntries(fd.entries());
+    var msg=document.getElementById('msg-inscription');
+    if(data.mot_de_passe!==data.mdp_confirm){ msg.textContent='Les mots de passe ne correspondent pas.'; msg.className='mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700'; return; }
+    var btn=document.getElementById('btn-submit-inscription'), txt=document.getElementById('btn-inscription-txt');
+    btn.disabled=true; txt.textContent='Creation en cours...';
+    try{
+      var resp=await fetch('/api/auth/inscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nom_club:data.nom_club,ville:data.ville,nom:data.nom,prenom:data.prenom,email:data.email,telephone:data.telephone,mot_de_passe:data.mot_de_passe})});
+      var json=await resp.json();
+      if(!resp.ok){ msg.textContent=json.erreur||'Erreur inscription.'; msg.className='mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700'; btn.disabled=false; txt.textContent='Creer mon espace gratuitement'; return; }
+      localStorage.setItem('token',json.token);
+      localStorage.setItem('utilisateur',JSON.stringify(Object.assign({},json.utilisateur,{club_nom:data.nom_club})));
+      msg.textContent='Compte cree ! Redirection...'; msg.className='mb-4 p-3 rounded-lg text-sm bg-green-50 border border-green-200 text-green-700';
+      setTimeout(function(){ window.location.href='/index.html'; },1200);
+    } catch(err){ msg.textContent='Erreur reseau.'; msg.className='mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700'; btn.disabled=false; txt.textContent='Creer mon espace gratuitement'; }
+  }
+
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      var t=document.querySelector(a.getAttribute('href'));
+      if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth'}); }
     });
-
-    /* â”€â”€ Menu mobile â”€â”€ */
-    function toggleMenu() {
-      const m = document.getElementById('mobile-menu');
-      m.classList.toggle('hidden');
-    }
-
-    /* â”€â”€ BackToTop â”€â”€ */
-    window.addEventListener('scroll', () => {
-      document.getElementById('btn-top').classList.toggle('visible', window.scrollY > 400);
-    });
-
-    /* â”€â”€ Slideshow â”€â”€ */
-    const slides = document.querySelectorAll('.slide');
-    const dots = document.querySelectorAll('.dot');
-    let currentSlide = 0;
-    let slideshowTimer;
-
-    function goToSlide(n) {
-      slides[currentSlide].classList.remove('active');
-      dots[currentSlide].classList.remove('active');
-      currentSlide = n;
-      slides[currentSlide].classList.add('active');
-      dots[currentSlide].classList.add('active');
-    }
-    function nextSlide() { goToSlide((currentSlide + 1) % slides.length); }
-    slideshowTimer = setInterval(nextSlide, 5000);
-    slides.forEach((_, i) => {
-      document.querySelectorAll('.dot')[i].addEventListener('click', () => {
-        clearInterval(slideshowTimer);
-        goToSlide(i);
-        slideshowTimer = setInterval(nextSlide, 5000);
-      });
-    });
-
-    /* â”€â”€ Typewriter â”€â”€ */
-    const phrases = [
-      'GÃ©rez votre stock en temps rÃ©el.',
-      'CrÃ©ez vos Ã©tiquettes avec codes-barres.',
-      'Encaissez vos ventes facilement.',
-      'Suivez vos performances en un clic.',
-    ];
-    let pi = 0, ci = 0, deleting = false;
-    const tw = document.getElementById('typewriter');
-    function typeStep() {
-      const phrase = phrases[pi];
-      if (!deleting) {
-        tw.textContent = phrase.substring(0, ci + 1);
-        ci++;
-        if (ci === phrase.length) { deleting = true; setTimeout(typeStep, 1800); return; }
-      } else {
-        tw.textContent = phrase.substring(0, ci - 1);
-        ci--;
-        if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; }
-      }
-      setTimeout(typeStep, deleting ? 40 : 70);
-    }
-    typeStep();
-
-    /* â”€â”€ Toggle mot de passe â”€â”€ */
-    function togglePwd(id, iconId) {
-      const inp = document.getElementById(id);
-      const ico = document.getElementById(iconId);
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      ico.className = inp.type === 'password' ? 'fa fa-eye' : 'fa fa-eye-slash';
-    }
-
-    /* â”€â”€ Connexion â”€â”€ */
-    async function soumettreConnexion(e) {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const data = Object.fromEntries(fd.entries());
-      const msg = document.getElementById('msg-connexion');
-      msg.className = 'hidden';
-      try {
-        const resp = await fetch('/api/auth/connexion', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: data.email, mot_de_passe: data.mot_de_passe })
-        });
-        const json = await resp.json();
-        if (!resp.ok) {
-          msg.textContent = 'âŒ ' + (json.erreur || 'Identifiants incorrects');
-          msg.className = 'mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-          return;
-        }
-        localStorage.setItem('token', json.token);
-        localStorage.setItem('utilisateur', JSON.stringify(json.utilisateur));
-        window.location.href = '/index.html';
-      } catch {
-        msg.textContent = 'âŒ Erreur rÃ©seau.';
-        msg.className = 'mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-      }
-    }
-
-    /* â”€â”€ Inscription â”€â”€ */
-    async function soumettreInscription(e) {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const data = Object.fromEntries(fd.entries());
-      const msg = document.getElementById('msg-inscription');
-      if (data.mot_de_passe !== data.mdp_confirm) {
-        msg.textContent = 'âŒ Les mots de passe ne correspondent pas.';
-        msg.className = 'mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-        return;
-      }
-      const btn = document.getElementById('btn-submit-inscription');
-      const txt = document.getElementById('btn-inscription-txt');
-      btn.disabled = true; txt.textContent = 'CrÃ©ation en cours...';
-      try {
-        const resp = await fetch('/api/auth/inscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nom_club: data.nom_club, ville: data.ville, nom: data.nom, prenom: data.prenom, email: data.email, telephone: data.telephone, mot_de_passe: data.mot_de_passe })
-        });
-        const json = await resp.json();
-        if (!resp.ok) {
-          msg.textContent = 'âŒ ' + (json.erreur || 'Erreur lors de l\'inscription.');
-          msg.className = 'mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-          btn.disabled = false; txt.textContent = 'CrÃ©er mon espace gratuitement';
-          return;
-        }
-        localStorage.setItem('token', json.token);
-        localStorage.setItem('utilisateur', JSON.stringify({ ...json.utilisateur, club_nom: data.nom_club }));
-        msg.textContent = 'âœ… Compte crÃ©Ã© ! Redirection...';
-        msg.className = 'mb-4 p-3 rounded-lg text-sm bg-green-50 border border-green-200 text-green-700';
-        setTimeout(() => { window.location.href = '/index.html'; }, 1200);
-      } catch {
-        msg.textContent = 'âŒ Erreur rÃ©seau.';
-        msg.className = 'mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-        btn.disabled = false; txt.textContent = 'CrÃ©er mon espace gratuitement';
-      }
-    }
-
-    /* â”€â”€ Smooth scroll â”€â”€ */
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', e => {
-        const t = document.querySelector(a.getAttribute('href'));
-        if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
-      });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>

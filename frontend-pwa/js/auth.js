@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (token) {
     chargerSession();
   } else {
-    document.getElementById('ecran-connexion').classList.remove('hidden');
+    window.location.href = '/landing.html';
   }
 
   document.getElementById('form-connexion').addEventListener('submit', async (e) => {

@@ -68,7 +68,12 @@ router.post('/connexion', async (req, res) => {
     let club_id = null;
 
     if (user.rows.length === 0) {
-      user = await pool.query('SELECT * FROM utilisateurs WHERE email = $1 AND actif = true', [email]);
+      user = await pool.query(
+        `SELECT u.*, c.nom AS club_nom
+         FROM utilisateurs u LEFT JOIN clubs c ON c.id = u.club_id
+         WHERE u.email = $1 AND u.actif = true`,
+        [email]
+      );
       if (user.rows.length === 0) return res.status(401).json({ erreur: 'Identifiants incorrects' });
       role = user.rows[0].role;
       club_id = user.rows[0].club_id;
@@ -83,7 +88,18 @@ router.post('/connexion', async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    res.json({ token, utilisateur: { id: user.rows[0].id, email, role, club_id } });
+    res.json({
+      token,
+      utilisateur: {
+        id: user.rows[0].id,
+        email,
+        role,
+        club_id,
+        nom: user.rows[0].nom || null,
+        prenom: user.rows[0].prenom || null,
+        club_nom: user.rows[0].club_nom || null
+      }
+    });
   } catch (err) {
     res.status(500).json({ erreur: 'Erreur serveur' });
   }

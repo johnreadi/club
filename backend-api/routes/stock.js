@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
     const result = await pool.query('SELECT * FROM produits WHERE club_id = $1 ORDER BY nom', [club_id]);
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ erreur: 'Erreur serveur' });
+    console.error('[STOCK GET]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
   }
 });
 

@@ -51,5 +51,5 @@ function chargerSession() {
 
 function deconnexion() {
   localStorage.clear();
-  window.location.reload();
+  window.location.href = '/landing.html';
 }

@@ -15,7 +15,7 @@ async function apiFetch(url, options = {}) {
     });
     if (res.status === 401) {
       localStorage.clear();
-      window.location.reload();
+      window.location.href = '/landing.html';
       return null;
     }
     const data = await res.json();

@@ -88,12 +88,108 @@ async function toggleActifClub(id, actif) {
 }
 
 // ── Tarifs ────────────────────────────────────────────────────────────────────
-function chargerAdminTarifs() {}
+let tarifsData = {
+  gratuit:  { id: 'gratuit',  nom: 'Gratuit',   emoji: '🔷', prix: 0,  prixAnnuel: 0,   description: 'Pour d\u00e9couvrir la plateforme',  populaire: false, fonctionnalites: [{ texte: 'Jusqu\u0027\u00e0 50 produits', inclus: true }, { texte: '1 utilisateur', inclus: true }, { texte: 'Rapports avanc\u00e9s', inclus: false }] },
+  essentiel:{ id: 'essentiel',nom: 'Essentiel', emoji: '⚡', prix: 19, prixAnnuel: 190, description: 'Pour les clubs actifs',               populaire: true,  fonctionnalites: [{ texte: 'Produits illimit\u00e9s', inclus: true }, { texte: '3 utilisateurs', inclus: true }, { texte: 'Rapports complets', inclus: true }, { texte: 'Support email', inclus: true }] },
+  complet:  { id: 'complet',  nom: 'Complet',   emoji: '👑', prix: 49, prixAnnuel: 490, description: 'Tout inclus, sans limites',           populaire: false, fonctionnalites: [{ texte: 'Tout illimit\u00e9', inclus: true }, { texte: 'Utilisateurs illimit\u00e9s', inclus: true }, { texte: 'Support t\u00e9l\u00e9phonique', inclus: true }, { texte: 'Messagerie prioritaire', inclus: true }] }
+};
+let tarifEnCours = null;
 
-function modifierTarif(plan) {
-  const prix = prompt(`Nouveau prix mensuel pour le plan "${plan}" (en euros) :`, plan === 'essentiel' ? '19' : plan === 'complet' ? '49' : '0');
-  if (prix === null) return;
-  afficherMessage(`Tarif "${plan}" mis &agrave; jour : ${prix} &euro;/mois`, 'success');
+function chargerAdminTarifs() { rendreTarifs(); }
+
+function rendreTarifs() {
+  const grid = document.getElementById('tarifs-grid');
+  if (!grid) return;
+  const styles = {
+    gratuit:   { border: 'border-gray-200', btnClass: 'border-2 border-primary text-primary hover:bg-primary hover:text-white', titleColor: 'text-gray-700', badge: '' },
+    essentiel: { border: 'border-primary',  btnClass: 'bg-primary text-white hover:bg-blue-700',                                titleColor: 'text-primary',  badge: '<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">Populaire</span>' },
+    complet:   { border: 'border-yellow-400',btnClass: 'border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-400 hover:text-white', titleColor: 'text-yellow-600', badge: '' }
+  };
+  grid.innerHTML = Object.values(tarifsData).map(t => {
+    const s = styles[t.id] || styles.gratuit;
+    const badge = t.populaire && s.badge ? s.badge : (t.populaire ? '<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">Populaire</span>' : '');
+    const feats = t.fonctionnalites.map(f => `<li><i class="fa ${f.inclus ? 'fa-check text-green-500' : 'fa-times text-red-400'} mr-2"></i>${f.texte}</li>`).join('');
+    return `
+    <div class="card border-2 ${s.border} text-center relative hover:shadow-lg transition-shadow">
+      ${badge}
+      <div class="text-5xl mb-3">${t.emoji}</div>
+      <h3 class="text-xl font-bold mb-1">${t.nom}</h3>
+      ${t.description ? `<p class="text-xs text-gray-400 mb-2">${t.description}</p>` : ''}
+      <p class="text-4xl font-black ${s.titleColor} mb-1">${t.prix} &euro;<span class="text-sm font-normal text-gray-400">/mois</span></p>
+      ${t.prixAnnuel ? `<p class="text-xs text-gray-400 mb-3">ou ${t.prixAnnuel}&euro;/an</p>` : '<p class="mb-3"></p>'}
+      <ul class="text-sm text-gray-500 space-y-2 mb-6 text-left px-2">${feats}</ul>
+      <button onclick="modifierTarif('${t.id}')" class="w-full py-2 rounded-lg font-medium transition-colors ${s.btnClass}">Modifier</button>
+    </div>`;
+  }).join('');
+}
+
+function modifierTarif(planId) {
+  tarifEnCours = planId;
+  const t = tarifsData[planId];
+  if (!t) return;
+  document.getElementById('modal-tarif-titre').textContent = 'Modifier le plan \u2014 ' + t.nom;
+  document.getElementById('tarif-nom').value = t.nom;
+  document.getElementById('tarif-emoji').value = t.emoji;
+  document.getElementById('tarif-prix').value = t.prix;
+  document.getElementById('tarif-prix-annuel').value = t.prixAnnuel || '';
+  document.getElementById('tarif-description').value = t.description || '';
+  document.getElementById('tarif-populaire').checked = t.populaire || false;
+  renderFonctionnalites(t.fonctionnalites);
+  document.getElementById('modal-tarif').classList.remove('hidden');
+}
+
+function renderFonctionnalites(fonctionnalites) {
+  const cont = document.getElementById('tarif-fonctionnalites');
+  cont.innerHTML = fonctionnalites.map((f, i) => `
+    <div class="flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2" data-idx="${i}">
+      <select class="border rounded px-1 py-0.5 text-xs" onchange="toggleFonct(${i}, this.value)">
+        <option value="1" ${f.inclus ? 'selected' : ''}>&#10003; Inclus</option>
+        <option value="0" ${!f.inclus ? 'selected' : ''}>&#10007; Exclu</option>
+      </select>
+      <input type="text" value="${f.texte}" class="flex-1 text-sm bg-transparent focus:outline-none border-b border-transparent focus:border-gray-300" oninput="editFonct(${i}, this.value)">
+      <button onclick="supprimerFonct(${i})" class="text-red-400 hover:text-red-600 text-xs px-1"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+
+function ajouterFonctionnalite() {
+  if (!tarifEnCours) return;
+  tarifsData[tarifEnCours].fonctionnalites.push({ texte: 'Nouvelle fonctionnalit\u00e9', inclus: true });
+  renderFonctionnalites(tarifsData[tarifEnCours].fonctionnalites);
+}
+
+function supprimerFonct(idx) {
+  if (!tarifEnCours) return;
+  tarifsData[tarifEnCours].fonctionnalites.splice(idx, 1);
+  renderFonctionnalites(tarifsData[tarifEnCours].fonctionnalites);
+}
+
+function editFonct(idx, val) {
+  if (!tarifEnCours) return;
+  tarifsData[tarifEnCours].fonctionnalites[idx].texte = val;
+}
+
+function toggleFonct(idx, val) {
+  if (!tarifEnCours) return;
+  tarifsData[tarifEnCours].fonctionnalites[idx].inclus = val === '1';
+}
+
+function sauvegarderTarif() {
+  if (!tarifEnCours) return;
+  const t = tarifsData[tarifEnCours];
+  t.nom = document.getElementById('tarif-nom').value.trim() || t.nom;
+  t.emoji = document.getElementById('tarif-emoji').value.trim() || t.emoji;
+  t.prix = parseFloat(document.getElementById('tarif-prix').value) || 0;
+  t.prixAnnuel = parseFloat(document.getElementById('tarif-prix-annuel').value) || 0;
+  t.description = document.getElementById('tarif-description').value.trim();
+  t.populaire = document.getElementById('tarif-populaire').checked;
+  fermerModalTarif();
+  rendreTarifs();
+  afficherMessage('Plan "' + t.nom + '" mis \u00e0 jour', 'success');
+}
+
+function fermerModalTarif() {
+  document.getElementById('modal-tarif').classList.add('hidden');
+  tarifEnCours = null;
 }
 
 // ── Paiements ─────────────────────────────────────────────────────────────────

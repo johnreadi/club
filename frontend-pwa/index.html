@@ -462,43 +462,59 @@
         <!-- Admin : Tarifs -->
         <section id="admin-tarifs" class="module hidden">
           <h2 class="text-2xl font-semibold mb-6">Tarifs &amp; Plans d&apos;abonnement</h2>
-          <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="card border-2 border-gray-200 text-center hover:shadow-lg transition-shadow">
-              <div class="text-5xl mb-3">&#x1F538;</div>
-              <h3 class="text-xl font-bold mb-1">Gratuit</h3>
-              <p class="text-4xl font-black text-gray-700 mb-4">0 &euro;<span class="text-sm font-normal text-gray-400">/mois</span></p>
-              <ul class="text-sm text-gray-500 space-y-2 mb-6 text-left px-2">
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Jusqu&apos;&agrave; 50 produits</li>
-                <li><i class="fa fa-check text-green-500 mr-2"></i>1 utilisateur</li>
-                <li><i class="fa fa-times text-red-400 mr-2"></i>Rapports avanc&eacute;s</li>
-              </ul>
-              <button onclick="modifierTarif('gratuit')" class="w-full border-2 border-primary text-primary py-2 rounded-lg font-medium hover:bg-primary hover:text-white transition-colors">Modifier</button>
+          <div id="tarifs-grid" class="grid md:grid-cols-3 gap-6 mb-8"></div>
+        </section>
+
+        <!-- Modal édition tarif -->
+        <div id="modal-tarif" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.45)">
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+              <h3 class="text-lg font-bold" id="modal-tarif-titre">Modifier le plan</h3>
+              <button onclick="fermerModalTarif()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
             </div>
-            <div class="card border-2 border-primary text-center relative hover:shadow-lg transition-shadow">
-              <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">Populaire</span>
-              <div class="text-5xl mb-3">&#x26A1;</div>
-              <h3 class="text-xl font-bold mb-1">Essentiel</h3>
-              <p class="text-4xl font-black text-primary mb-4">19 &euro;<span class="text-sm font-normal text-gray-400">/mois</span></p>
-              <ul class="text-sm text-gray-500 space-y-2 mb-6 text-left px-2">
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Produits illimit&eacute;s</li>
-                <li><i class="fa fa-check text-green-500 mr-2"></i>3 utilisateurs</li>
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Rapports complets</li>
-              </ul>
-              <button onclick="modifierTarif('essentiel')" class="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">Modifier</button>
+            <div class="px-6 py-5 space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Nom du plan</label>
+                  <input type="text" id="tarif-nom" class="w-full border p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Emoji / Ic&ocirc;ne</label>
+                  <input type="text" id="tarif-emoji" class="w-full border p-2 rounded-lg text-sm text-center text-2xl" maxlength="4">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Prix mensuel (&euro;)</label>
+                  <input type="number" id="tarif-prix" min="0" step="0.01" class="w-full border p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Prix annuel (&euro;) <span class="text-gray-400 font-normal">optionnel</span></label>
+                  <input type="number" id="tarif-prix-annuel" min="0" step="0.01" placeholder="Ex: 190" class="w-full border p-2 rounded-lg text-sm">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Description courte</label>
+                <input type="text" id="tarif-description" placeholder="Ex: Pour les petits clubs" class="w-full border p-2 rounded-lg text-sm">
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium">Fonctionnalit&eacute;s</label>
+                  <button onclick="ajouterFonctionnalite()" class="text-xs text-primary hover:underline"><i class="fa fa-plus mr-1"></i>Ajouter</button>
+                </div>
+                <div id="tarif-fonctionnalites" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="tarif-populaire" class="rounded w-4 h-4">
+                <label for="tarif-populaire" class="text-sm">Marquer comme &quot;Populaire&quot;</label>
+              </div>
             </div>
-            <div class="card border-2 border-yellow-400 text-center hover:shadow-lg transition-shadow">
-              <div class="text-5xl mb-3">&#x1F451;</div>
-              <h3 class="text-xl font-bold mb-1">Complet</h3>
-              <p class="text-4xl font-black text-yellow-600 mb-4">49 &euro;<span class="text-sm font-normal text-gray-400">/mois</span></p>
-              <ul class="text-sm text-gray-500 space-y-2 mb-6 text-left px-2">
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Tout illimit&eacute;</li>
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Utilisateurs illimit&eacute;s</li>
-                <li><i class="fa fa-check text-green-500 mr-2"></i>Support t&eacute;l&eacute;phonique</li>
-              </ul>
-              <button onclick="modifierTarif('complet')" class="w-full border-2 border-yellow-400 text-yellow-700 py-2 rounded-lg font-medium hover:bg-yellow-400 hover:text-white transition-colors">Modifier</button>
+            <div class="flex gap-3 px-6 py-4 border-t justify-end">
+              <button onclick="fermerModalTarif()" class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50">Annuler</button>
+              <button onclick="sauvegarderTarif()" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700"><i class="fa fa-save mr-1"></i>Sauvegarder</button>
             </div>
           </div>
-        </section>
+        </div>
 
         <!-- Admin : Paiements -->
         <section id="admin-paiements" class="module hidden">

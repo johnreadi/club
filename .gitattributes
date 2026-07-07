@@ -1,0 +1,17 @@
+# Force UTF-8 sans conversion de fins de ligne pour les fichiers texte web
+* text=auto
+
+# HTML/CSS/JS : préserver UTF-8 sans BOM, LF dans le repo
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.sql  text eol=lf
+*.md   text eol=lf
+
+# Binaires : pas de conversion
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary

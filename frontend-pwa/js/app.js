@@ -73,7 +73,12 @@ function naviguerVers(section) {
     'inventaire': () => typeof chargerInventaire === 'function' && chargerInventaire(),
     'rapports': () => typeof chargerRapports === 'function' && chargerRapports(),
     'utilisateurs': () => typeof chargerUtilisateurs === 'function' && chargerUtilisateurs(),
-    'admin-plateforme': () => typeof chargerListeClubs === 'function' && chargerListeClubs(),
+    'admin-dashboard': () => typeof chargerAdminDashboard === 'function' && chargerAdminDashboard(),
+    'admin-inscriptions': () => typeof chargerAdminInscriptions === 'function' && chargerAdminInscriptions(),
+    'admin-tarifs': () => typeof chargerAdminTarifs === 'function' && chargerAdminTarifs(),
+    'admin-paiements': () => typeof chargerAdminPaiements === 'function' && chargerAdminPaiements(),
+    'admin-messagerie': () => typeof chargerMessagerie === 'function' && chargerMessagerie(),
+    'admin-parametres': () => typeof chargerAdminParametres === 'function' && chargerAdminParametres(),
     'parametres': () => typeof chargerParametres === 'function' && chargerParametres(),
   };
   if (loaders[section]) loaders[section]();

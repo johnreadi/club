@@ -130,6 +130,18 @@ CREATE TABLE IF NOT EXISTS parametres_club (
   mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table messagerie plateforme
+CREATE TABLE IF NOT EXISTS messages_plateforme (
+  id SERIAL PRIMARY KEY,
+  club_id INTEGER REFERENCES clubs(id) ON DELETE CASCADE,
+  sujet VARCHAR(255),
+  contenu TEXT NOT NULL,
+  urgent BOOLEAN DEFAULT FALSE,
+  direction VARCHAR(10) DEFAULT 'sortant',
+  lu BOOLEAN DEFAULT FALSE,
+  cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Migrations : ajout colonnes manquantes (idempotentes)
 ALTER TABLE produits ADD COLUMN IF NOT EXISTS categorie VARCHAR(100);
 ALTER TABLE produits ADD COLUMN IF NOT EXISTS description TEXT;
@@ -144,6 +156,7 @@ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS email_contact VARCHAR(100);
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS date_debut_abonnement DATE DEFAULT CURRENT_DATE;
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS date_fin_abonnement DATE;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS derniere_connexion TIMESTAMP WITH TIME ZONE;
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS cree_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_clubs_actif ON clubs(actif);

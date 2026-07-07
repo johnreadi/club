@@ -44,9 +44,12 @@ function chargerSession() {
   document.getElementById('interface-principale').classList.remove('hidden');
 
   if (utilisateur.role === 'admin_plateforme') {
+    document.getElementById('menu-club').classList.add('hidden');
     document.getElementById('menu-admin').classList.remove('hidden');
+    naviguerVers('admin-dashboard');
+  } else {
+    naviguerVers('accueil');
   }
-  naviguerVers('accueil');
 }
 
 function deconnexion() {

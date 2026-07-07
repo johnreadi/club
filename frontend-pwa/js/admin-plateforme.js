@@ -2,6 +2,7 @@
 let listeClubs = [];
 let listeClubsFiltree = [];
 let conversationActive = null;
+let conversationActiveClubId = null;
 let conversations = [];
 let filtreConvActif = 'tous';
 
@@ -239,18 +240,27 @@ async function ouvrirConversation(id) {
   conversationActive = id;
   const msg = conversations.find(m => m.id === id);
   if (!msg) return;
+  conversationActiveClubId = msg.club_id || null;
   document.getElementById('msg-dest-nom').textContent = msg.club_nom || msg.destinataire_email || 'Inconnu';
-  document.getElementById('msg-dest-club').textContent = msg.sujet || '';
+  document.getElementById('msg-dest-club').textContent = `Répondre à : ${msg.club_nom || 'ce club'}  —  Objet : ${msg.sujet || '(sans objet)'}`;
   document.getElementById('msg-actions').classList.remove('hidden');
   document.getElementById('msg-actions').style.removeProperty('display');
-  document.getElementById('msg-fil').innerHTML = `
+  // Afficher champ objet pré-rempli pour la réponse
+  const filEl = document.getElementById('msg-fil');
+  filEl.innerHTML = `
     <div class="flex ${msg.direction === 'sortant' ? 'justify-end' : 'justify-start'}">
       <div class="max-w-lg rounded-2xl px-4 py-3 shadow-sm ${msg.direction === 'sortant' ? 'bg-primary text-white rounded-tr-sm' : 'bg-white rounded-tl-sm border'}">
         ${msg.urgent ? '<span class="text-xs font-bold text-red-400 block mb-1">&#x26A0; URGENT</span>' : ''}
         <div class="text-sm">${msg.contenu || ''}</div>
         <p class="text-xs mt-2 ${msg.direction === 'sortant' ? 'text-white/60' : 'text-gray-400'}">${msg.cree_le ? new Date(msg.cree_le).toLocaleString('fr-FR') : ''}</p>
       </div>
-    </div>`;
+    </div>
+    <p class="text-center text-xs text-gray-400 mt-4">Rédigez votre réponse ci-dessous</p>`;
+  // Pré-remplir le sujet de réponse et vider le contenu
+  const sujetEl = document.getElementById('msg-sujet');
+  if (sujetEl) sujetEl.value = msg.sujet ? `Re: ${msg.sujet}` : '';
+  document.getElementById('msg-contenu').innerHTML = '';
+  document.getElementById('msg-contenu').focus();
   afficherConversations();
 }
 
@@ -269,16 +279,20 @@ function filtrerConversations() { afficherConversations(); }
 
 function nouveauMessage() {
   conversationActive = null;
+  conversationActiveClubId = null;
   const clubs = listeClubs.map(c => `<option value="${c.id}" data-email="${c.email_contact || ''}">${c.nom}</option>`).join('');
   document.getElementById('msg-dest-nom').innerHTML = `<select id="dest-club-select" class="border rounded p-1 text-sm w-full" onchange="selDest(this)">${clubs ? '<option value="">Choisir un club...</option>' + clubs : '<option>Aucun club disponible</option>'}</select>`;
-  document.getElementById('msg-dest-club').textContent = 'Nouveau message';
+  document.getElementById('msg-dest-club').textContent = 'Choisissez un destinataire';
   document.getElementById('msg-fil').innerHTML = `
-    <div class="p-4">
-      <label class="block text-sm mb-1 font-medium text-gray-600">Objet du message</label>
-      <input type="text" id="msg-sujet" placeholder="Objet..." class="w-full border p-2 rounded-lg mb-3 text-sm">
+    <div class="text-center text-gray-300 text-sm mt-16">
+      <i class="fa fa-envelope-o text-5xl mb-3 block"></i>
+      S&eacute;lectionnez un destinataire et r&eacute;digez votre message
     </div>`;
+  const sujetEl = document.getElementById('msg-sujet');
+  if (sujetEl) sujetEl.value = '';
   document.getElementById('msg-contenu').innerHTML = '';
   document.getElementById('msg-actions').classList.add('hidden');
+  document.getElementById('msg-contenu').focus();
 }
 
 function selDest(sel) {
@@ -289,16 +303,17 @@ async function envoyerMessage() {
   const contenu = document.getElementById('msg-contenu')?.innerHTML?.trim();
   if (!contenu) return afficherMessage('Veuillez saisir un message', 'warning');
   const sujet = document.getElementById('msg-sujet')?.value || '(sans objet)';
-  const destSel = document.getElementById('dest-club-select');
-  const clubId = destSel ? destSel.value : null;
   const urgent = document.getElementById('msg-urgent')?.checked || false;
-  if (!clubId) return afficherMessage('S&eacute;lectionnez un destinataire', 'warning');
+  // Priorité : select nouveau message, sinon club du message actif
+  const destSel = document.getElementById('dest-club-select');
+  const clubId  = destSel ? parseInt(destSel.value) : (conversationActiveClubId || null);
+  if (!clubId) return afficherMessage('Destinataire non renseigné — ouvrez un message ou utilisez Nouveau message', 'warning');
   try {
-    await apiFetch('/admin/messages', { method: 'POST', body: JSON.stringify({ club_id: parseInt(clubId), sujet, contenu, urgent }) });
-    afficherMessage('Message envoy&eacute; avec succ&egrave;s', 'success');
+    await apiFetch('/admin/messages', { method: 'POST', body: JSON.stringify({ club_id: clubId, sujet, contenu, urgent }) });
+    afficherMessage('✅ Message envoyé avec succès', 'success');
     document.getElementById('msg-contenu').innerHTML = '';
     await chargerMessagerie();
-  } catch {}
+  } catch { afficherMessage('❌ Erreur envoi', 'danger'); }
 }
 
 function envoyerMessageAClub(clubId, nom, email) {

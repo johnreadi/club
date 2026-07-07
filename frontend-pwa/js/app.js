@@ -79,6 +79,7 @@ function naviguerVers(section) {
     'admin-paiements': () => typeof chargerAdminPaiements === 'function' && chargerAdminPaiements(),
     'admin-messagerie': () => typeof chargerMessagerie === 'function' && chargerMessagerie(),
     'admin-parametres': () => typeof chargerAdminParametres === 'function' && chargerAdminParametres(),
+    'admin-reglage-site': () => typeof chargerReglagesSite === 'function' && chargerReglagesSite(),
     'parametres': () => typeof chargerParametres === 'function' && chargerParametres(),
   };
   if (loaders[section]) loaders[section]();

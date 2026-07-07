@@ -18,6 +18,18 @@
 .module.hidden {
   display: none;
 }
+.active-tab {
+  background: white !important;
+  border-bottom-color: white !important;
+  color: #165DFF;
+  font-weight: 600;
+}
+.active-site-tab {
+  background: white !important;
+  border-bottom-color: white !important;
+  color: #165DFF;
+  font-weight: 600;
+}
 .card {
   background: white;
   border-radius: 0.75rem;

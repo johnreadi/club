@@ -104,6 +104,7 @@
           <a href="#" class="menu-item" data-section="admin-paiements"><i class="fa fa-credit-card"></i> Paiements</a>
           <a href="#" class="menu-item" data-section="admin-messagerie"><i class="fa fa-envelope"></i> Messagerie <span id="badge-msg" class="hidden ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">0</span></a>
           <a href="#" class="menu-item" data-section="admin-parametres"><i class="fa fa-cogs"></i> Param&egrave;tres plateforme</a>
+          <a href="#" class="menu-item" data-section="admin-reglage-site"><i class="fa fa-paint-brush"></i> R&eacute;glage Site</a>
           <hr class="my-2 border-gray-200">
           <a href="#" class="menu-item" data-section="profil"><i class="fa fa-user"></i> Mon profil</a>
           <a href="#" onclick="deconnexion()" class="menu-item text-red-600"><i class="fa fa-sign-out"></i> D&eacute;connexion</a>
@@ -616,6 +617,343 @@
           </div>
         </section>
 
+        <!-- Admin : Réglage Site -->
+        <section id="admin-reglage-site" class="module hidden">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="text-2xl font-semibold">R&eacute;glage Site</h2>
+              <p class="text-sm text-gray-400 mt-0.5">Personnalisez l&apos;apparence et le contenu de toute la plateforme en temps r&eacute;el</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="reinitialiserSite()" class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50"><i class="fa fa-undo mr-1"></i>R&eacute;initialiser</button>
+              <button onclick="sauvegarderSite()" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700"><i class="fa fa-save mr-1"></i>Appliquer les changements</button>
+            </div>
+          </div>
+
+          <!-- Onglets studio -->
+          <div class="flex border-b mb-5 gap-1 flex-wrap">
+            <button onclick="ongletSite('identite')" id="site-tab-identite" class="site-tab active-site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-white"><i class="fa fa-id-card mr-1"></i>Identit&eacute;</button>
+            <button onclick="ongletSite('couleurs')" id="site-tab-couleurs" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-paint-brush mr-1"></i>Couleurs</button>
+            <button onclick="ongletSite('typographie')" id="site-tab-typographie" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-font mr-1"></i>Typographie</button>
+            <button onclick="ongletSite('landing')" id="site-tab-landing" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-home mr-1"></i>Page d&apos;accueil</button>
+            <button onclick="ongletSite('navigation')" id="site-tab-navigation" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-bars mr-1"></i>Navigation</button>
+            <button onclick="ongletSite('footer')" id="site-tab-footer" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-minus mr-1"></i>Footer</button>
+          </div>
+
+          <!-- Panneau Identité -->
+          <div id="site-panel-identite" class="site-panel">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-tag mr-2 text-primary"></i>Nom &amp; Marque</h3>
+                  <div class="space-y-3">
+                    <div><label class="block text-sm mb-1">Nom de la plateforme</label><input type="text" id="site-nom" class="w-full border p-2 rounded-lg text-sm" oninput="previewSite()" placeholder="READI.Fr"></div>
+                    <div><label class="block text-sm mb-1">Slogan / Sous-titre</label><input type="text" id="site-slogan" class="w-full border p-2 rounded-lg text-sm" oninput="previewSite()" placeholder="La gestion de club simplifi&eacute;e"></div>
+                    <div><label class="block text-sm mb-1">Email de contact</label><input type="email" id="site-email" class="w-full border p-2 rounded-lg text-sm" placeholder="contact@readi.fr"></div>
+                    <div><label class="block text-sm mb-1">T&eacute;l&eacute;phone support</label><input type="tel" id="site-tel" class="w-full border p-2 rounded-lg text-sm" placeholder="+33 1 23 45 67 89"></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-image mr-2 text-primary"></i>Logo &amp; Favicon</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-sm mb-2">Logo principal</label>
+                      <div class="flex items-center gap-3">
+                        <div id="site-logo-preview" class="w-16 h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 text-2xl font-bold bg-gray-50">R</div>
+                        <label class="cursor-pointer px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50"><i class="fa fa-upload mr-1"></i>T&eacute;l&eacute;charger<input type="file" class="hidden" accept="image/*" onchange="previewLogo(event)"></label>
+                        <span class="text-xs text-gray-400">PNG, SVG recommand&eacute;</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-sm mb-1">Texte logo (si pas d&apos;image)</label>
+                      <div class="flex gap-2">
+                        <input type="text" id="site-logo-texte" value="READI" class="flex-1 border p-2 rounded-lg text-sm" oninput="previewSite()">
+                        <input type="text" id="site-logo-suffix" value=".Fr" class="w-16 border p-2 rounded-lg text-sm" oninput="previewSite()">
+                      </div>
+                      <p class="text-xs text-gray-400 mt-1">La premi&egrave;re partie en gras, la seconde en accent</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Aperçu identité -->
+              <div class="card bg-gray-50 flex flex-col">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u en direct</h3>
+                <div id="preview-identite" class="flex-1 bg-white rounded-xl border p-6 flex flex-col items-center justify-center gap-3 min-h-48">
+                  <div class="text-2xl font-bold text-primary" id="prev-nom">READI<span class="text-blue-400">.Fr</span></div>
+                  <div class="text-sm text-gray-500 text-center" id="prev-slogan">La gestion de club simplifi&eacute;e</div>
+                  <div class="mt-3 px-4 py-1.5 bg-primary text-white rounded-full text-xs" id="prev-btn-cta">Commencer gratuitement</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Couleurs -->
+          <div id="site-panel-couleurs" class="site-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-paint-brush mr-2 text-primary"></i>Palette de couleurs</h3>
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="block text-sm font-medium">Couleur primaire</label>
+                        <p class="text-xs text-gray-400">Boutons, liens, menu actif</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="site-color-primary" value="#3B82F6" class="w-10 h-10 rounded-lg cursor-pointer border" oninput="previewCouleurs()">
+                        <input type="text" id="site-color-primary-hex" value="#3B82F6" class="w-24 border p-1.5 rounded-lg text-xs font-mono" oninput="syncColorPicker('primary')">
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="block text-sm font-medium">Couleur sidebar</label>
+                        <p class="text-xs text-gray-400">Fond du menu lat&eacute;ral</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="site-color-sidebar" value="#1e3a5f" class="w-10 h-10 rounded-lg cursor-pointer border" oninput="previewCouleurs()">
+                        <input type="text" id="site-color-sidebar-hex" value="#1e3a5f" class="w-24 border p-1.5 rounded-lg text-xs font-mono" oninput="syncColorPicker('sidebar')">
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="block text-sm font-medium">Couleur accent</label>
+                        <p class="text-xs text-gray-400">Badges, highlights</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="site-color-accent" value="#60A5FA" class="w-10 h-10 rounded-lg cursor-pointer border" oninput="previewCouleurs()">
+                        <input type="text" id="site-color-accent-hex" value="#60A5FA" class="w-24 border p-1.5 rounded-lg text-xs font-mono" oninput="syncColorPicker('accent')">
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="block text-sm font-medium">Couleur texte principal</label>
+                        <p class="text-xs text-gray-400">Corps du texte</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="site-color-text" value="#1f2937" class="w-10 h-10 rounded-lg cursor-pointer border" oninput="previewCouleurs()">
+                        <input type="text" id="site-color-text-hex" value="#1f2937" class="w-24 border p-1.5 rounded-lg text-xs font-mono" oninput="syncColorPicker('text')">
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="block text-sm font-medium">Fond g&eacute;n&eacute;ral</label>
+                        <p class="text-xs text-gray-400">Arri&egrave;re-plan des pages</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="site-color-bg" value="#f8fafc" class="w-10 h-10 rounded-lg cursor-pointer border" oninput="previewCouleurs()">
+                        <input type="text" id="site-color-bg-hex" value="#f8fafc" class="w-24 border p-1.5 rounded-lg text-xs font-mono" oninput="syncColorPicker('bg')">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-4 pt-4 border-t">
+                    <p class="text-xs text-gray-500 mb-2">Th&egrave;mes pr&eacute;d&eacute;finis</p>
+                    <div class="flex gap-2 flex-wrap" id="themes-predefinis"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Aperçu couleurs -->
+              <div class="card bg-gray-50">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u en direct</h3>
+                <div id="preview-couleurs" class="rounded-xl overflow-hidden border shadow-sm">
+                  <div id="prev-sidebar" class="flex" style="min-height:220px">
+                    <div id="prev-sidebar-bg" class="w-32 p-3 flex flex-col gap-1.5 text-xs" style="background:#1e3a5f">
+                      <div class="font-bold mb-2" id="prev-sidebar-logo" style="color:#60A5FA">READI.Fr</div>
+                      <div class="rounded px-2 py-1 font-medium" id="prev-menu-active" style="background:#3B82F6;color:white">Tableau de bord</div>
+                      <div class="px-2 py-1 text-white opacity-70">Inscriptions</div>
+                      <div class="px-2 py-1 text-white opacity-70">Tarifs</div>
+                      <div class="px-2 py-1 text-white opacity-70">Messagerie</div>
+                    </div>
+                    <div class="flex-1 p-3" id="prev-main-bg" style="background:#f8fafc">
+                      <div class="h-5 rounded mb-2 w-1/2" id="prev-heading" style="background:#1f2937;opacity:0.8"></div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="h-14 rounded-lg p-2 text-xs text-white flex items-end font-medium" id="prev-card1" style="background:#3B82F6">Clubs inscrits</div>
+                        <div class="h-14 rounded-lg p-2 text-xs text-white flex items-end font-medium bg-green-500">Clubs actifs</div>
+                      </div>
+                      <div class="mt-2 flex gap-2">
+                        <div class="px-3 py-1.5 rounded-lg text-white text-xs font-medium" id="prev-btn" style="background:#3B82F6">Bouton</div>
+                        <div class="px-3 py-1.5 rounded-lg text-xs font-medium border" id="prev-badge" style="color:#3B82F6;border-color:#3B82F6">Badge</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Typographie -->
+          <div id="site-panel-typographie" class="site-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="font-medium mb-4"><i class="fa fa-font mr-2 text-primary"></i>Polices &amp; Tailles</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Police principale</label>
+                    <select id="site-font" class="w-full border p-2 rounded-lg text-sm" onchange="previewTypo()">
+                      <option value="Inter, sans-serif">Inter (d&eacute;faut)</option>
+                      <option value="'Roboto', sans-serif">Roboto</option>
+                      <option value="'Open Sans', sans-serif">Open Sans</option>
+                      <option value="'Poppins', sans-serif">Poppins</option>
+                      <option value="'Lato', sans-serif">Lato</option>
+                      <option value="'Nunito', sans-serif">Nunito</option>
+                      <option value="'Montserrat', sans-serif">Montserrat</option>
+                      <option value="'Source Sans 3', sans-serif">Source Sans 3</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Taille de base : <span id="typo-base-val" class="font-bold text-primary">14</span>px</label>
+                    <input type="range" id="site-font-size" min="12" max="18" value="14" class="w-full" oninput="document.getElementById('typo-base-val').textContent=this.value;previewTypo()">
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-1">Int&eacute;rlignage : <span id="typo-line-val" class="font-bold text-primary">1.5</span></label>
+                    <input type="range" id="site-line-height" min="1.2" max="2" step="0.1" value="1.5" class="w-full" oninput="document.getElementById('typo-line-val').textContent=parseFloat(this.value).toFixed(1);previewTypo()">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Arrondi des &eacute;l&eacute;ments (border-radius)</label>
+                    <select id="site-radius" class="w-full border p-2 rounded-lg text-sm" onchange="previewTypo()">
+                      <option value="0">Carr&eacute; (0px)</option>
+                      <option value="4px">L&eacute;ger (4px)</option>
+                      <option value="8px" selected>Moyen (8px)</option>
+                      <option value="12px">Arrondi (12px)</option>
+                      <option value="9999px">Tr&egrave;s arrondi (pill)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card bg-gray-50">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u typographie</h3>
+                <div id="preview-typo" class="bg-white rounded-xl border p-5 space-y-3">
+                  <h2 id="prev-typo-h2" class="text-2xl font-bold" style="font-family:Inter,sans-serif">Titre principal</h2>
+                  <h3 id="prev-typo-h3" class="text-lg font-semibold text-gray-600" style="font-family:Inter,sans-serif">Sous-titre de section</h3>
+                  <p id="prev-typo-p" class="text-sm text-gray-500" style="font-family:Inter,sans-serif;line-height:1.5">Ceci est un exemple de texte courant dans l&apos;application. Il montre comment les contenus seront affich&eacute;s dans les diff&eacute;rentes sections.</p>
+                  <div class="flex gap-2">
+                    <div id="prev-typo-btn" class="px-4 py-2 bg-primary text-white text-sm font-medium" style="border-radius:8px">Bouton action</div>
+                    <div id="prev-typo-input" class="px-3 py-2 border text-sm text-gray-400" style="border-radius:8px">Champ de saisie</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Landing -->
+          <div id="site-panel-landing" class="site-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-star mr-2 text-primary"></i>Section H&eacute;ro</h3>
+                  <div class="space-y-3">
+                    <div><label class="block text-sm mb-1">Titre principal</label><input type="text" id="land-hero-titre" class="w-full border p-2 rounded-lg text-sm" value="G&eacute;rez votre club comme un pro" oninput="previewLanding()"></div>
+                    <div><label class="block text-sm mb-1">Sous-titre</label><textarea id="land-hero-sous" rows="2" class="w-full border p-2 rounded-lg text-sm" oninput="previewLanding()">La solution tout-en-un pour g&eacute;rer votre stock, votre caisse et vos membres.</textarea></div>
+                    <div><label class="block text-sm mb-1">Texte bouton CTA principal</label><input type="text" id="land-cta1" value="Commencer gratuitement" class="w-full border p-2 rounded-lg text-sm" oninput="previewLanding()"></div>
+                    <div><label class="block text-sm mb-1">Texte bouton CTA secondaire</label><input type="text" id="land-cta2" value="Voir la d&eacute;mo" class="w-full border p-2 rounded-lg text-sm" oninput="previewLanding()"></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-list-ul mr-2 text-primary"></i>Points forts (features)</h3>
+                  <div id="landing-features" class="space-y-3"></div>
+                  <button onclick="ajouterFeature()" class="mt-3 w-full border-2 border-dashed border-gray-300 text-gray-400 py-2 rounded-lg text-sm hover:border-primary hover:text-primary transition-colors"><i class="fa fa-plus mr-1"></i>Ajouter un point fort</button>
+                </div>
+                <div class="card">
+                  <h3 class="font-medium mb-4"><i class="fa fa-quote-left mr-2 text-primary"></i>Section finale</h3>
+                  <div class="space-y-3">
+                    <div><label class="block text-sm mb-1">Titre CTA final</label><input type="text" id="land-final-titre" value="Pr&ecirc;t &agrave; booster votre club ?" class="w-full border p-2 rounded-lg text-sm"></div>
+                    <div><label class="block text-sm mb-1">Texte CTA final</label><input type="text" id="land-final-cta" value="Cr&eacute;er mon espace gratuit" class="w-full border p-2 rounded-lg text-sm"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Aperçu landing -->
+              <div class="card bg-gray-50 sticky top-4">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u page d&apos;accueil</h3>
+                <div id="preview-landing" class="bg-white rounded-xl border overflow-hidden text-xs" style="transform-origin:top left;transform:scale(0.85)">
+                  <div class="p-6 text-center" id="prev-land-hero-bg" style="background:linear-gradient(135deg,#1e3a5f 0%,#3B82F6 100%);color:white">
+                    <div class="font-bold text-xl mb-1" id="prev-land-titre">G&eacute;rez votre club comme un pro</div>
+                    <p class="text-xs opacity-80 mb-3" id="prev-land-sous">La solution tout-en-un pour g&eacute;rer votre stock, votre caisse et vos membres.</p>
+                    <div class="flex gap-2 justify-center">
+                      <span class="px-3 py-1 rounded-full text-xs font-medium bg-white" id="prev-land-cta1" style="color:#3B82F6">Commencer gratuitement</span>
+                      <span class="px-3 py-1 rounded-full text-xs font-medium border border-white text-white" id="prev-land-cta2">Voir la d&eacute;mo</span>
+                    </div>
+                  </div>
+                  <div class="p-4 grid grid-cols-3 gap-2" id="prev-land-features"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Navigation -->
+          <div id="site-panel-navigation" class="site-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="font-medium mb-4"><i class="fa fa-bars mr-2 text-primary"></i>Menu de navigation</h3>
+                <div class="space-y-3 mb-4">
+                  <p class="text-xs text-gray-500">Personnalisez les &eacute;tiquettes des menus visibles par les utilisateurs clubs.</p>
+                  <div id="nav-items" class="space-y-2"></div>
+                  <div class="flex items-center gap-3 pt-2 border-t">
+                    <input type="checkbox" id="nav-show-logo" checked class="rounded">
+                    <label for="nav-show-logo" class="text-sm">Afficher le logo dans la sidebar</label>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <input type="checkbox" id="nav-sidebar-collapsed" class="rounded">
+                    <label for="nav-sidebar-collapsed" class="text-sm">Sidebar r&eacute;ductible par d&eacute;faut</label>
+                  </div>
+                </div>
+              </div>
+              <div class="card bg-gray-50">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u menu</h3>
+                <div id="preview-nav" class="rounded-xl border overflow-hidden">
+                  <div class="p-3 text-xs text-white" id="prev-nav-sidebar" style="background:#1e3a5f;min-height:200px">
+                    <div class="font-bold mb-3 text-center" style="color:#60A5FA">READI.Fr</div>
+                    <div id="prev-nav-items" class="space-y-1"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Footer -->
+          <div id="site-panel-footer" class="site-panel hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="font-medium mb-4"><i class="fa fa-minus mr-2 text-primary"></i>Pied de page</h3>
+                <div class="space-y-3">
+                  <div><label class="block text-sm mb-1">Texte copyright</label><input type="text" id="footer-copyright" value="&copy; 2026 READI.Fr &mdash; Tous droits r&eacute;serv&eacute;s" class="w-full border p-2 rounded-lg text-sm"></div>
+                  <div><label class="block text-sm mb-1">Lien Mentions l&eacute;gales (URL)</label><input type="text" id="footer-mentions" placeholder="/mentions-legales.html" class="w-full border p-2 rounded-lg text-sm"></div>
+                  <div><label class="block text-sm mb-1">Lien CGU (URL)</label><input type="text" id="footer-cgu" placeholder="/cgu.html" class="w-full border p-2 rounded-lg text-sm"></div>
+                  <div><label class="block text-sm mb-1">Lien Politique de confidentialit&eacute;</label><input type="text" id="footer-privacy" placeholder="/privacy.html" class="w-full border p-2 rounded-lg text-sm"></div>
+                  <div class="pt-3 border-t">
+                    <p class="text-xs text-gray-500 mb-2">R&eacute;seaux sociaux</p>
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2"><i class="fa fa-facebook-square text-blue-600 w-5"></i><input type="url" id="footer-facebook" placeholder="https://facebook.com/..." class="flex-1 border p-2 rounded-lg text-sm"></div>
+                      <div class="flex items-center gap-2"><i class="fa fa-twitter text-sky-400 w-5"></i><input type="url" id="footer-twitter" placeholder="https://twitter.com/..." class="flex-1 border p-2 rounded-lg text-sm"></div>
+                      <div class="flex items-center gap-2"><i class="fa fa-instagram text-pink-500 w-5"></i><input type="url" id="footer-instagram" placeholder="https://instagram.com/..." class="flex-1 border p-2 rounded-lg text-sm"></div>
+                      <div class="flex items-center gap-2"><i class="fa fa-linkedin-square text-blue-700 w-5"></i><input type="url" id="footer-linkedin" placeholder="https://linkedin.com/..." class="flex-1 border p-2 rounded-lg text-sm"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card bg-gray-50">
+                <h3 class="font-medium mb-3 text-sm text-gray-500"><i class="fa fa-eye mr-1"></i>Aper&ccedil;u footer</h3>
+                <div id="preview-footer" class="rounded-xl border overflow-hidden bg-gray-800 text-white p-4 text-xs">
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-blue-300">READI.Fr</span>
+                    <div class="flex gap-3 text-gray-400" id="prev-footer-social">
+                      <i class="fa fa-facebook-square"></i>
+                      <i class="fa fa-twitter"></i>
+                      <i class="fa fa-instagram"></i>
+                    </div>
+                  </div>
+                  <div class="border-t border-gray-700 pt-3 flex justify-between items-center flex-wrap gap-2">
+                    <span class="text-gray-400" id="prev-footer-copyright">&copy; 2026 READI.Fr &mdash; Tous droits r&eacute;serv&eacute;s</span>
+                    <div class="flex gap-3 text-gray-400" id="prev-footer-links">
+                      <a href="#" class="hover:text-white">Mentions l&eacute;gales</a>
+                      <a href="#" class="hover:text-white">CGU</a>
+                      <a href="#" class="hover:text-white">Confidentialit&eacute;</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Paramètres -->
         <section id="parametres" class="module hidden">
           <h2 class="text-2xl font-semibold mb-4">Paramètres du club</h2>
@@ -896,6 +1234,7 @@
   <script src="/js/rapports.js"></script>
   <script src="/js/utilisateurs.js"></script>
   <script src="/js/admin-plateforme.js"></script>
+  <script src="/js/reglage-site.js"></script>
   <script src="/js/parametres.js"></script>
 </body>
 </html>

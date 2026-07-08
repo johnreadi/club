@@ -176,6 +176,9 @@ ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_couleur_primaire 
 ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_couleur_sidebar VARCHAR(10) DEFAULT '#1e3a5f';
 ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_theme VARCHAR(20) DEFAULT 'clair';
 ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE ventes ADD COLUMN IF NOT EXISTS client_nom VARCHAR(100);
+ALTER TABLE ventes ADD COLUMN IF NOT EXISTS client_tel VARCHAR(30);
+ALTER TABLE produits ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_clubs_actif ON clubs(actif);

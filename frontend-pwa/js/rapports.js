@@ -33,12 +33,14 @@ function _rptInitDates() {
 
 async function _rptChargerDonnees() {
   try {
-    const [ventesRes, lignesRes] = await Promise.allSettled([
-      apiFetch('/ventes'),
-      apiFetch('/rapports/ventes')
+    const params = new URLSearchParams();
+    if (_rptDateDebut) params.set('debut', _rptDateDebut);
+    if (_rptDateFin)   params.set('fin',   _rptDateFin);
+    const qs = params.toString() ? '?' + params.toString() : '';
+    const [ventesRes] = await Promise.allSettled([
+      apiFetch('/rapports/detail' + qs)
     ]);
-    _rptVentesRaw  = ventesRes.status  === 'fulfilled' && ventesRes.value  ? ventesRes.value  : [];
-    _rptLignesRaw  = lignesRes.status  === 'fulfilled' && lignesRes.value  ? lignesRes.value  : [];
+    _rptVentesRaw = ventesRes.status === 'fulfilled' && ventesRes.value ? ventesRes.value : [];
     _rptMajAffichage();
   } catch (e) {
     console.warn('Rapports error', e);
@@ -369,7 +371,7 @@ function rptPeriodeRapide(key) {
   if (inputF) inputF.value = _rptDateFin   || '';
   _rptActifQuick(key);
   _rptMajLabelPeriode();
-  _rptMajAffichage();
+  _rptChargerDonnees();
 }
 
 function rptAppliquerPeriode() {
@@ -377,7 +379,7 @@ function rptAppliquerPeriode() {
   _rptDateFin   = document.getElementById('rpt-date-fin')?.value   || null;
   _rptActifQuick(null);
   _rptMajLabelPeriode();
-  _rptMajAffichage();
+  _rptChargerDonnees();
 }
 
 function rptChangerGroupement(g) {

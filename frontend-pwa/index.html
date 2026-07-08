@@ -174,6 +174,22 @@
                 <input type="number" step="0.01" name="prix_vente" placeholder="Prix de vente (TTC)" required class="w-full border p-2 rounded">
                 <input type="number" name="quantite" placeholder="Quantité en stock" min="0" class="w-full border p-2 rounded">
                 <input type="number" name="seuil" placeholder="Seuil d'alerte" min="0" value="5" class="w-full border p-2 rounded">
+                <!-- Image produit -->
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">Image produit (affichée en caisse)</label>
+                  <div id="stock-image-dropzone"
+                    class="border-2 border-dashed border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-colors"
+                    ondragover="stockImageDragOver(event)" ondragleave="stockImageDragLeave(event)" ondrop="stockImageDrop(event)"
+                    onclick="document.getElementById('stock-image-fichier').click()">
+                    <i class="fa fa-image text-gray-300 text-xl mb-1 block"></i>
+                    <span class="text-xs text-gray-400">Glisser une image ici ou cliquer pour choisir</span>
+                    <input type="file" id="stock-image-fichier" accept="image/*" class="hidden" onchange="stockImageFichier(this)">
+                  </div>
+                  <input type="text" id="produit-image-url" placeholder="ou coller une URL d'image..." class="w-full border p-1.5 rounded text-xs mt-1 focus:outline-none focus:border-primary" oninput="stockImageUrl(this.value)">
+                  <div id="produit-image-apercu" class="mt-2 min-h-8 flex items-center justify-center">
+                    <span class="text-xs text-gray-400">Aucune image</span>
+                  </div>
+                </div>
                 <button type="submit" class="w-full bg-primary text-white p-2 rounded hover:bg-primary/90">Enregistrer</button>
               </form>
             </div>
@@ -308,7 +324,16 @@
                   </div>
                 </div>
 
-                <!-- Boutons modes de paiement -->
+                <!-- Informations client (optionnel) -->
+                <div class="mb-3">
+                  <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1"><i class="fa fa-user mr-1"></i>Client (optionnel)</div>
+                  <div class="flex gap-2">
+                    <input type="text" id="caisse-client-nom" placeholder="Nom client" class="flex-1 border border-gray-200 rounded-lg p-1.5 text-sm focus:outline-none focus:border-primary">
+                    <input type="text" id="caisse-client-tel" placeholder="Téléphone" class="w-28 border border-gray-200 rounded-lg p-1.5 text-sm focus:outline-none focus:border-primary">
+                  </div>
+                </div>
+
+              <!-- Boutons modes de paiement -->
                 <div class="space-y-2">
                   <button onclick="ouvrirEncaissement('Espèces')"
                     class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold text-base hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2">

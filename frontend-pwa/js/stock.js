@@ -3,6 +3,7 @@ let produits = [];
 let produitEnEdition = null;
 let scanStockBuffer = '';
 let scanStockTimer = null;
+let _imageUrlProduit = '';
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('form-produit')?.addEventListener('submit', enregistrerProduit);
@@ -137,7 +138,8 @@ async function enregistrerProduit(e) {
     prix_achat: parseFloat(form.prix_achat.value) || 0,
     prix_vente: parseFloat(form.prix_vente.value) || 0,
     quantite_stock: parseInt(form.quantite.value) || 0,
-    seuil_alerte: parseInt(form.seuil.value) || 5
+    seuil_alerte: parseInt(form.seuil.value) || 5,
+    image_url: _imageUrlProduit || null
   };
   try {
     let produitSauvegarde;
@@ -149,6 +151,8 @@ async function enregistrerProduit(e) {
       produitSauvegarde = await apiFetch('/stock', { method: 'POST', body: JSON.stringify(donnees) });
       afficherMessage('✅ Produit enregistré en base — code-barres : ' + produitSauvegarde.code_barre, 'success');
     }
+    _imageUrlProduit = '';
+    _stockMajAperçuImage('');
     form.reset();
     document.querySelector('#form-produit button[type="submit"]').textContent = 'Enregistrer';
     await chargerStock();
@@ -168,8 +172,57 @@ function editerProduit(id) {
   form.prix_vente.value = p.prix_vente;
   form.quantite.value = p.quantite_stock;
   form.seuil.value = p.seuil_alerte || 5;
+  _imageUrlProduit = p.image_url || '';
+  _stockMajAperçuImage(_imageUrlProduit);
+  const urlInput = document.getElementById('produit-image-url');
+  if (urlInput) urlInput.value = _imageUrlProduit;
   form.querySelector('button[type="submit"]').textContent = 'Modifier le produit';
   form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function _stockMajAperçuImage(url) {
+  const apercu = document.getElementById('produit-image-apercu');
+  if (!apercu) return;
+  if (url) {
+    apercu.innerHTML = `<img src="${url}" class="max-h-24 rounded border object-contain" onerror="this.parentElement.innerHTML='<span class=text-red-400 text-xs>Image invalide</span>'">`;
+  } else {
+    apercu.innerHTML = '<span class="text-xs text-gray-400">Aucune image</span>';
+  }
+}
+
+function stockImageFichier(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _imageUrlProduit = e.target.result;
+    _stockMajAperçuImage(_imageUrlProduit);
+    const urlInput = document.getElementById('produit-image-url');
+    if (urlInput) urlInput.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function stockImageUrl(val) {
+  _imageUrlProduit = val.trim();
+  _stockMajAperçuImage(_imageUrlProduit);
+}
+
+function stockImageDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('border-primary','bg-blue-50'); }
+function stockImageDragLeave(e) { e.currentTarget.classList.remove('border-primary','bg-blue-50'); }
+function stockImageDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-primary','bg-blue-50');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _imageUrlProduit = ev.target.result;
+    _stockMajAperçuImage(_imageUrlProduit);
+    const urlInput = document.getElementById('produit-image-url');
+    if (urlInput) urlInput.value = '';
+  };
+  reader.readAsDataURL(file);
 }
 
 // ── Aperçu étiquettes ──────────────────────────────────────────────────────────

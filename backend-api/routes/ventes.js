@@ -38,13 +38,13 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { club_id, id: utilisateur_id } = req.utilisateur;
-  const { articles, montant_total, mode_paiement } = req.body;
+  const { articles, montant_total, mode_paiement, client_nom, client_tel } = req.body;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const vente = await client.query(
-      'INSERT INTO ventes (club_id, utilisateur_id, montant_total, mode_paiement) VALUES ($1,$2,$3,$4) RETURNING *',
-      [club_id, utilisateur_id, montant_total, mode_paiement || 'especes']
+      'INSERT INTO ventes (club_id, utilisateur_id, montant_total, mode_paiement, client_nom, client_tel) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [club_id, utilisateur_id, montant_total, mode_paiement || 'especes', client_nom || null, client_tel || null]
     );
     for (const art of articles) {
       await client.query(

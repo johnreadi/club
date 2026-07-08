@@ -4,6 +4,7 @@ let produitsCaisse = [];
 let scanCaisseBuffer = '';
 let scanCaisseTimer = null;
 let categorieActive = '';
+let _infoClub = null;
 
 // Couleurs par catégorie (auto-générées au besoin)
 const COULEURS_CAT = ['bg-blue-100 text-blue-800','bg-purple-100 text-purple-800',
@@ -165,10 +166,14 @@ function afficherGrille() {
         : `<span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 rounded-full">${p.quantite_stock}</span>`;
     const catBadge = p.categorie
       ? `<span class="text-xs px-1.5 py-0.5 rounded ${couleurCat(p.categorie)}">${p.categorie}</span>` : '';
+    const imgHtml = p.image_url
+      ? `<div class="w-full h-20 mb-2 rounded overflow-hidden bg-gray-50"><img src="${p.image_url}" alt="${p.nom}" class="w-full h-full object-cover"></div>`
+      : '';
     return `<button onclick="cliquerProduitGrille(${p.id})"
       class="card p-3 text-left relative hover:shadow-md hover:border-primary/50 border-2 border-transparent transition-all ${rupture ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}"
       ${rupture ? 'disabled' : ''}>
       ${badgeStock}
+      ${imgHtml}
       <div class="font-semibold text-sm leading-tight mb-1">${p.nom}</div>
       ${p.description ? `<div class="text-xs text-gray-400 italic truncate mb-1">${p.description}</div>` : ''}
       <div class="flex items-center justify-between mt-1">
@@ -248,23 +253,52 @@ async function traiterScanCaisse(code) {
 async function chargerVentesCaisse() {
   demarrerHorloge();
   try {
-    produitsCaisse = await apiFetch('/stock') || [];
+    [produitsCaisse, _infoClub] = await Promise.all([
+      apiFetch('/stock').catch(() => []),
+      apiFetch('/clubs/mon-club').catch(() => null)
+    ]);
     afficherFiltresCategories();
     filtrerCategorie('');
     const ventes = await apiFetch('/ventes') || [];
     const conteneur = document.getElementById('dernieres-ventes-caisse');
     if (conteneur) {
-      conteneur.innerHTML = ventes.slice(0, 15).map(v =>
-        `<div class="flex justify-between items-center border-b py-1.5 last:border-0">
+      conteneur.innerHTML = ventes.slice(0, 15).map(v => {
+        const client = v.client_nom ? `<div class="text-gray-500 italic">${v.client_nom}</div>` : '';
+        return `<div class="flex justify-between items-center border-b py-1.5 last:border-0">
           <div>
             <div class="text-gray-700">${new Date(v.date_vente).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
             <div class="text-gray-400">${v.mode_paiement}</div>
+            ${client}
           </div>
-          <span class="font-semibold text-primary">${parseFloat(v.montant_total).toFixed(2)} €</span>
-        </div>`
-      ).join('') || '<p class="text-gray-400 text-center py-2">Aucune vente</p>';
+          <div class="text-right">
+            <span class="font-semibold text-primary block">${parseFloat(v.montant_total).toFixed(2)} €</span>
+            <button onclick="reimprimer(${v.id})" class="text-xs text-blue-400 hover:text-blue-600 mt-0.5"><i class="fa fa-print"></i> réimpr.</button>
+          </div>
+        </div>`;
+      }).join('') || '<p class="text-gray-400 text-center py-2">Aucune vente</p>';
     }
   } catch {}
+}
+
+async function reimprimer(venteId) {
+  try {
+    const detail = await apiFetch('/ventes/' + venteId);
+    if (!detail) return;
+    const vente = {
+      ...detail,
+      lignes: (detail.lignes || []).map(l => ({
+        nom: l.produit_nom || l.nom || 'Produit',
+        description: l.description || '',
+        reference: l.reference || '',
+        quantite: l.quantite,
+        prix_unitaire: l.prix_unitaire,
+        code_barre: l.code_barre || ''
+      }))
+    };
+    genererFactureA4(vente);
+  } catch {
+    afficherMessage('❌ Impossible de récupérer la vente', 'danger');
+  }
 }
 
 // ── Panier ────────────────────────────────────────────────────────────────────
@@ -273,7 +307,7 @@ function ajouterAuPanier(produit) {
   if (ligne) {
     ligne.quantite++;
   } else {
-    panier.push({ produit_id: produit.id, nom: produit.nom, description: produit.description || '', prix_unitaire: parseFloat(produit.prix_vente), quantite: 1 });
+    panier.push({ produit_id: produit.id, nom: produit.nom, description: produit.description || '', prix_unitaire: parseFloat(produit.prix_vente), quantite: 1, image_url: produit.image_url || '' });
   }
   afficherPanier();
 }
@@ -423,13 +457,15 @@ function validerEspeces() {
 let derniereVente = null;
 
 async function validerVente(modePaiement, montantRemis, montantRendu) {
-  if (panier.length === 0) return afficherMessage('⚠️ Panier vide', 'warning');
+  if (panier.length === 0) return afficherMessage('\u26a0\ufe0f Panier vide', 'warning');
   const montant_total = panier.reduce((s, l) => s + l.prix_unitaire * l.quantite, 0);
   const articles = panier.map(l => ({ produit_id: l.produit_id, quantite: l.quantite, prix_unitaire: l.prix_unitaire }));
+  const client_nom = document.getElementById('caisse-client-nom')?.value?.trim() || null;
+  const client_tel = document.getElementById('caisse-client-tel')?.value?.trim() || null;
   try {
     const vente = await apiFetch('/ventes', {
       method: 'POST',
-      body: JSON.stringify({ articles, montant_total, mode_paiement: modePaiement })
+      body: JSON.stringify({ articles, montant_total, mode_paiement: modePaiement, client_nom, client_tel })
     });
     derniereVente = {
       ...vente,
@@ -437,7 +473,8 @@ async function validerVente(modePaiement, montantRemis, montantRendu) {
       montant_total,
       mode_paiement: modePaiement,
       montant_remis: montantRemis || null,
-      montant_rendu: montantRendu || null
+      montant_rendu: montantRendu || null,
+      client_nom, client_tel
     };
     articles.forEach(a => {
       const p = produitsCaisse.find(x => x.id === a.produit_id);
@@ -558,61 +595,72 @@ async function apercuFactureA4() {
   document.getElementById('modal-apercu').style.display = 'flex';
 }
 
-async function genererFactureA4() {
-  if (!derniereVente) return afficherMessage('⚠️ Aucune vente en cours de session', 'warning');
+async function genererFactureA4(venteObj) {
+  const vente = venteObj || derniereVente;
+  if (!vente) return afficherMessage('\u26a0\ufe0f Aucune vente en cours de session', 'warning');
+  const club = _infoClub || {};
   const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
-  const clubNom = utilisateur.club_nom || 'Club Sportif';
-  const now = new Date();
+  const clubNom = club.nom || utilisateur.club_nom || 'Club Sportif';
+  const clubAdresse = [club.adresse, club.code_postal && club.ville ? club.code_postal + ' ' + club.ville : club.ville].filter(Boolean).join(' — ');
+  const clubContact = [club.telephone, club.email_contact].filter(Boolean).join(' | ');
+  const now = new Date(vente.date_vente || Date.now());
   const dateStr = now.toLocaleDateString('fr-FR');
   const heureStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const numFacture = 'FAC-' + derniereVente.id + '-' + now.getFullYear();
+  const numFacture = 'FAC-' + vente.id + '-' + now.getFullYear();
 
-  // Récupérer les lignes détaillées depuis l'API si possible
-  let lignes = derniereVente.lignes || [];
-  try {
-    const detail = await apiFetch('/ventes/' + derniereVente.id);
-    if (detail && detail.lignes) lignes = detail.lignes.map(l => ({
-      nom: l.produit_nom,
-      description: l.description || '',
-      reference: l.reference || '',
-      quantite: l.quantite,
-      prix_unitaire: l.prix_unitaire,
-      code_barre: l.code_barre || ''
-    }));
-  } catch {}
+  let lignes = vente.lignes || [];
+  if (lignes.length === 0 || (lignes[0] && !lignes[0].nom && !lignes[0].produit_nom)) {
+    try {
+      const detail = await apiFetch('/ventes/' + vente.id);
+      if (detail && detail.lignes) lignes = detail.lignes.map(l => ({
+        nom: l.produit_nom || l.nom || 'Produit',
+        description: l.description || '',
+        reference: l.reference || '',
+        quantite: l.quantite,
+        prix_unitaire: l.prix_unitaire,
+        code_barre: l.code_barre || ''
+      }));
+    } catch {}
+  }
 
   const lignesHtml = lignes.map((l, i) => {
     const total = (parseFloat(l.prix_unitaire) * parseInt(l.quantite || 1)).toFixed(2);
     const desc = l.description ? `<br><span style="font-size:10px;color:#666;font-style:italic;">${l.description}</span>` : '';
     return `<tr style="border-bottom:1px solid #eee;">
       <td style="padding:6px 4px;font-size:11px;color:#999;">${i + 1}</td>
-      <td style="padding:6px 4px;">
-        <strong>${l.nom || l.produit_nom || ''}</strong>${desc}
-        <div style="font-size:10px;color:#aaa;">Réf: ${l.reference || '-'}</div>
-      </td>
-      <td style="padding:6px 4px;text-align:right;">${parseFloat(l.prix_unitaire).toFixed(2)} €</td>
+      <td style="padding:6px 4px;"><strong>${l.nom || ''}</strong>${desc}<div style="font-size:10px;color:#aaa;">R\u00e9f: ${l.reference || '-'}</div></td>
+      <td style="padding:6px 4px;text-align:right;">${parseFloat(l.prix_unitaire).toFixed(2)} \u20ac</td>
       <td style="padding:6px 4px;text-align:center;">${l.quantite}</td>
-      <td style="padding:6px 4px;text-align:right;font-weight:bold;">${total} €</td>
+      <td style="padding:6px 4px;text-align:right;font-weight:bold;">${total} \u20ac</td>
     </tr>`;
   }).join('');
 
   const sousTotal = lignes.reduce((s, l) => s + parseFloat(l.prix_unitaire) * parseInt(l.quantite || 1), 0);
-  const tva = sousTotal * 0.20;
+  const tva = sousTotal - sousTotal / 1.2;
   const ttc = sousTotal;
 
-  const fenetre = window.open('', '_blank', 'width=820,height=1100');
+  const clientHtml = vente.client_nom ? `
+    <div class="bloc">
+      <div class="bloc-titre">Client</div>
+      <strong>${vente.client_nom}</strong><br>
+      ${vente.client_tel ? `<span style="font-size:11px;">${vente.client_tel}</span>` : ''}
+    </div>` : '';
+
+  const fenetre = window.open('about:blank', '_blank', 'width=820,height=1100');
   if (!fenetre) return;
   fenetre.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8">
+    <title>Facture ${numFacture}</title>
     <style>
       * { margin:0; padding:0; box-sizing:border-box; }
       body { font-family: Arial, sans-serif; font-size:12px; color:#222; padding:20px 30px; }
       .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px; border-bottom:3px solid #165DFF; padding-bottom:16px; }
       .club-nom { font-size:22px; font-weight:bold; color:#165DFF; }
+      .club-info { font-size:11px; color:#666; margin-top:4px; line-height:1.6; }
       .facture-titre { font-size:18px; font-weight:bold; color:#333; text-align:right; }
       .facture-num { font-size:11px; color:#666; text-align:right; margin-top:4px; }
-      .infos { display:flex; justify-content:space-between; margin-bottom:24px; }
-      .bloc { background:#f7f9fc; border-radius:6px; padding:10px 14px; min-width:200px; }
+      .infos { display:flex; justify-content:space-between; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+      .bloc { background:#f7f9fc; border-radius:6px; padding:10px 14px; min-width:180px; flex:1; }
       .bloc-titre { font-size:10px; color:#999; text-transform:uppercase; margin-bottom:4px; }
       table { width:100%; border-collapse:collapse; margin-bottom:16px; }
       thead tr { background:#165DFF; color:white; }
@@ -624,92 +672,101 @@ async function genererFactureA4() {
       .total-ttc { font-size:15px; font-weight:bold; background:#165DFF; color:white; }
       .total-ttc td { padding:8px 6px; }
       .footer { margin-top:40px; border-top:1px solid #eee; padding-top:10px; font-size:10px; color:#aaa; text-align:center; }
-      @media print { body { padding:10px 20px; } }
+      @media print { @page { margin:15mm; } body { padding:0; } }
     </style>
   </head><body>
     <div class="header">
       <div>
         <div class="club-nom">${clubNom}</div>
-        <div style="font-size:11px;color:#666;margin-top:4px;">${utilisateur.email || ''}</div>
+        <div class="club-info">${clubAdresse ? clubAdresse + '<br>' : ''}${clubContact}</div>
       </div>
       <div>
         <div class="facture-titre">FACTURE</div>
-        <div class="facture-num">N° ${numFacture}</div>
-        <div class="facture-num">Date : ${dateStr} à ${heureStr}</div>
+        <div class="facture-num">N\u00b0 ${numFacture}</div>
+        <div class="facture-num">Date : ${dateStr} \u00e0 ${heureStr}</div>
       </div>
     </div>
-
     <div class="infos">
       <div class="bloc">
         <div class="bloc-titre">Vendeur</div>
         <strong>${utilisateur.prenom || ''} ${utilisateur.nom || ''}</strong><br>
         <span style="font-size:11px;">${clubNom}</span>
       </div>
+      ${clientHtml}
       <div class="bloc">
         <div class="bloc-titre">Paiement</div>
-        <strong>${derniereVente.mode_paiement}</strong><br>
-        <span style="font-size:11px;color:#666;">Réglé le ${dateStr}</span>
+        <strong>${vente.mode_paiement}</strong><br>
+        <span style="font-size:11px;color:#666;">R\u00e9gl\u00e9 le ${dateStr}</span>
       </div>
     </div>
-
     <table>
-      <thead>
-        <tr>
-          <th style="width:30px;">#</th>
-          <th>Désignation</th>
-          <th style="width:90px;text-align:right;">P.U. TTC</th>
-          <th style="width:60px;text-align:center;">Qté</th>
-          <th style="width:90px;text-align:right;">Total</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th style="width:30px;">#</th>
+        <th>D\u00e9signation</th>
+        <th style="width:90px;text-align:right;">P.U. TTC</th>
+        <th style="width:60px;text-align:center;">Qt\u00e9</th>
+        <th style="width:90px;text-align:right;">Total</th>
+      </tr></thead>
       <tbody>${lignesHtml}</tbody>
     </table>
-
     <div class="total-bloc">
       <table class="total-table">
-        <tr><td>Sous-total HT</td><td style="text-align:right;">${(sousTotal / 1.2).toFixed(2)} €</td></tr>
-        <tr><td>TVA 20%</td><td style="text-align:right;">${tva.toFixed(2)} €</td></tr>
-        <tr class="total-ttc"><td>TOTAL TTC</td><td style="text-align:right;">${ttc.toFixed(2)} €</td></tr>
+        <tr><td>Sous-total HT</td><td style="text-align:right;">${(ttc - tva).toFixed(2)} \u20ac</td></tr>
+        <tr><td>TVA 20%</td><td style="text-align:right;">${tva.toFixed(2)} \u20ac</td></tr>
+        <tr class="total-ttc"><td>TOTAL TTC</td><td style="text-align:right;">${ttc.toFixed(2)} \u20ac</td></tr>
       </table>
     </div>
-
-    <div class="footer">
-      Document généré le ${dateStr} à ${heureStr} — ${clubNom} — Merci de votre confiance
-    </div>
-
+    <div class="footer">Document g\u00e9n\u00e9r\u00e9 le ${dateStr} \u00e0 ${heureStr} \u2014 ${clubNom} \u2014 Merci de votre confiance</div>
     <script>window.onload = function(){ window.print(); };<\/script>
   </body></html>`);
   fenetre.document.close();
 }
 
 function imprimerTicket(vente) {
+  const club = _infoClub || {};
   const utilisateur = JSON.parse(localStorage.getItem('utilisateur') || '{}');
-  const clubNom = utilisateur.club_nom || 'GESTION DES CLUBS';
+  const clubNom = club.nom || utilisateur.club_nom || 'GESTION DES CLUBS';
+  const clubSousNom = [club.adresse, club.ville].filter(Boolean).join(', ');
+  const clubTel = club.telephone || '';
   const lignesHtml = (vente.lignes || []).map(l => {
     const p = produitsCaisse.find(x => x.id === l.produit_id);
-    const code = p?.code_barre || '';
+    const code = p?.code_barre || l.code_barre || '';
     const codeBarreHtml = code
       ? `<div style="text-align:center;margin:2px 0;"><svg class="bc-ticket" data-code="${code}" style="max-width:180px;"></svg></div>`
       : '';
     return `<div style="border-bottom:1px dashed #ccc;padding:4px 0;margin:2px 0;">
-      <p style="margin:0;font-weight:bold;">${l.nom}</p>
-      <p style="margin:0;">${l.quantite} × ${parseFloat(l.prix_unitaire).toFixed(2)} € = <strong>${(l.quantite * parseFloat(l.prix_unitaire)).toFixed(2)} €</strong></p>
+      <p style="margin:0;font-weight:bold;">${l.nom || l.produit_nom || 'Produit'}</p>
+      ${l.description ? `<p style="margin:0;font-size:10px;color:#666;">${l.description}</p>` : ''}
+      <p style="margin:0;">${l.quantite} &times; ${parseFloat(l.prix_unitaire).toFixed(2)} &euro; = <strong>${(l.quantite * parseFloat(l.prix_unitaire)).toFixed(2)} &euro;</strong></p>
       ${codeBarreHtml}
     </div>`;
   }).join('');
 
-  const fenetre = window.open('', '_blank', 'width=340,height=620');
+  const clientHtml = vente.client_nom
+    ? `<p style="margin:4px 0;font-size:11px;">Client : <strong>${vente.client_nom}</strong>${vente.client_tel ? ' &mdash; ' + vente.client_tel : ''}</p>`
+    : '';
+  const renduHtml = vente.montant_remis
+    ? `<p style="margin:2px 0;font-size:11px;">Remis : ${parseFloat(vente.montant_remis).toFixed(2)} &euro; &mdash; Rendu : <strong>${parseFloat(vente.montant_rendu||0).toFixed(2)} &euro;</strong></p>`
+    : '';
+
+  const fenetre = window.open('about:blank', '_blank', 'width=340,height=620');
   if (!fenetre) return;
   fenetre.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Ticket</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
     </head><body style="margin:0;padding:8px;font-family:monospace;font-size:12px;width:280px;">
     <h3 style="text-align:center;margin:0 0 2px 0;">${clubNom}</h3>
-    <p style="text-align:center;margin:2px 0;font-size:10px;">${new Date().toLocaleString('fr-FR')}</p>
+    ${clubSousNom ? `<p style="text-align:center;margin:1px 0;font-size:10px;">${clubSousNom}</p>` : ''}
+    ${clubTel ? `<p style="text-align:center;margin:1px 0;font-size:10px;">${clubTel}</p>` : ''}
+    <p style="text-align:center;margin:2px 0;font-size:10px;">${new Date(vente.date_vente||Date.now()).toLocaleString('fr-FR')}</p>
     <hr style="margin:4px 0;">
+    ${clientHtml}
+    ${clientHtml ? '<hr style="margin:4px 0;">' : ''}
     ${lignesHtml}
     <hr style="margin:4px 0;">
-    <p style="text-align:right;font-size:14px;font-weight:bold;">TOTAL : ${parseFloat(vente.montant_total).toFixed(2)} €</p>
-    <p style="margin:2px 0;">Règlement : ${vente.mode_paiement}</p>
+    <p style="text-align:right;font-size:14px;font-weight:bold;">TOTAL : ${parseFloat(vente.montant_total).toFixed(2)} &euro;</p>
+    <p style="margin:2px 0;">R&egrave;glement : ${vente.mode_paiement}</p>
+    ${renduHtml}
     <p style="text-align:center;margin-top:8px;font-size:11px;">Merci de votre visite !</p>
     <script>
       document.querySelectorAll('.bc-ticket').forEach(function(svg){

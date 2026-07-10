@@ -561,7 +561,7 @@ function imprimerRapport() {
     td{padding:5px 8px;border-bottom:1px solid #eee;vertical-align:top}
     tr:nth-child(even) td{background:#f7f9fc}
     .footer{margin-top:16px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px}
-    @media print{@page{margin:12mm}body{padding:0}}
+    @media print{@page{margin:0;size:A4}body{padding:12mm}}
   </style></head><body>
   <h2>D\u00e9tail des ventes</h2>
   <p class="periode">${periode} &mdash; Imprim\u00e9 le ${new Date().toLocaleString('fr-FR')}</p>

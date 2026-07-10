@@ -672,7 +672,7 @@ async function genererFactureA4(venteObj) {
       .total-ttc { font-size:15px; font-weight:bold; background:#165DFF; color:white; }
       .total-ttc td { padding:8px 6px; }
       .footer { margin-top:40px; border-top:1px solid #eee; padding-top:10px; font-size:10px; color:#aaa; text-align:center; }
-      @media print { @page { margin:15mm; } body { padding:0; } }
+      @media print { @page { margin:0; size:A4; } body { padding:15mm; } }
     </style>
   </head><body>
     <div class="header">
@@ -754,6 +754,7 @@ function imprimerTicket(vente) {
   fenetre.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Ticket</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>@media print{@page{margin:0}body{padding:4px}}</style>
     </head><body style="margin:0;padding:8px;font-family:monospace;font-size:12px;width:280px;">
     <h3 style="text-align:center;margin:0 0 2px 0;">${clubNom}</h3>
     ${clubSousNom ? `<p style="text-align:center;margin:1px 0;font-size:10px;">${clubSousNom}</p>` : ''}

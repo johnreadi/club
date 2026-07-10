@@ -401,8 +401,8 @@ function lancerImpression() {
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
     <style>
       @media print {
-        @page { margin: 8mm; }
-        body { margin:0; }
+        @page { margin: 0; }
+        body { margin:8mm; }
         .etiq-grid { display:flex; flex-wrap:wrap; gap:3mm; }
         .no-print { display:none; }
       }

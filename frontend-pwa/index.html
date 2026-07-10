@@ -458,6 +458,9 @@
               <button onclick="exporterCSV()" class="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 shadow-sm transition-all">
                 <i class="fa fa-file-text text-xs text-green-600"></i> CSV
               </button>
+              <button onclick="imprimerRapport()" class="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 shadow-sm transition-all">
+                <i class="fa fa-print text-xs text-blue-600"></i> Imprimer
+              </button>
             </div>
           </div>
 
@@ -561,6 +564,7 @@
                 <thead>
                   <tr class="border-b border-gray-100">
                     <th class="text-left p-2 text-gray-500 font-medium text-xs uppercase">Date</th>
+                    <th class="text-left p-2 text-gray-500 font-medium text-xs uppercase">Référence</th>
                     <th class="text-left p-2 text-gray-500 font-medium text-xs uppercase">Produit</th>
                     <th class="text-right p-2 text-gray-500 font-medium text-xs uppercase">Qté</th>
                     <th class="text-right p-2 text-gray-500 font-medium text-xs uppercase">P.U.</th>
@@ -569,7 +573,7 @@
                   </tr>
                 </thead>
                 <tbody id="rpt-tableau-ventes">
-                  <tr><td colspan="6" class="text-center py-8 text-gray-400">Chargement...</td></tr>
+                  <tr><td colspan="7" class="text-center py-8 text-gray-400">Chargement...</td></tr>
                 </tbody>
               </table>
             </div>

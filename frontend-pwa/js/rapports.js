@@ -323,13 +323,14 @@ function _rptMajTableau(ventes) {
 
   if (nbEl) nbEl.textContent = lignes.length + ' ligne(s)';
   if (lignes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400">Aucune vente sur cette période</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400">Aucune vente sur cette p\u00e9riode</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = lignes.slice(0, 100).map(l => {
+  tbody.innerHTML = lignes.slice(0, 200).map(l => {
     const v   = l._vente;
     const dt  = v.date_vente ? new Date(v.date_vente).toLocaleString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+    const ref = l._simple ? '—' : (l.reference || '—');
     const nom = l._simple ? ('Vente #' + v.id) : (l.produit_nom || l.nom || 'Produit');
     const qte = l._simple ? '—' : (l.quantite || '—');
     const pu  = l._simple ? '—' : (l.prix_unitaire ? _eur(l.prix_unitaire) : '—');
@@ -341,14 +342,15 @@ function _rptMajTableau(ventes) {
       'virement':'bg-purple-100 text-purple-700','cheque':'bg-yellow-100 text-yellow-700','chèque':'bg-yellow-100 text-yellow-700'
     }[mdp.toLowerCase()] || 'bg-gray-100 text-gray-600';
     return `<tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-      <td class="p-2 text-gray-500 text-xs">${dt}</td>
+      <td class="p-2 text-gray-500 text-xs whitespace-nowrap">${dt}</td>
+      <td class="p-2 text-gray-500 text-xs font-mono">${ref}</td>
       <td class="p-2 font-medium text-gray-800">${nom}</td>
       <td class="p-2 text-right text-gray-600">${qte}</td>
       <td class="p-2 text-right text-gray-600">${pu}</td>
       <td class="p-2 text-right font-semibold text-gray-800">${tot}</td>
       <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-medium ${badgeMdp}">${mdp}</span></td>
     </tr>`;
-  }).join('') + (lignes.length > 100 ? `<tr><td colspan="6" class="text-center py-2 text-xs text-gray-400">… et ${lignes.length - 100} lignes de plus</td></tr>` : '');
+  }).join('') + (lignes.length > 200 ? `<tr><td colspan="7" class="text-center py-2 text-xs text-gray-400">… et ${lignes.length - 200} lignes de plus</td></tr>` : '');
 }
 
 // ── Sélecteur de période ──────────────────────────────────────────────────────
@@ -483,26 +485,92 @@ async function exporterDonnees() {
   } catch {}
 }
 
+function _fmtDateCSV(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${_z(d.getDate())}/${_z(d.getMonth()+1)}/${d.getFullYear()} ${_z(d.getHours())}:${_z(d.getMinutes())}`;
+}
+
+function _csvCell(v) {
+  const s = String(v ?? '');
+  return s.includes(';') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+}
+
 async function exporterCSV() {
   try {
     const ventes = _rptFiltrerVentes();
-    const lignes = [['Date','Produit','Quantité','Prix unitaire','Total','Mode paiement'],
-      ...ventes.flatMap(v =>
-        (v.lignes && v.lignes.length > 0)
-          ? v.lignes.map(l => [
-              new Date(v.date_vente).toLocaleString('fr-FR'),
-              l.produit_nom || l.nom || '#' + l.produit_id,
-              l.quantite, l.prix_unitaire,
-              (parseFloat(l.prix_unitaire||0) * parseInt(l.quantite||0)).toFixed(2),
-              v.mode_paiement || '—'
-            ])
-          : [[new Date(v.date_vente).toLocaleString('fr-FR'), 'Vente #'+v.id, '—', '—', v.montant_total, v.mode_paiement || '—']]
-      )
-    ];
-    const csv = lignes.map(r => r.join(';')).join('\n');
-    telecharger(csv, `ventes_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
-    afficherMessage('✅ Export CSV téléchargé', 'success');
+    const periode = (_rptDateDebut || '') + (_rptDateFin ? '_au_' + _rptDateFin : '');
+    const entete = ['Date','Référence','Produit','Quantité','Prix unitaire','Total','Mode paiement','Client','Téléphone'];
+    const rows = ventes.flatMap(v =>
+      (v.lignes && v.lignes.length > 0)
+        ? v.lignes.map(l => [
+            _fmtDateCSV(v.date_vente),
+            l.reference || '',
+            l.produit_nom || l.nom || '',
+            l.quantite,
+            parseFloat(l.prix_unitaire||0).toFixed(2).replace('.',','),
+            (parseFloat(l.prix_unitaire||0) * parseInt(l.quantite||0)).toFixed(2).replace('.',','),
+            v.mode_paiement || '',
+            v.client_nom || '',
+            v.client_tel || ''
+          ])
+        : [[_fmtDateCSV(v.date_vente), '', 'Vente #'+v.id, '', '', parseFloat(v.montant_total||0).toFixed(2).replace('.',','), v.mode_paiement || '', v.client_nom || '', v.client_tel || '']]
+    );
+    const csv = '\uFEFF' + [entete, ...rows].map(r => r.map(_csvCell).join(';')).join('\r\n');
+    const nom = `ventes${periode ? '_' + periode : ''}_${new Date().toISOString().slice(0,10)}.csv`;
+    telecharger(csv, nom, 'text/csv;charset=utf-8;');
+    afficherMessage('\u2705 Export CSV t\u00e9l\u00e9charg\u00e9', 'success');
   } catch {}
+}
+
+function imprimerRapport() {
+  const debut = document.getElementById('rpt-date-debut')?.value || '';
+  const fin   = document.getElementById('rpt-date-fin')?.value   || '';
+  const periode = debut || fin
+    ? `Période : ${debut ? new Date(debut).toLocaleDateString('fr-FR') : '—'} → ${fin ? new Date(fin).toLocaleDateString('fr-FR') : '—'}`
+    : 'Toutes les données';
+
+  const lignes = _rptFiltrerVentes().flatMap(v =>
+    (v.lignes && v.lignes.length > 0)
+      ? v.lignes.map(l => ({ v, l }))
+      : [{ v, l: null }]
+  );
+
+  const rows = lignes.map(({ v, l }) => {
+    const dt  = v.date_vente ? new Date(v.date_vente).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const ref = l ? (l.reference || '—') : '—';
+    const nom = l ? (l.produit_nom || l.nom || 'Produit') : ('Vente #' + v.id);
+    const qte = l ? (l.quantite || '—') : '—';
+    const pu  = l ? (l.prix_unitaire ? parseFloat(l.prix_unitaire).toFixed(2) + ' \u20ac' : '—') : '—';
+    const tot = l && l.quantite && l.prix_unitaire
+      ? (parseFloat(l.prix_unitaire) * parseInt(l.quantite)).toFixed(2) + ' \u20ac'
+      : parseFloat(v.montant_total||0).toFixed(2) + ' \u20ac';
+    const mdp = v.mode_paiement || '—';
+    return `<tr><td>${dt}</td><td>${ref}</td><td>${nom}</td><td style="text-align:right">${qte}</td><td style="text-align:right">${pu}</td><td style="text-align:right;font-weight:bold">${tot}</td><td>${mdp}</td></tr>`;
+  }).join('');
+
+  const fenetre = window.open('about:blank', '_blank', 'width=1000,height=700');
+  if (!fenetre) return;
+  fenetre.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport ventes</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:16px 24px}
+    h2{font-size:16px;margin-bottom:4px}p.periode{font-size:11px;color:#666;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:#165DFF;color:#fff}
+    th{padding:6px 8px;text-align:left;font-size:10px}
+    td{padding:5px 8px;border-bottom:1px solid #eee;vertical-align:top}
+    tr:nth-child(even) td{background:#f7f9fc}
+    .footer{margin-top:16px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px}
+    @media print{@page{margin:12mm}body{padding:0}}
+  </style></head><body>
+  <h2>D\u00e9tail des ventes</h2>
+  <p class="periode">${periode} &mdash; Imprim\u00e9 le ${new Date().toLocaleString('fr-FR')}</p>
+  <table><thead><tr><th>Date</th><th>R\u00e9f\u00e9rence</th><th>Produit</th><th>Qt\u00e9</th><th>P.U.</th><th>Total</th><th>Paiement</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div class="footer">Rapport g\u00e9n\u00e9r\u00e9 le ${new Date().toLocaleString('fr-FR')}</div>
+  <script>window.onload=function(){window.print()};<\/script>
+  </body></html>`);
+  fenetre.document.close();
 }
 
 function telecharger(contenu, nom, type) {

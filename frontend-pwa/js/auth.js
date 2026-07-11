@@ -43,6 +43,8 @@ function chargerSession() {
   document.getElementById('ecran-connexion').classList.add('hidden');
   document.getElementById('interface-principale').classList.remove('hidden');
 
+  if (typeof themeInit === 'function') themeInit();
+
   if (utilisateur.role === 'admin_plateforme') {
     document.getElementById('menu-club').classList.add('hidden');
     document.getElementById('menu-admin').classList.remove('hidden');

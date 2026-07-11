@@ -1,3 +1,125 @@
+/* ── Variables thème ─────────────────────────────────────── */
+:root {
+  --th-primary:  #165DFF;
+  --th-sidebar:  #0f2d6b;
+  --th-txt:      #ffffff;
+  --th-fond:     #F8FAFC;
+  --th-carte:    #ffffff;
+  --th-arrondi:  0.75rem;
+  --th-police:   Inter, sans-serif;
+}
+
+/* ── Sidebar dynamique ───────────────────────────────────── */
+aside {
+  background: var(--th-sidebar) !important;
+  transition: background 0.3s, width 0.3s;
+}
+aside .menu-item { color: rgba(255,255,255,0.8); }
+aside .menu-item.active,
+aside .menu-item:hover { background: rgba(255,255,255,0.12); color: #fff; }
+aside h1 { color: #fff !important; }
+aside .text-gray-600 { color: rgba(255,255,255,0.6) !important; }
+aside .text-primary { color: #fff !important; }
+aside hr { border-color: rgba(255,255,255,0.15) !important; }
+aside .text-red-600 { color: #fca5a5 !important; }
+aside .text-gray-400 { color: rgba(255,255,255,0.4) !important; }
+
+/* ── Cartes dynamiques ───────────────────────────────────── */
+.card { border-radius: var(--th-arrondi) !important; }
+
+/* ── Layout : SIDEBAR (défaut) ───────────────────────────── */
+.layout-sidebar #interface-principale,
+#interface-principale:not([data-layout]),
+[data-layout="sidebar-gauche"] #interface-principale {
+  flex-direction: row;
+}
+
+/* ── Layout : TOPBAR ─────────────────────────────────────── */
+[data-layout="topbar"] #interface-principale {
+  flex-direction: column;
+}
+[data-layout="topbar"] .topbar-aside {
+  width: 100% !important;
+  min-height: auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 0.5rem 1.5rem !important;
+  gap: 1rem;
+  border-right: none !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+[data-layout="topbar"] .topbar-aside h1 { margin-bottom: 0 !important; white-space: nowrap; }
+[data-layout="topbar"] .topbar-aside .text-sm.text-center { display: none; }
+[data-layout="topbar"] .topbar-aside nav {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+[data-layout="topbar"] .topbar-aside nav .menu-item {
+  white-space: nowrap;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0;
+}
+
+/* ── Layout : CARTES ─────────────────────────────────────── */
+[data-layout="cartes"] #interface-principale { flex-direction: row; }
+[data-layout="cartes"] .cartes-aside {
+  width: 4rem !important;
+  min-width: 4rem !important;
+  overflow: hidden;
+  padding: 0.75rem 0.5rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+[data-layout="cartes"] .cartes-aside h1 { font-size: 0.6rem !important; text-align: center; }
+[data-layout="cartes"] .cartes-aside .text-sm { display: none; }
+[data-layout="cartes"] .cartes-aside nav .menu-item span { display: none; }
+[data-layout="cartes"] .cartes-aside nav .menu-item {
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  text-align: center;
+  border-radius: 0.5rem;
+}
+[data-layout="cartes"] .cartes-aside nav .menu-item i { margin-right: 0 !important; }
+[data-layout="cartes"] .cartes-aside nav hr { width: 100%; }
+
+/* ── Thème sombre ────────────────────────────────────────── */
+.theme-sombre main { background: var(--th-fond); color: var(--th-txt); }
+.theme-sombre .card { background: var(--th-carte) !important; color: #e2e8f0; }
+.theme-sombre input, .theme-sombre select, .theme-sombre textarea {
+  background: #1e3a5f; border-color: #2d4a7f; color: #e2e8f0;
+}
+.theme-sombre table { color: #e2e8f0; }
+.theme-sombre .bg-white { background: var(--th-carte) !important; }
+.theme-sombre .text-gray-800, .theme-sombre .text-gray-700 { color: #e2e8f0 !important; }
+.theme-sombre .text-gray-500, .theme-sombre .text-gray-400 { color: #94a3b8 !important; }
+.theme-sombre .border-gray-100, .theme-sombre .border-gray-200 { border-color: #2d4a7f !important; }
+.theme-sombre .bg-gray-50, .theme-sombre .bg-gray-100 { background: #1a3050 !important; }
+
+/* ── Boutons thème UI ────────────────────────────────────── */
+.th-actif {
+  border-color: var(--th-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 25%, transparent);
+}
+.th-layout-actif {
+  border-color: var(--th-primary) !important;
+  background: color-mix(in srgb, var(--th-primary) 8%, white);
+}
+
+/* ── Cartes tuiles dashboard ─────────────────────────────── */
+.cartes-tuile { cursor: pointer; }
+
+/* ── Bouton primaire dynamique ───────────────────────────── */
+.bg-primary { background-color: var(--th-primary) !important; }
+.text-primary { color: var(--th-primary) !important; }
+.border-primary { border-color: var(--th-primary) !important; }
+.hover\:bg-primary\/90:hover { background-color: color-mix(in srgb, var(--th-primary) 90%, black) !important; }
+.focus\:border-primary:focus { border-color: var(--th-primary) !important; }
+
 .menu-item {
   display: block;
   padding: 0.75rem 1rem;

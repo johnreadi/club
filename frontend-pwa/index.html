@@ -1323,6 +1323,7 @@
             <button onclick="ongletParam('periph')" id="tab-periph" class="tab-param active-tab px-4 py-2 rounded-t font-medium border border-b-0 bg-white"><i class="fa fa-plug mr-1"></i> Périphériques</button>
             <button onclick="ongletParam('etiquettes')" id="tab-etiquettes" class="tab-param px-4 py-2 rounded-t font-medium border border-b-0 bg-gray-100"><i class="fa fa-tag mr-1"></i> Étiquettes</button>
             <button onclick="ongletParam('prefs')" id="tab-prefs" class="tab-param px-4 py-2 rounded-t font-medium border border-b-0 bg-gray-100"><i class="fa fa-paint-brush mr-1"></i> Préférences</button>
+            <button onclick="ongletParam('apparence')" id="tab-apparence" class="tab-param px-4 py-2 rounded-t font-medium border border-b-0 bg-gray-100"><i class="fa fa-magic mr-1"></i> Apparence</button>
           </div>
 
           <!-- Onglet Périphériques -->
@@ -1489,6 +1490,11 @@
                 <button onclick="sauvegarderParametres()" class="w-full mt-4 bg-primary text-white py-2 rounded hover:bg-primary/90"><i class="fa fa-save mr-1"></i> Sauvegarder</button>
               </div>
             </div>
+          </div>
+
+          <!-- Onglet Apparence -->
+          <div id="param-apparence" class="param-panel hidden">
+            <!-- Contenu généré dynamiquement par theme.js → themeRendreUI() -->
           </div>
 
           <!-- Onglet Préférences -->
@@ -1695,5 +1701,6 @@
   <script src="/js/reglage-site.js"></script>
   <script src="/js/parametres.js"></script>
   <script src="/js/messagerie.js"></script>
+  <script src="/js/theme.js"></script>
 </body>
 </html>

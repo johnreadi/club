@@ -78,6 +78,7 @@ function ongletParam(nom) {
   const tab = document.getElementById('tab-' + nom);
   tab.classList.add('active-tab', 'bg-white');
   tab.classList.remove('bg-gray-100');
+  if (nom === 'apparence' && typeof themeRendreUI === 'function') themeRendreUI();
 }
 
 function setAlignement(val, save = true) {

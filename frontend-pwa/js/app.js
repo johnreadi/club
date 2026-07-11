@@ -1,3 +1,37 @@
+// ── Garde-fou localStorage ────────────────────────────────────────────────────
+// Seules les clés de session (token, utilisateur) sont autorisées.
+// Toute tentative de stocker une donnée métier est bloquée et loguée.
+(function() {
+  const CLES_AUTORISEES = new Set(['token', 'utilisateur']);
+  const _set = localStorage.setItem.bind(localStorage);
+  const _get = localStorage.getItem.bind(localStorage);
+  const _rm  = localStorage.removeItem.bind(localStorage);
+
+  localStorage.setItem = function(cle, valeur) {
+    if (!CLES_AUTORISEES.has(cle)) {
+      console.warn(`[localStorage BLOQUÉ] setItem("${cle}") — utilisez l'API BDD à la place.`);
+      return;
+    }
+    _set(cle, valeur);
+  };
+
+  localStorage.getItem = function(cle) {
+    if (!CLES_AUTORISEES.has(cle)) {
+      console.warn(`[localStorage BLOQUÉ] getItem("${cle}") — données non disponibles, utilisez l'API BDD.`);
+      return null;
+    }
+    return _get(cle);
+  };
+
+  localStorage.removeItem = function(cle) {
+    if (!CLES_AUTORISEES.has(cle)) {
+      console.warn(`[localStorage BLOQUÉ] removeItem("${cle}")`);
+      return;
+    }
+    _rm(cle);
+  };
+})();
+
 const API_BASE = '/api';
 
 function apiHeaders() {

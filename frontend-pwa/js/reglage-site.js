@@ -101,9 +101,19 @@ const THEMES = [
 let siteConfig = {};
 
 // ── Point d'entrée principal ──────────────────────────────────────────────────
-function chargerReglagesSite() {
-  const saved = localStorage.getItem('siteConfig');
-  siteConfig = saved ? { ...SITE_DEFAULTS, ...JSON.parse(saved) } : { ...SITE_DEFAULTS };
+async function chargerReglagesSite() {
+  siteConfig = { ...SITE_DEFAULTS };
+  try {
+    const data = await apiFetch('/parametres');
+    if (data && data.site_config_json) {
+      const saved = typeof data.site_config_json === 'string'
+        ? JSON.parse(data.site_config_json)
+        : data.site_config_json;
+      siteConfig = { ...SITE_DEFAULTS, ...saved };
+    }
+  } catch (e) {
+    console.warn('[reglage-site] Chargement BDD échoué, valeurs par défaut', e);
+  }
   _remplirFormulaires();
   _rendreToutes();
   _previewToutes();
@@ -759,7 +769,7 @@ function ajouterStep() {
 }
 
 // ── SAUVEGARDE ────────────────────────────────────────────────────────────────
-function sauvegarderSite() {
+async function sauvegarderSite() {
   const get  = id => document.getElementById(id)?.value ?? '';
   const getN = id => parseFloat(document.getElementById(id)?.value) || 0;
   const getI = id => parseInt(document.getElementById(id)?.value) || 0;
@@ -805,9 +815,17 @@ function sauvegarderSite() {
     sectCtaSous: get('sect-cta-sous'), sectCtaBtn: get('sect-cta-btn'), sectCtaNote: get('sect-cta-note')
   });
 
-  localStorage.setItem('siteConfig', JSON.stringify(siteConfig));
-  appliquerSiteEnDirect(siteConfig);
-  afficherMessage('✅ Réglages sauvegardés et appliqués en direct', 'success');
+  try {
+    await apiFetch('/parametres', {
+      method: 'PATCH',
+      body: JSON.stringify({ site_config_json: JSON.stringify(siteConfig) })
+    });
+    appliquerSiteEnDirect(siteConfig);
+    afficherMessage('✅ Réglages sauvegardés en base de données', 'success');
+  } catch (e) {
+    console.error('[reglage-site] Erreur sauvegarde', e);
+    afficherMessage('❌ Erreur lors de la sauvegarde', 'danger');
+  }
 }
 
 // ── APPLICATION EN DIRECT ─────────────────────────────────────────────────────
@@ -830,10 +848,15 @@ function appliquerSiteEnDirect(cfg) {
 }
 
 // ── RÉINITIALISATION ──────────────────────────────────────────────────────────
-function reinitialiserSite() {
+async function reinitialiserSite() {
   if (!confirm('Réinitialiser tous les réglages aux valeurs par défaut ?')) return;
-  localStorage.removeItem('siteConfig');
   siteConfig = { ...SITE_DEFAULTS };
+  try {
+    await apiFetch('/parametres', {
+      method: 'PATCH',
+      body: JSON.stringify({ site_config_json: null })
+    });
+  } catch (e) { console.warn('[reglage-site] Erreur réinit BDD', e); }
   _remplirFormulaires();
   _rendreToutes();
   _previewToutes();
@@ -841,10 +864,18 @@ function reinitialiserSite() {
   afficherMessage('Réglages réinitialisés aux valeurs par défaut', 'info');
 }
 
-// ── AUTO-APPLY AU DÉMARRAGE ───────────────────────────────────────────────────
+// ── AUTO-APPLY AU DÉMARRAGE (depuis BDD, non bloquant) ───────────────────────
 (function() {
-  try {
-    const saved = localStorage.getItem('siteConfig');
-    if (saved) appliquerSiteEnDirect({ ...SITE_DEFAULTS, ...JSON.parse(saved) });
-  } catch(e) {}
+  if (typeof apiFetch === 'function') {
+    apiFetch('/parametres').then(data => {
+      if (data && data.site_config_json) {
+        try {
+          const saved = typeof data.site_config_json === 'string'
+            ? JSON.parse(data.site_config_json)
+            : data.site_config_json;
+          appliquerSiteEnDirect({ ...SITE_DEFAULTS, ...saved });
+        } catch(e) {}
+      }
+    }).catch(() => {});
+  }
 })();

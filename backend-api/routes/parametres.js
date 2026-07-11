@@ -31,8 +31,16 @@ router.put('/', async (req, res) => {
       etiquette_couleur_texte, etiquette_couleur_fond, etiquette_alignement,
       etiquette_afficher_logo, etiquette_logo_url,
       etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
-      interface_couleur_primaire, interface_couleur_sidebar, interface_theme
+      interface_couleur_primaire, interface_couleur_sidebar, interface_theme,
+      site_config_json, interface_theme_json
     } = req.body;
+
+    const siteConfigStr = site_config_json
+      ? (typeof site_config_json === 'string' ? site_config_json : JSON.stringify(site_config_json))
+      : null;
+    const themeJsonStr = interface_theme_json
+      ? (typeof interface_theme_json === 'string' ? interface_theme_json : JSON.stringify(interface_theme_json))
+      : null;
 
     const result = await pool.query(
       `INSERT INTO parametres_club (
@@ -43,8 +51,9 @@ router.put('/', async (req, res) => {
         etiquette_afficher_logo, etiquette_logo_url,
         etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
         interface_couleur_primaire, interface_couleur_sidebar, interface_theme,
+        site_config_json, interface_theme_json,
         mis_a_jour_le
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,CURRENT_TIMESTAMP)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,CURRENT_TIMESTAMP)
       ON CONFLICT (club_id) DO UPDATE SET
         imprimante_nom = EXCLUDED.imprimante_nom,
         imprimante_tickets_nom = EXCLUDED.imprimante_tickets_nom,
@@ -67,6 +76,8 @@ router.put('/', async (req, res) => {
         interface_couleur_primaire = EXCLUDED.interface_couleur_primaire,
         interface_couleur_sidebar = EXCLUDED.interface_couleur_sidebar,
         interface_theme = EXCLUDED.interface_theme,
+        site_config_json = COALESCE(EXCLUDED.site_config_json, parametres_club.site_config_json),
+        interface_theme_json = COALESCE(EXCLUDED.interface_theme_json, parametres_club.interface_theme_json),
         mis_a_jour_le = CURRENT_TIMESTAMP
       RETURNING *`,
       [club_id, imprimante_nom, imprimante_tickets_nom, douchette_activee,
@@ -75,11 +86,50 @@ router.put('/', async (req, res) => {
        etiquette_couleur_texte, etiquette_couleur_fond, etiquette_alignement,
        etiquette_afficher_logo, etiquette_logo_url,
        etiquette_afficher_prix, etiquette_afficher_description, etiquette_afficher_reference, etiquette_afficher_codebarre,
-       interface_couleur_primaire, interface_couleur_sidebar, interface_theme]
+       interface_couleur_primaire, interface_couleur_sidebar, interface_theme,
+       siteConfigStr, themeJsonStr]
     );
     res.json(result.rows[0]);
   } catch (err) {
     console.error('PUT /parametres erreur:', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
+  }
+});
+
+// ── Route PATCH : mise à jour partielle (thème, site_config) ─────────────────
+router.patch('/', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const updates = [];
+    const values  = [club_id];
+
+    if (req.body.interface_theme_json !== undefined) {
+      const v = typeof req.body.interface_theme_json === 'string'
+        ? req.body.interface_theme_json
+        : JSON.stringify(req.body.interface_theme_json);
+      values.push(v);
+      updates.push(`interface_theme_json = $${values.length}`);
+    }
+    if (req.body.site_config_json !== undefined) {
+      const v = typeof req.body.site_config_json === 'string'
+        ? req.body.site_config_json
+        : JSON.stringify(req.body.site_config_json);
+      values.push(v);
+      updates.push(`site_config_json = $${values.length}`);
+    }
+    if (updates.length === 0) return res.json({ ok: true });
+
+    updates.push(`mis_a_jour_le = CURRENT_TIMESTAMP`);
+
+    await pool.query(
+      `INSERT INTO parametres_club (club_id, ${updates.map((u, i) => u.split(' = ')[0]).filter(c => c !== 'mis_a_jour_le').join(', ')})
+       VALUES ($1, ${values.slice(1).map((_, i) => `$${i + 2}`).join(', ')})
+       ON CONFLICT (club_id) DO UPDATE SET ${updates.join(', ')}`,
+      values
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('PATCH /parametres erreur:', err.message);
     res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
   }
 });

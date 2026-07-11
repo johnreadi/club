@@ -178,15 +178,19 @@ let _themeActuel = {
   sombre: false
 };
 
-// ── Clé de stockage ──────────────────────────────────────────
-const THEME_KEY = 'readi_theme_v1';
-
-// ── Chargement au démarrage ──────────────────────────────────
-function themeInit() {
+// ── Chargement au démarrage (depuis BDD via /parametres) ────
+async function themeInit() {
   try {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved) _themeActuel = { ..._themeActuel, ...JSON.parse(saved) };
-  } catch {}
+    const data = await apiFetch('/parametres');
+    if (data && data.interface_theme_json) {
+      const saved = typeof data.interface_theme_json === 'string'
+        ? JSON.parse(data.interface_theme_json)
+        : data.interface_theme_json;
+      _themeActuel = { ..._themeActuel, ...saved };
+    }
+  } catch (e) {
+    console.warn('[theme] Chargement BDD échoué, thème par défaut', e);
+  }
   _themeAppliquer(_themeActuel);
 }
 
@@ -269,18 +273,20 @@ function _themeInjecterDashboardCartes() {
   accueil.dataset.cartesInjecte = '1';
 }
 
-// ── Sauvegarde ───────────────────────────────────────────────
-function themeSauvegarder() {
-  localStorage.setItem(THEME_KEY, JSON.stringify(_themeActuel));
-  // Sauvegarder aussi via l'API paramètres si disponible
+// ── Sauvegarde en BDD (PATCH /parametres) ───────────────────
+async function themeSauvegarder() {
   try {
-    apiFetch('/parametres', {
-      method: 'POST',
-      body: JSON.stringify({ interface_theme: JSON.stringify(_themeActuel) })
-    }).catch(() => {});
-  } catch {}
-  if (typeof afficherMessage === 'function')
-    afficherMessage('✅ Thème sauvegardé', 'success');
+    await apiFetch('/parametres', {
+      method: 'PATCH',
+      body: JSON.stringify({ interface_theme_json: JSON.stringify(_themeActuel) })
+    });
+    if (typeof afficherMessage === 'function')
+      afficherMessage('✅ Thème sauvegardé en base de données', 'success');
+  } catch (e) {
+    console.error('[theme] Erreur sauvegarde', e);
+    if (typeof afficherMessage === 'function')
+      afficherMessage('❌ Erreur lors de la sauvegarde du thème', 'danger');
+  }
 }
 
 // ── API publique appelée depuis l'UI ─────────────────────────

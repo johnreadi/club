@@ -695,6 +695,8 @@ function previewSlideshow() {
 }
 
 // ── SECTIONS LANDING ──────────────────────────────────────────────────────────
+let dragIndex = null;
+
 function rendreFonctCardsEditor() {
   const cont = document.getElementById('fonct-cards-editor');
   if (!cont) return;
@@ -703,8 +705,15 @@ function rendreFonctCardsEditor() {
     return;
   }
   cont.innerHTML = (siteConfig.fonctCards).map((c, i) => `
-    <div class="border rounded-xl p-3 mb-2 bg-gray-50">
+    <div class="border rounded-xl p-3 mb-2 bg-gray-50 draggable-item cursor-move"
+      draggable="true" data-index="${i}"
+      ondragstart="handleDragStart(event, 'fonctCards')"
+      ondragover="handleDragOver(event)"
+      ondragenter="handleDragEnter(event)"
+      ondragleave="handleDragLeave(event)"
+      ondrop="handleDrop(event, 'fonctCards')">
       <div class="flex items-center gap-2 mb-2">
+        <i class="fa fa-grip-vertical text-gray-400"></i>
         <select class="border rounded px-1 py-1 text-xs" onchange="editFonctCard(${i},'icone',this.value)">
           ${['fa-cubes','fa-barcode','fa-calculator','fa-bar-chart','fa-users','fa-mobile','fa-star','fa-globe','fa-shield','fa-bolt'].map(ic =>
             `<option value="${ic}" ${c.icone===ic?'selected':''}>${ic.replace('fa-','')}</option>`).join('')}
@@ -727,6 +736,44 @@ function rendreFonctCardsEditor() {
         <i class="fa fa-plus mr-1"></i>Ajouter un point
       </button>
     </div>`).join('');
+}
+
+function handleDragStart(e, type) {
+  dragIndex = parseInt(e.target.closest('.draggable-item').dataset.index);
+  e.target.closest('.draggable-item').classList.add('opacity-50', 'border-primary');
+  e.dataTransfer.setData('text/plain', dragIndex.toString());
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+}
+
+function handleDragEnter(e) {
+  e.preventDefault();
+  const el = e.target.closest('.draggable-item');
+  if (el) el.classList.add('border-dashed', 'border-primary');
+}
+
+function handleDragLeave(e) {
+  const el = e.target.closest('.draggable-item');
+  if (el) el.classList.remove('border-dashed', 'border-primary');
+}
+
+function handleDrop(e, type) {
+  e.preventDefault();
+  const dropIndex = parseInt(e.target.closest('.draggable-item').dataset.index);
+  const allItems = document.querySelectorAll('.draggable-item');
+  allItems.forEach(el => el.classList.remove('opacity-50', 'border-primary', 'border-dashed'));
+
+  if (dragIndex !== dropIndex) {
+    const array = siteConfig[type];
+    const movedItem = array.splice(dragIndex, 1)[0];
+    array.splice(dropIndex, 0, movedItem);
+
+    if (type === 'fonctCards') rendreFonctCardsEditor();
+    if (type === 'howSteps') rendreHowStepsEditor();
+  }
+  dragIndex = null;
 }
 function editFonctCard(idx, champ, val) {
   if (siteConfig.fonctCards[idx]) {
@@ -759,7 +806,14 @@ function rendreHowStepsEditor() {
     return;
   }
   cont.innerHTML = (siteConfig.howSteps).map((s, i) => `
-    <div class="flex items-start gap-2 bg-gray-50 border rounded-lg px-3 py-2">
+    <div class="flex items-start gap-2 bg-gray-50 border rounded-lg px-3 py-2 draggable-item cursor-move"
+      draggable="true" data-index="${i}"
+      ondragstart="handleDragStart(event, 'howSteps')"
+      ondragover="handleDragOver(event)"
+      ondragenter="handleDragEnter(event)"
+      ondragleave="handleDragLeave(event)"
+      ondrop="handleDrop(event, 'howSteps')">
+      <i class="fa fa-grip-vertical text-gray-400 mt-2"></i>
       <div class="w-7 h-7 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-1"
         style="background:${siteConfig.colorPrimary}">${i+1}</div>
       <div class="flex-1 space-y-1">

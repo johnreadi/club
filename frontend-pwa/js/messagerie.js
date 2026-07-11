@@ -164,22 +164,29 @@ async function msg_envoyer() {
   }
 }
 
-// ── Supprimer actif (côté client uniquement pour l'instant) ───────────────────
-function msg_supprimerActif() {
+// ── Supprimer actif (en BDD via DELETE /messages/:id) ────────────────────────
+async function msg_supprimerActif() {
   if (!_msgActifId) return;
   if (!confirm('Supprimer ce message ?')) return;
-  _msgMessages = _msgMessages.filter(m => m.id !== _msgActifId);
-  _msgActifId  = null;
-  const fil = document.getElementById('msg-fil-club');
-  if (fil) fil.innerHTML = '<div class="text-center text-gray-300 text-sm mt-16"><i class="fa fa-envelope-o text-5xl mb-3 block"></i>S&eacute;lectionnez un message</div>';
-  const titre = document.getElementById('msg-conv-titre');
-  if (titre) titre.textContent = 'S&eacute;lectionnez un message';
-  const champsNouv = document.getElementById('msg-champs-nouveaux');
-  if (champsNouv) champsNouv.classList.add('hidden');
-  const actions = document.getElementById('msg-conv-actions');
-  if (actions) actions.style.display = 'none';
-  _msgMajBadge();
-  _msgAfficherListe();
+  const idASupprimer = _msgActifId;
+  try {
+    await apiFetch(`/messages/${idASupprimer}`, { method: 'DELETE' });
+    _msgMessages = _msgMessages.filter(m => m.id !== idASupprimer);
+    _msgActifId  = null;
+    const fil = document.getElementById('msg-fil-club');
+    if (fil) fil.innerHTML = '<div class="text-center text-gray-300 text-sm mt-16"><i class="fa fa-envelope-o text-5xl mb-3 block"></i>S&eacute;lectionnez un message</div>';
+    const titre = document.getElementById('msg-conv-titre');
+    if (titre) titre.textContent = 'Sélectionnez un message';
+    const champsNouv = document.getElementById('msg-champs-nouveaux');
+    if (champsNouv) champsNouv.classList.add('hidden');
+    const actions = document.getElementById('msg-conv-actions');
+    if (actions) actions.style.display = 'none';
+    _msgMajBadge();
+    _msgAfficherListe();
+    afficherMessage('✅ Message supprimé', 'success');
+  } catch (e) {
+    afficherMessage('❌ Erreur lors de la suppression', 'danger');
+  }
 }
 
 // ── Filtre onglets ────────────────────────────────────────────────────────────

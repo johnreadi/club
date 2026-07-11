@@ -41,6 +41,22 @@ router.post('/', async (req, res) => {
   }
 });
 
+// DELETE — supprimer un message
+router.delete('/:id', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const result = await pool.query(
+      `DELETE FROM messages_plateforme WHERE id = $1 AND club_id = $2 RETURNING id`,
+      [req.params.id, club_id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ erreur: 'Message introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /messages/:id]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
 // PATCH — marquer un message comme lu
 router.patch('/:id/lu', async (req, res) => {
   try {

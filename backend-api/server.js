@@ -48,16 +48,66 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Valeurs par défaut du site (même que dans reglage-site.js)
+const DEFAULT_SITE_CONFIG = {
+  logoTexte:'READI', logoSuffix:'.Fr',
+  colorPrimary:'#165DFF', colorSidebar:'#0f2d6b', colorAccent:'#60a5fa',
+  navbarBtnConnexion:'Connexion', navbarBtnCta:'Essai gratuit',
+  navbarBgColor:'#ffffff', navbarShowLogo:true, navbarSticky:true,
+  navbarLinks:[{label:'Fonctionnalités',href:'#fonctionnalites'},{label:'Comment ça marche',href:'#comment-ca-marche'},{label:'Tarifs',href:'#tarifs'}],
+  slideSpeed:5000, slideAutoplay:true, slideShowDots:true, slideShowStats:true,
+  slides:[
+    {gradient:'linear-gradient(135deg,#0f2d6b 0%,#165DFF 55%,#0ea5e9 100%)'},
+    {gradient:'linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%)'},
+    {gradient:'linear-gradient(135deg,#064e3b 0%,#065f46 45%,#059669 100%)'},
+    {gradient:'linear-gradient(135deg,#4c1d95 0%,#5b21b6 45%,#7c3aed 100%)'}
+  ],
+  typewriterPhrases:['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'],
+  heroStats:[{valeur:'+200',label:'Clubs'},{valeur:'50k+',label:'Étiquettes'},{valeur:'100%',label:'En ligne'}],
+  sectFonctVisible:true, sectFonctBadge:'Tout-en-un',
+  sectFonctTitre:'Tout ce dont votre club a besoin',
+  sectFonctSous:'Une plateforme complète pour professionnaliser la gestion de votre boutique sportive.',
+  fonctCards:null,
+  sectHowVisible:true, sectHowBadge:'Simple & rapide', sectHowTitre:'Opérationnel en 3 étapes',
+  howSteps:null,
+  sectTarifsVisible:true, sectTarifsBadge:'Tarification', sectTarifsTitre:'Gratuit pour commencer',
+  sectTarifsSous:'Profitez de toutes les fonctionnalités sans limitation.',
+  sectTarifsPrix:'0 €', sectTarifsBadgeLabel:'LANCEMENT GRATUIT', sectTarifsCta:'Commencer gratuitement',
+  sectCtaVisible:true, sectCtaTitre:'Prêt à professionnaliser votre boutique ?',
+  sectCtaSous:'Rejoignez des centaines de clubs qui gèrent leur stock avec READI.Fr.',
+  sectCtaBtn:'Créer mon espace gratuitement', sectCtaNote:'Aucune carte bancaire · Activation immédiate',
+  landCta1:'Créer mon espace gratuit', landCta2:'Découvrir',
+  font:'Inter, sans-serif', fontSize:14,
+  pageMentions: '<h1>Mentions légales</h1><p>Contenu des mentions légales à personnaliser.</p>',
+  pageCgu: '<h1>Conditions générales d\'utilisation</h1><p>Contenu des CGU à personnaliser.</p>',
+  pagePrivacy: '<h1>Politique de confidentialité</h1><p>Contenu de la politique de confidentialité à personnaliser.</p>'
+};
+
 // Helper pour charger la config du site
 async function loadSiteConfig() {
   try {
     const result = await pool.query('SELECT cle, valeur FROM plateforme_config');
     const config = {};
     result.rows.forEach(row => { config[row.cle] = row.valeur; });
+
+    // Parse site_config_json et merge avec defaults
+    let siteConfigFromDB = {};
+    if (config.site_config_json) {
+      try {
+        siteConfigFromDB = typeof config.site_config_json === 'string' 
+          ? JSON.parse(config.site_config_json) 
+          : config.site_config_json;
+      } catch (err) {
+        console.warn('Failed to parse site_config_json from DB, using defaults');
+      }
+    }
+    
+    config.site_config_merged = Object.assign({}, DEFAULT_SITE_CONFIG, siteConfigFromDB);
     return config;
   } catch (err) {
     console.error('[loadSiteConfig]', err.message);
-    return {};
+    // Return default config if everything fails
+    return { site_config_merged: DEFAULT_SITE_CONFIG };
   }
 }
 
@@ -87,46 +137,33 @@ function renderLegalPage(title, content) {
 </html>`;
 }
 
+// API publique pour récupérer la config du site
+app.get('/api/config', async (req, res) => {
+  try {
+    const config = await loadSiteConfig();
+    res.json(config.site_config_merged); // Return the merged config directly
+  } catch (err) {
+    console.error('GET /api/config error:', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
 // Routes pour les pages légales
 app.get('/mentions-legales.html', async (req, res) => {
   const config = await loadSiteConfig();
-  let content = '<h1>Mentions légales</h1><p>Contenu des mentions légales à personnaliser.</p>';
-  if (config.site_config_json) {
-    try {
-      const siteConfig = typeof config.site_config_json === 'string' 
-        ? JSON.parse(config.site_config_json) 
-        : config.site_config_json;
-      if (siteConfig.pageMentions) content = siteConfig.pageMentions;
-    } catch (err) { /* use default */ }
-  }
+  const content = config.site_config_merged.pageMentions;
   res.send(renderLegalPage('Mentions légales', content));
 });
 
 app.get('/cgu.html', async (req, res) => {
   const config = await loadSiteConfig();
-  let content = '<h1>Conditions générales d\'utilisation</h1><p>Contenu des CGU à personnaliser.</p>';
-  if (config.site_config_json) {
-    try {
-      const siteConfig = typeof config.site_config_json === 'string' 
-        ? JSON.parse(config.site_config_json) 
-        : config.site_config_json;
-      if (siteConfig.pageCgu) content = siteConfig.pageCgu;
-    } catch (err) { /* use default */ }
-  }
+  const content = config.site_config_merged.pageCgu;
   res.send(renderLegalPage('Conditions générales d\'utilisation', content));
 });
 
 app.get('/politique-confidentialite.html', async (req, res) => {
   const config = await loadSiteConfig();
-  let content = '<h1>Politique de confidentialité</h1><p>Contenu de la politique de confidentialité à personnaliser.</p>';
-  if (config.site_config_json) {
-    try {
-      const siteConfig = typeof config.site_config_json === 'string' 
-        ? JSON.parse(config.site_config_json) 
-        : config.site_config_json;
-      if (siteConfig.pagePrivacy) content = siteConfig.pagePrivacy;
-    } catch (err) { /* use default */ }
-  }
+  const content = config.site_config_merged.pagePrivacy;
   res.send(renderLegalPage('Politique de confidentialité', content));
 });
 

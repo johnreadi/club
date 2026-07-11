@@ -415,7 +415,7 @@
 
 <script>
 // ── Application siteConfig depuis l'admin ─────────────────────────────────────
-(function applySiteConfig() {
+async function applySiteConfig() {
   try {
     var D = {
       logoTexte:'READI', logoSuffix:'.Fr',
@@ -447,8 +447,18 @@
       landCta1:'Créer mon espace gratuit', landCta2:'Découvrir',
       font:'Inter, sans-serif', fontSize:14
     };
-    var saved = localStorage.getItem('siteConfig');
-    var cfg = saved ? Object.assign({}, D, JSON.parse(saved)) : D;
+    
+    // Charger config depuis API au lieu de localStorage
+    var cfg = D;
+    try {
+      const resp = await fetch('/api/config');
+      if (resp.ok) {
+        const apiCfg = await resp.json();
+        cfg = Object.assign({}, D, apiCfg);
+      }
+    } catch (err) {
+      console.warn('Erreur chargement config via API, utilisation des défauts', err);
+    }
     var p = cfg.colorPrimary || '#165DFF';
     var s = cfg.colorSidebar || '#0f2d6b';
     var a = cfg.colorAccent  || '#60a5fa';
@@ -667,27 +677,31 @@ function ouvrirModal(type) {
     document.getElementById('btn-top').classList.toggle('visible', window.scrollY > 400);
   });
 
-  var slides=document.querySelectorAll('.slide');
-  var dots=document.querySelectorAll('.dot');
-  var cur=0, timer;
-  function goToSlide(n){
-    slides[cur].classList.remove('active'); dots[cur].classList.remove('active');
-    cur=n; slides[cur].classList.add('active'); dots[cur].classList.add('active');
-  }
-  function nextSlide(){ goToSlide((cur+1)%slides.length); }
-  timer=setInterval(nextSlide,5000);
-  dots.forEach(function(d,i){ d.addEventListener('click',function(){ clearInterval(timer); goToSlide(i); timer=setInterval(nextSlide,5000); }); });
+  // Lancer l'application de la config d'abord
+  applySiteConfig().then(function() {
+    // Initialiser slides et typewriter APRES chargement de la config
+    var slides=document.querySelectorAll('.slide');
+    var dots=document.querySelectorAll('.dot');
+    var cur=0, timer;
+    function goToSlide(n){
+      slides[cur].classList.remove('active'); dots[cur].classList.remove('active');
+      cur=n; slides[cur].classList.add('active'); dots[cur].classList.add('active');
+    }
+    function nextSlide(){ goToSlide((cur+1)%slides.length); }
+    timer=setInterval(nextSlide,5000);
+    dots.forEach(function(d,i){ d.addEventListener('click',function(){ clearInterval(timer); goToSlide(i); timer=setInterval(nextSlide,5000); }); });
 
-  var phrases = window.__twPhrases || ['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'];
-  var pi=0,ci=0,del=false;
-  var tw=document.getElementById('typewriter');
-  function typeStep(){
-    var p=phrases[pi];
-    if(!del){ tw.textContent=p.substring(0,ci+1); ci++; if(ci===p.length){del=true;setTimeout(typeStep,1800);return;} }
-    else { tw.textContent=p.substring(0,ci-1); ci--; if(ci===0){del=false;pi=(pi+1)%phrases.length;} }
-    setTimeout(typeStep,del?40:70);
-  }
-  typeStep();
+    var phrases = window.__twPhrases || ['Gerez votre stock en temps reel.','Creez vos etiquettes avec codes-barres.','Encaissez vos ventes facilement.','Suivez vos performances en un clic.'];
+    var pi=0,ci=0,del=false;
+    var tw=document.getElementById('typewriter');
+    function typeStep(){
+      var p=phrases[pi];
+      if(!del){ tw.textContent=p.substring(0,ci+1); ci++; if(ci===p.length){del=true;setTimeout(typeStep,1800);return;} }
+      else { tw.textContent=p.substring(0,ci-1); ci--; if(ci===0){del=false;pi=(pi+1)%phrases.length;} }
+      setTimeout(typeStep,del?40:70);
+    }
+    typeStep();
+  });
 
   function togglePwd(id,iconId){
     var inp=document.getElementById(id),ico=document.getElementById(iconId);

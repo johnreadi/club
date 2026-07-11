@@ -268,13 +268,16 @@ function appliquerTheme(idx) {
 
 // ── IDENTITÉ ─────────────────────────────────────────────────────────────────
 function previewSite() {
+  const nom    = document.getElementById('site-nom')?.value || siteConfig.nom || 'READI.Fr';
   const texte  = document.getElementById('site-logo-texte')?.value || siteConfig.logoTexte || 'READI';
   const suffix = document.getElementById('site-logo-suffix')?.value || siteConfig.logoSuffix || '.Fr';
   const color  = document.getElementById('site-color-primary')?.value || siteConfig.colorPrimary;
   const accent = document.getElementById('site-color-accent')?.value || siteConfig.colorAccent;
-  const slogan = document.getElementById('site-slogan')?.value || '';
+  const slogan = document.getElementById('site-slogan')?.value || siteConfig.slogan || '';
   const el = document.getElementById('prev-nom');
   if (el) el.innerHTML = `<span style="color:${color}">${texte}</span><span style="color:${accent}">${suffix}</span>`;
+  const nomEl = document.getElementById('prev-nom-plateforme');
+  if (nomEl) nomEl.textContent = nom;
   const sl = document.getElementById('prev-slogan'); if (sl) sl.textContent = slogan;
   const cta = document.getElementById('prev-btn-cta'); if (cta) cta.style.background = color;
 }

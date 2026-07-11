@@ -182,6 +182,15 @@ ALTER TABLE produits ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS site_config_json TEXT;
 ALTER TABLE parametres_club ADD COLUMN IF NOT EXISTS interface_theme_json TEXT;
 
+-- Configuration globale de la plateforme (admin)
+CREATE TABLE IF NOT EXISTS plateforme_config (
+  id SERIAL PRIMARY KEY,
+  cle VARCHAR(100) UNIQUE NOT NULL,
+  valeur TEXT,
+  mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO plateforme_config (cle, valeur) VALUES ('site_config_json', NULL) ON CONFLICT (cle) DO NOTHING;
+
 -- Index
 CREATE INDEX IF NOT EXISTS idx_clubs_actif ON clubs(actif);
 CREATE INDEX IF NOT EXISTS idx_produits_club ON produits(club_id);

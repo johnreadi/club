@@ -78,4 +78,41 @@ router.post('/messages', async (req, res) => {
   }
 });
 
+// GET /admin/config — lire la configuration globale de la plateforme
+router.get('/config', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT cle, valeur FROM plateforme_config`
+    );
+    const config = {};
+    result.rows.forEach(row => { config[row.cle] = row.valeur; });
+    res.json(config);
+  } catch (err) {
+    console.error('[GET /admin/config]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
+// PATCH /admin/config — mettre à jour une ou plusieurs clés
+router.patch('/config', async (req, res) => {
+  try {
+    const updates = Object.entries(req.body);
+    if (updates.length === 0) return res.json({ ok: true });
+    for (const [cle, valeur] of updates) {
+      const v = valeur === null ? null
+        : (typeof valeur === 'string' ? valeur : JSON.stringify(valeur));
+      await pool.query(
+        `INSERT INTO plateforme_config (cle, valeur, mis_a_jour_le)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         ON CONFLICT (cle) DO UPDATE SET valeur = EXCLUDED.valeur, mis_a_jour_le = CURRENT_TIMESTAMP`,
+        [cle, v]
+      );
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[PATCH /admin/config]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur', detail: err.message });
+  }
+});
+
 module.exports = router;

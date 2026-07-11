@@ -104,7 +104,7 @@ let siteConfig = {};
 async function chargerReglagesSite() {
   siteConfig = { ...SITE_DEFAULTS };
   try {
-    const data = await apiFetch('/parametres');
+    const data = await apiFetch('/admin/config');
     if (data && data.site_config_json) {
       const saved = typeof data.site_config_json === 'string'
         ? JSON.parse(data.site_config_json)
@@ -816,7 +816,7 @@ async function sauvegarderSite() {
   });
 
   try {
-    await apiFetch('/parametres', {
+    await apiFetch('/admin/config', {
       method: 'PATCH',
       body: JSON.stringify({ site_config_json: JSON.stringify(siteConfig) })
     });
@@ -852,7 +852,7 @@ async function reinitialiserSite() {
   if (!confirm('Réinitialiser tous les réglages aux valeurs par défaut ?')) return;
   siteConfig = { ...SITE_DEFAULTS };
   try {
-    await apiFetch('/parametres', {
+    await apiFetch('/admin/config', {
       method: 'PATCH',
       body: JSON.stringify({ site_config_json: null })
     });
@@ -867,7 +867,7 @@ async function reinitialiserSite() {
 // ── AUTO-APPLY AU DÉMARRAGE (depuis BDD, non bloquant) ───────────────────────
 (function() {
   if (typeof apiFetch === 'function') {
-    apiFetch('/parametres').then(data => {
+    apiFetch('/admin/config').then(data => {
       if (data && data.site_config_json) {
         try {
           const saved = typeof data.site_config_json === 'string'

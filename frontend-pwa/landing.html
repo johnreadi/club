@@ -470,11 +470,20 @@ async function applySiteConfig() {
         return '<a href="'+l.href+'" class="hover:text-white transition-colors">'+l.label+'</a>';
       }).join('');
     }
-    var btnConn = document.querySelector('#navbar button:first-of-type');
+    // Modifier les boutons navbar sans perdre les onclick
     var allBtns = document.querySelectorAll('#navbar button');
     allBtns.forEach(function(b){
-      if (b.textContent.trim().indexOf('Connexion') !== -1 || b.textContent.trim().indexOf(D.navbarBtnConnexion) !== -1) b.innerHTML = b.innerHTML.replace(/Connexion|Connexion/g, cfg.navbarBtnConnexion);
-      if (b.textContent.trim().indexOf('Essai gratuit') !== -1 || b.textContent.trim().indexOf(D.navbarBtnCta) !== -1) b.innerHTML = b.innerHTML.replace(/Essai gratuit/g, cfg.navbarBtnCta);
+      // Traiter le texte sans toucher aux éléments <i>
+      Array.from(b.childNodes).forEach(function(node){
+        if(node.nodeType === 3) { // Node.TEXT_NODE
+          var text = node.textContent;
+          if (text.indexOf('Connexion') !== -1) {
+            node.textContent = text.replace(/Connexion/g, cfg.navbarBtnConnexion);
+          } else if (text.indexOf('Essai gratuit') !== -1) {
+            node.textContent = text.replace(/Essai gratuit/g, cfg.navbarBtnCta);
+          }
+        }
+      });
     });
     var nav = document.getElementById('navbar');
     if (nav && !cfg.navbarSticky) nav.style.position = 'relative';
@@ -644,7 +653,7 @@ async function applySiteConfig() {
       window.tailwind.config.theme.extend.colors.primary = p;
     }
   } catch(e) { console.warn('siteConfig apply error:', e); }
-})();
+}
 
 function ouvrirModal(type) {
     fermerModals();

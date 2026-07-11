@@ -48,7 +48,89 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Routes
+// Helper pour charger la config du site
+async function loadSiteConfig() {
+  try {
+    const result = await pool.query('SELECT cle, valeur FROM plateforme_config');
+    const config = {};
+    result.rows.forEach(row => { config[row.cle] = row.valeur; });
+    return config;
+  } catch (err) {
+    console.error('[loadSiteConfig]', err.message);
+    return {};
+  }
+}
+
+// Helper pour générer la page HTML légale avec style
+function renderLegalPage(title, content) {
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - READI.Fr</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:2rem; background-color:#f8fafc; color:#1f2937; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1 { color: #165DFF; margin-top:0; }
+    a { color: #165DFF; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back-link { margin-bottom:1rem; display:inline-block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Retour à l'accueil</a>
+    ${content}
+  </div>
+</body>
+</html>`;
+}
+
+// Routes pour les pages légales
+app.get('/mentions-legales.html', async (req, res) => {
+  const config = await loadSiteConfig();
+  let content = '<h1>Mentions légales</h1><p>Contenu des mentions légales à personnaliser.</p>';
+  if (config.site_config_json) {
+    try {
+      const siteConfig = typeof config.site_config_json === 'string' 
+        ? JSON.parse(config.site_config_json) 
+        : config.site_config_json;
+      if (siteConfig.pageMentions) content = siteConfig.pageMentions;
+    } catch (err) { /* use default */ }
+  }
+  res.send(renderLegalPage('Mentions légales', content));
+});
+
+app.get('/cgu.html', async (req, res) => {
+  const config = await loadSiteConfig();
+  let content = '<h1>Conditions générales d\'utilisation</h1><p>Contenu des CGU à personnaliser.</p>';
+  if (config.site_config_json) {
+    try {
+      const siteConfig = typeof config.site_config_json === 'string' 
+        ? JSON.parse(config.site_config_json) 
+        : config.site_config_json;
+      if (siteConfig.pageCgu) content = siteConfig.pageCgu;
+    } catch (err) { /* use default */ }
+  }
+  res.send(renderLegalPage('Conditions générales d\'utilisation', content));
+});
+
+app.get('/politique-confidentialite.html', async (req, res) => {
+  const config = await loadSiteConfig();
+  let content = '<h1>Politique de confidentialité</h1><p>Contenu de la politique de confidentialité à personnaliser.</p>';
+  if (config.site_config_json) {
+    try {
+      const siteConfig = typeof config.site_config_json === 'string' 
+        ? JSON.parse(config.site_config_json) 
+        : config.site_config_json;
+      if (siteConfig.pagePrivacy) content = siteConfig.pagePrivacy;
+    } catch (err) { /* use default */ }
+  }
+  res.send(renderLegalPage('Politique de confidentialité', content));
+});
+
+// Routes API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/clubs', require('./routes/clubs'));

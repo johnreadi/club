@@ -833,6 +833,7 @@
             <button onclick="ongletSite('navbar')" id="site-tab-navbar" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-navicon mr-1"></i>Navbar</button>
             <button onclick="ongletSite('slideshow')" id="site-tab-slideshow" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-film mr-1"></i>Slideshow</button>
             <button onclick="ongletSite('sections')" id="site-tab-sections" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-th-list mr-1"></i>Sections</button>
+            <button onclick="ongletSite('pages-legales')" id="site-tab-pages-legales" class="site-tab px-4 py-2 rounded-t text-sm font-medium border border-b-0 bg-gray-100"><i class="fa fa-file-text mr-1"></i>Pages légales</button>
           </div>
 
           <!-- Panneau Identité -->
@@ -1311,6 +1312,36 @@
                   <div><label class="block text-xs mb-1 text-gray-500">Texte bouton</label><input type="text" id="sect-cta-btn" value="Cr&eacute;er mon espace gratuitement" class="w-full border p-2 rounded-lg text-sm"></div>
                   <div><label class="block text-xs mb-1 text-gray-500">Texte sous-bouton</label><input type="text" id="sect-cta-note" value="Aucune carte bancaire &middot; Activation imm&eacute;diate" class="w-full border p-2 rounded-lg text-sm"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panneau Pages légales -->
+          <div id="site-panel-pages-legales" class="site-panel hidden">
+            <div class="space-y-5">
+              <!-- Mentions légales -->
+              <div class="card">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-medium"><i class="fa fa-file-text mr-2 text-primary"></i>Mentions légales</h3>
+                  <a href="/mentions-legales.html" target="_blank" class="text-xs text-primary hover:underline"><i class="fa fa-external-link mr-1"></i>Voir la page</a>
+                </div>
+                <textarea id="page-mentions" rows="10" class="w-full border p-2 rounded-lg text-sm" placeholder="Contenu HTML des mentions légales..."></textarea>
+              </div>
+              <!-- CGU -->
+              <div class="card">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-medium"><i class="fa fa-file-text mr-2 text-primary"></i>Conditions générales d'utilisation</h3>
+                  <a href="/cgu.html" target="_blank" class="text-xs text-primary hover:underline"><i class="fa fa-external-link mr-1"></i>Voir la page</a>
+                </div>
+                <textarea id="page-cgu" rows="10" class="w-full border p-2 rounded-lg text-sm" placeholder="Contenu HTML des CGU..."></textarea>
+              </div>
+              <!-- Politique de confidentialité -->
+              <div class="card">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-medium"><i class="fa fa-file-text mr-2 text-primary"></i>Politique de confidentialité</h3>
+                  <a href="/politique-confidentialite.html" target="_blank" class="text-xs text-primary hover:underline"><i class="fa fa-external-link mr-1"></i>Voir la page</a>
+                </div>
+                <textarea id="page-privacy" rows="10" class="w-full border p-2 rounded-lg text-sm" placeholder="Contenu HTML de la politique de confidentialité..."></textarea>
               </div>
             </div>
           </div>

@@ -34,6 +34,10 @@ const SITE_DEFAULTS = {
   footerCopyright: '© 2026 READI.Fr — Tous droits réservés',
   footerMentions: '', footerCgu: '', footerPrivacy: '',
   footerFacebook: '', footerTwitter: '', footerInstagram: '', footerLinkedin: '',
+  // Pages légales
+  pageMentions: '<h1>Mentions légales</h1><p>Contenu des mentions légales à personnaliser.</p>',
+  pageCgu: '<h1>Conditions générales d\'utilisation</h1><p>Contenu des CGU à personnaliser.</p>',
+  pagePrivacy: '<h1>Politique de confidentialité</h1><p>Contenu de la politique de confidentialité à personnaliser.</p>',
   // Navbar landing
   navbarBtnConnexion: 'Connexion', navbarBtnCta: 'Essai gratuit',
   navbarBgColor: '#ffffff', navbarShowLogo: true, navbarSticky: true,
@@ -167,6 +171,10 @@ function _remplirFormulaires() {
   set('footer-twitter', siteConfig.footerTwitter);
   set('footer-instagram', siteConfig.footerInstagram);
   set('footer-linkedin', siteConfig.footerLinkedin);
+  // Pages légales
+  set('page-mentions', siteConfig.pageMentions);
+  set('page-cgu', siteConfig.pageCgu);
+  set('page-privacy', siteConfig.pagePrivacy);
   // Navbar landing
   set('nav-btn-connexion', siteConfig.navbarBtnConnexion);
   set('nav-btn-cta', siteConfig.navbarBtnCta);
@@ -800,6 +808,8 @@ async function sauvegarderSite() {
     footerCgu: get('footer-cgu'), footerPrivacy: get('footer-privacy'),
     footerFacebook: get('footer-facebook'), footerTwitter: get('footer-twitter'),
     footerInstagram: get('footer-instagram'), footerLinkedin: get('footer-linkedin'),
+    // Pages légales
+    pageMentions: get('page-mentions'), pageCgu: get('page-cgu'), pagePrivacy: get('page-privacy'),
     // Navbar landing
     navbarBtnConnexion: get('nav-btn-connexion'), navbarBtnCta: get('nav-btn-cta'),
     navbarBgColor: get('navbar-bg-color'),

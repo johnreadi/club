@@ -786,11 +786,13 @@ async function sauvegarderSite() {
   const getI = id => parseInt(document.getElementById(id)?.value) || 0;
   const getC = id => document.getElementById(id)?.checked ?? false;
 
+  // Update form fields, keep existing array/object fields (heroStats, slides, etc.)
   Object.assign(siteConfig, {
     // Identité
     nom: get('site-nom'), slogan: get('site-slogan'),
     email: get('site-email'), tel: get('site-tel'),
     logoTexte: get('site-logo-texte'), logoSuffix: get('site-logo-suffix'),
+    logoUrl: siteConfig.logoUrl, // Preserve existing logoUrl
     // Couleurs
     colorPrimary: get('site-color-primary'), colorSidebar: get('site-color-sidebar'),
     colorAccent: get('site-color-accent'), colorText: get('site-color-text'), colorBg: get('site-color-bg'),

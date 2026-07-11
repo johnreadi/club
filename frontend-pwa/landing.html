@@ -480,9 +480,13 @@ async function applySiteConfig() {
     if (nav && !cfg.navbarSticky) nav.style.position = 'relative';
 
     // --- Logo (navbar + footer) ---
-    document.querySelectorAll('.font-black').forEach(function(el){
-      if (el.textContent.indexOf('READI') !== -1 && el.querySelector('span')) {
-        el.innerHTML = '<span style="color:'+p+'">'+cfg.logoTexte+'</span><span style="color:'+a+'">'+cfg.logoSuffix+'</span>';
+    document.querySelectorAll('.font-black').forEach(function(el) {
+      if (el.textContent.indexOf('READI') !== -1) {
+        if (cfg.logoUrl) {
+          el.innerHTML = `<img src="${cfg.logoUrl}" alt="Logo" class="h-10">`;
+        } else if (el.querySelector('span')) {
+          el.innerHTML = `<span style="color:${p}">${cfg.logoTexte}</span><span style="color:${a}">${cfg.logoSuffix}</span>`;
+        }
       }
     });
 

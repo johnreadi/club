@@ -70,9 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Gestion connectivité
-  window.addEventListener('online', () => afficherMessage('✅ Connexion rétablie', 'success'));
-  window.addEventListener('offline', () => afficherMessage('⚠️ Mode hors ligne actif — les données seront synchronisées plus tard', 'warning'));
+
 
   // Service Worker
   if ('serviceWorker' in navigator) {

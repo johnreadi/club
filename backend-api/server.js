@@ -56,7 +56,7 @@ app.use('/api/stock', require('./routes/stock'));
 app.use('/api/ventes', require('./routes/ventes'));
 app.use('/api/inventaire', require('./routes/inventaire'));
 app.use('/api/rapports', require('./routes/rapports'));
-app.use('/api/sync', require('./routes/sync'));
+
 app.use('/api/utilisateurs', require('./routes/utilisateurs'));
 app.use('/api/parametres', require('./routes/parametres'));
 app.use('/api/messages', require('./routes/messages'));

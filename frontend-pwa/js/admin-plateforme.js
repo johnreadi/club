@@ -326,14 +326,21 @@ function envoyerMessageAClub(clubId, nom, email) {
 }
 
 function archiverConversation() { afficherMessage('Conversation archiv&eacute;e', 'success'); }
-function supprimerConversation() {
+async function supprimerConversation() {
   if (!confirm('Supprimer cette conversation ?')) return;
-  conversations = conversations.filter(m => m.id !== conversationActive);
-  conversationActive = null;
-  document.getElementById('msg-fil').innerHTML = '<div class="text-center text-gray-300 text-sm mt-16"><i class="fa fa-envelope-o text-5xl mb-3 block"></i>S&eacute;lectionnez une conversation</div>';
-  document.getElementById('msg-dest-nom').textContent = 'S&eacute;lectionnez une conversation';
-  document.getElementById('msg-dest-club').textContent = '';
-  afficherConversations();
+  if (!conversationActive) return;
+  try {
+    await apiFetch(`/admin/messages/${conversationActive}`, { method: 'DELETE' });
+    conversations = conversations.filter(m => m.id !== conversationActive);
+    conversationActive = null;
+    document.getElementById('msg-fil').innerHTML = '<div class="text-center text-gray-300 text-sm mt-16"><i class="fa fa-envelope-o text-5xl mb-3 block"></i>S&eacute;lectionnez une conversation</div>';
+    document.getElementById('msg-dest-nom').textContent = 'S&eacute;lectionnez une conversation';
+    document.getElementById('msg-dest-club').textContent = '';
+    afficherConversations();
+    afficherMessage('✅ Conversation supprimée', 'success');
+  } catch (e) {
+    afficherMessage('❌ Erreur lors de la suppression', 'danger');
+  }
 }
 
 function fmtMsg(cmd) { document.execCommand(cmd, false, null); document.getElementById('msg-contenu')?.focus(); }

@@ -78,6 +78,20 @@ router.post('/messages', async (req, res) => {
   }
 });
 
+router.delete('/messages/:id', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM messages_plateforme WHERE id = $1 RETURNING id`,
+      [req.params.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ erreur: 'Message introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[ADMIN DELETE message]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
 // GET /admin/config — lire la configuration globale de la plateforme
 router.get('/config', async (req, res) => {
   try {

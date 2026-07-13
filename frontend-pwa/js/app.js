@@ -161,11 +161,40 @@ async function chargerTableauBord() {
     const utilisateursData = await apiFetch('/utilisateurs').catch(() => []);
     document.getElementById('stat-utilisateurs').textContent = (utilisateursData || []).length;
 
-    // Dernières ventes
-    const ventesRecentes = await apiFetch('/ventes').catch(() => []);
-    document.getElementById('dernieres-ventes').innerHTML = (ventesRecentes || []).slice(0, 5).map(v =>
-      `<div class="flex justify-between py-1 border-b text-sm"><span>${new Date(v.date_vente).toLocaleString('fr-FR')}</span><span class="font-medium">${parseFloat(v.montant_total).toFixed(2)} €</span></div>`
-    ).join('') || '<p class="text-gray-500 text-sm">Aucune vente récente</p>';
+    // Dernières ventes — tableau enrichi
+    const lignesRecentes = await apiFetch('/ventes/lignes-recentes').catch(() => []);
+    const lignes = lignesRecentes || [];
+    const _modeBadge = m => {
+      const map = { especes: ['Espèces','bg-green-100 text-green-700'], cheque: ['Chèque','bg-yellow-100 text-yellow-700'], cb: ['CB','bg-blue-100 text-blue-700'], virement: ['Virement','bg-purple-100 text-purple-700'] };
+      const [label, cls] = map[(m||'').toLowerCase()] || [m || '—', 'bg-gray-100 text-gray-500'];
+      return `<span class="px-2 py-0.5 rounded-full text-xs font-medium ${cls}">${label}</span>`;
+    };
+    const _fmt = d => { const dt = new Date(d); return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ', ' + dt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); };
+    document.getElementById('dernieres-ventes').innerHTML = lignes.length === 0
+      ? '<p class="text-gray-500 text-sm p-2">Aucune vente récente</p>'
+      : `<div class="overflow-x-auto">
+          <div class="flex justify-end text-xs text-gray-400 mb-1">${lignes.length} ligne(s)</div>
+          <table class="w-full text-sm">
+            <thead><tr class="text-xs text-gray-400 uppercase border-b">
+              <th class="text-left py-1.5 pr-3 font-medium">Date</th>
+              <th class="text-left py-1.5 pr-3 font-medium">Référence</th>
+              <th class="text-left py-1.5 pr-3 font-medium">Produit</th>
+              <th class="text-right py-1.5 pr-3 font-medium">Qté</th>
+              <th class="text-right py-1.5 pr-3 font-medium">P.U.</th>
+              <th class="text-right py-1.5 pr-3 font-medium">Total</th>
+              <th class="text-left py-1.5 font-medium">Paiement</th>
+            </tr></thead>
+            <tbody>${lignes.map(l => `<tr class="border-b border-gray-50 hover:bg-gray-50">
+              <td class="py-1.5 pr-3 text-gray-500 whitespace-nowrap">${_fmt(l.date_vente)}</td>
+              <td class="py-1.5 pr-3 font-mono text-xs text-gray-600">${l.reference || '—'}</td>
+              <td class="py-1.5 pr-3 text-gray-800">${l.produit_nom || '—'}</td>
+              <td class="py-1.5 pr-3 text-right text-gray-600">${l.quantite}</td>
+              <td class="py-1.5 pr-3 text-right text-gray-600">${parseFloat(l.prix_unitaire).toFixed(2)} €</td>
+              <td class="py-1.5 pr-3 text-right font-semibold">${(parseFloat(l.prix_unitaire)*parseInt(l.quantite)).toFixed(2)} €</td>
+              <td class="py-1.5">${_modeBadge(l.mode_paiement)}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>`;
 
   } catch {
     // Silencieux — erreurs déjà gérées par apiFetch

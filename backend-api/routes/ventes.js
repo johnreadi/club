@@ -18,6 +18,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/lignes-recentes', async (req, res) => {
+  try {
+    const { club_id } = req.utilisateur;
+    const result = await pool.query(
+      `SELECT lv.id, lv.quantite, lv.prix_unitaire,
+              p.nom AS produit_nom, p.reference,
+              v.date_vente, v.mode_paiement, v.montant_total, v.id AS vente_id
+       FROM lignes_vente lv
+       JOIN ventes v ON v.id = lv.vente_id
+       LEFT JOIN produits p ON p.id = lv.produit_id
+       WHERE v.club_id = $1
+       ORDER BY v.date_vente DESC, lv.id ASC
+       LIMIT 50`,
+      [club_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[GET /ventes/lignes-recentes]', err.message);
+    res.status(500).json({ erreur: 'Erreur serveur' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const { club_id } = req.utilisateur;
